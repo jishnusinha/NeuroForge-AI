@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  
+  html, body {
+    margin: 0;
+    padding: 0;
+    background-color: #080D18;
+    color: #F2F5FC;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom scientific dark scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #080D18;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #202B43;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #46D7F2;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    background: rgba(21, 30, 48, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .glass-elevated {
+    background: rgba(32, 43, 67, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(70, 215, 242, 0.2);
+  }
+
+  .glow-cyan-border {
+    box-shadow: 0 0 15px -3px rgba(70, 215, 242, 0.3);
+  }
+
+  .glow-violet-border {
+    box-shadow: 0 0 15px -3px rgba(167, 139, 250, 0.3);
+  }
+
+  /* Scientific grid background pattern */
+  .bg-grid-pattern {
+    background-size: 32px 32px;
+    background-image: 
+      linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  }
+
+  .bg-radial-vignette {
+    background: radial-gradient(circle at 50% 20%, rgba(70, 215, 242, 0.08) 0%, transparent 60%);
+  }
+}

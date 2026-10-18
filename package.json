@@ -1,0 +1,21 @@
+{
+  "name": "neuroforge-ai",
+  "version": "1.0.0",
+  "description": "NeuroForge AI - Interactive Machine Learning & Deep Learning Laboratory",
+  "scripts": {
+    "dev:client": "npm --prefix client run dev",
+    "dev:server": "npm --prefix server run dev",
+    "build:client": "npm --prefix client run build",
+    "start:server": "npm --prefix server start"
+  },
+  "keywords": [
+    "machine-learning",
+    "deep-learning",
+    "interactive-lab",
+    "tensorflow-js",
+    "react",
+    "portfolio"
+  ],
+  "author": "",
+  "license": "MIT"
+}
