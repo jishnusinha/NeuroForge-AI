@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { profileDataset } from '../../ml/datasetProfiling.js';
+import DatasetInvestigation from './DatasetInvestigation.jsx';
 
 const format = value => Number.isFinite(value)
   ? (Math.abs(value) >= 1000 ? value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : value.toFixed(2))
@@ -58,7 +59,7 @@ export default function DataScienceWorkbench({ dataset, name }) {
   </div>;
 
   const active = report.columns.find(column=>column.name===selectedColumn) ?? report.columns[0];
-  const tabs = [{id:'overview',name:'Overview'}, {id:'distributions',name:'Distributions'}, {id:'correlations',name:'Correlations'}, {id:'preview',name:'Row preview'}];
+  const tabs = [{id:'overview',name:'Overview'}, {id:'distributions',name:'Distributions'}, {id:'relationships',name:'Relationships'}, {id:'balance',name:'Class balance'}, {id:'outliers',name:'Outliers & quality'}, {id:'correlations',name:'Correlations'}, {id:'preview',name:'Row preview'}];
   return <section role="region" aria-label="Dataset profile dashboard" className="space-y-4 rounded-xl border border-white/10 bg-[#0D1422] p-3 sm:p-4">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div className="min-w-0">
@@ -112,6 +113,7 @@ export default function DataScienceWorkbench({ dataset, name }) {
       </div>
       <Distribution column={active}/>
     </div>}
+    {['relationships','balance','outliers'].includes(tab) && <DatasetInvestigation dataset={dataset} report={report} mode={tab} />}
     {tab==='correlations' && <div className="space-y-3">
       <p className="text-sm text-[#9EACC4]">Pairwise-complete Pearson correlation, not causation. Each cell uses only rows where both numeric features were measured. Constant columns and fewer than 3 valid pairs are marked unavailable.</p>
       {report.numericNames.length<2
