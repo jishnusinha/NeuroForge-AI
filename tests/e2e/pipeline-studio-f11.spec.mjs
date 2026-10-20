@@ -2,9 +2,12 @@ import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
 async function openStudio(page) {
-  const prep=page.getByRole('region',{name:'CSV preparation'}).first();
-  await prep.locator('summary').filter({hasText:'Advanced Pipeline Studio (F11)'}).click();
-  const studio=prep.getByRole('region',{name:'F11 Pipeline Studio'});
+  // Several CSV preparation regions can be mounted during navigation; select the
+  // visible editor belonging to the active imported dataset.
+  const trigger=page.locator('summary:visible').filter({hasText:'Advanced Pipeline Studio (F11)'}).first();
+  await expect(trigger).toBeVisible();
+  await trigger.click();
+  const studio=page.getByRole('region',{name:'F11 Pipeline Studio'});
   await expect(studio).toBeVisible();
   return studio;
 }
