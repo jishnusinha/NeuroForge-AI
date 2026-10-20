@@ -33,10 +33,20 @@ test('F2: imported CSV shows real 3:1 class ratio, scatter groups, and flags the
   await expect(dash.getByText('3:1',{exact:true})).toBeVisible();
   await expect(dash.getByText(/Class imbalance flagged for review/)).toBeVisible();
   await dash.getByRole('button',{name:'Outliers & quality'}).click();
-  await expect(dash.getByText('1 flagged',{exact:false})).toBeVisible();
+  await expect(dash.getByText('1 flagged',{exact:true})).toBeVisible();
   const flagged=dash.getByRole('region',{name:'Flagged outlier observations'});
   await expect(flagged.getByRole('row')).toHaveCount(2);
   await expect(flagged.getByRole('row').last()).toContainText('80');
   await dash.getByRole('button',{name:'Row preview'}).click();
   await expect(dash.getByRole('region',{name:'Uploaded row preview'})).toContainText('80');
+});
+
+test('F2: constant target remains selectable and clearly warns about single-class data', async ({page}) => {
+  await page.goto('/app/datasets');
+  const csv='feature_x,feature_y,label\n1,2,0\n2,4,0\n3,6,0\n4,8,0\n';
+  await page.getByLabel('CSV file').setInputFiles({name:'one-class.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
+  const dashboard=page.getByRole('region',{name:'Dataset profile dashboard'});
+  await dashboard.getByRole('button',{name:'Class balance'}).click();
+  await expect(dashboard.getByRole('combobox',{name:'Class or category column'})).toHaveValue('label');
+  await expect(dashboard.getByText('Only one class is observed. Binary classification needs more than one class.')).toBeVisible();
 });
