@@ -106,6 +106,13 @@ export default function AppShell() {
 
   return (
     <div className="min-h-screen bg-[#080D18] text-[#F2F5FC] flex flex-col font-sans">
+      <button
+        type="button"
+        onClick={() => document.getElementById('main-content')?.focus()}
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-lg focus:bg-[#46D7F2] focus:px-4 focus:py-2 focus:text-[#080D18] focus:font-semibold"
+      >
+        Skip to main content
+      </button>
       <CommandPalette />
       <Toast />
       <NotificationDrawer />
@@ -127,7 +134,7 @@ export default function AppShell() {
         )}
 
         {/* Workspace Canvas / Viewport */}
-        <main className="flex-1 flex flex-col overflow-x-hidden bg-[#080D18]">
+        <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col overflow-x-hidden bg-[#080D18]">
           <Outlet key={location.key} />
         </main>
       </div>

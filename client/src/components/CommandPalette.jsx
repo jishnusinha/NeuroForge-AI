@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
@@ -37,6 +37,8 @@ function CommandDialog() {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
+  const dialogRef = useRef(null);
+  const resultsId = useId();
   const navigate = useNavigate();
 
   const commands = [
@@ -120,16 +122,44 @@ function CommandDialog() {
     cmd.category.toLowerCase().includes(query.toLowerCase())
   );
 
+  // Keep keyboard focus within the modal, and return it to the launch control.
   useEffect(() => {
     const previous = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     inputRef.current?.focus();
-    return () => { if (previous?.isConnected) previous.focus(); };
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      if (previous?.isConnected) previous.focus();
+    };
   }, []);
+
+  const handleModalKeyDown = (event) => {
+    if (event.key !== 'Tab') return;
+    const focusable = [...(dialogRef.current?.querySelectorAll(
+      'input:not([disabled]), button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+    ) || [])].filter(element => element.getClientRects().length > 0);
+    if (!focusable.length) {
+      event.preventDefault();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
 
   const handleSelect = (cmd) => {
     setCommandPaletteOpen(false);
     cmd.action();
   };
+
+  const activeIndex = Math.min(selectedIndex, Math.max(filteredCommands.length - 1, 0));
 
   const handleKeyDownList = (e) => {
     if (e.key === 'ArrowDown') {
@@ -140,24 +170,35 @@ function CommandDialog() {
       setSelectedIndex((prev) => (prev - 1 + filteredCommands.length) % (filteredCommands.length || 1));
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (filteredCommands[selectedIndex]) {
-        handleSelect(filteredCommands[selectedIndex]);
+      if (filteredCommands[activeIndex]) {
+        handleSelect(filteredCommands[activeIndex]);
       }
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-[#080D18]/80 backdrop-blur-md">
-      <div 
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center pt-4 sm:pt-20 px-3 sm:px-4 bg-[#080D18]/80 backdrop-blur-md"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) setCommandPaletteOpen(false);
+      }}
+    >
+      <div
+        ref={dialogRef}
         role="dialog" aria-modal="true" aria-label="Quick commands"
-        className="w-full max-w-2xl bg-[#151E30] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
-        onClick={(e) => e.stopPropagation()}
+        onKeyDown={handleModalKeyDown}
+        className="w-full max-w-2xl max-h-[calc(100dvh-2rem)] flex flex-col bg-[#151E30] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
       >
         {/* Search Input Bar */}
         <div className="flex items-center px-4 py-3.5 border-b border-white/10 gap-3">
           <Search className="w-5 h-5 text-[#46D7F2]" />
           <input
             aria-label="Search commands"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded="true"
+            aria-controls={resultsId}
+            aria-activedescendant={filteredCommands.length ? `${resultsId}-${filteredCommands[activeIndex].id}` : undefined}
             ref={inputRef}
             type="text"
             value={query}
@@ -167,19 +208,23 @@ function CommandDialog() {
             }}
             onKeyDown={handleKeyDownList}
             placeholder="Type a command, experiment name, or destination..."
-            className="flex-1 bg-transparent text-[#F2F5FC] placeholder-[#9EACC4]/60 text-sm focus:outline-none font-sans"
+            className="min-w-0 flex-1 bg-transparent text-[#F2F5FC] placeholder-[#9EACC4]/60 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#46D7F2] font-sans"
           />
           <button 
             aria-label="Close commands"
             onClick={() => setCommandPaletteOpen(false)}
-            className="p-1 rounded-lg text-[#9EACC4] hover:text-white hover:bg-white/5 transition-colors"
+            className="p-2 rounded-lg text-[#9EACC4] hover:text-white hover:bg-white/5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#46D7F2]"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
+        {/* Announce result counts and active command to assistive technology. */}
+        <p className="sr-only" role="status" aria-live="polite">
+          {filteredCommands.length === 0 ? 'No matching commands' : `${filteredCommands.length} commands. Selected: ${filteredCommands[activeIndex].title}`}
+        </p>
         {/* Results List */}
-        <div className="max-h-[380px] overflow-y-auto p-2 divide-y divide-white/5">
+        <div id={resultsId} role="listbox" aria-label="Matching commands" className="min-h-0 max-h-[min(60dvh,380px)] overflow-y-auto p-2 divide-y divide-white/5">
           {filteredCommands.length === 0 ? (
             <div className="py-8 text-center text-sm text-[#9EACC4]">
               No results found for <span className="text-[#46D7F2]">"{query}"</span>
@@ -187,22 +232,27 @@ function CommandDialog() {
           ) : (
             filteredCommands.map((cmd, idx) => {
               const Icon = cmd.icon;
-              const isSelected = idx === selectedIndex;
+              const isSelected = idx === activeIndex;
               return (
-                <div
+                <button
                   key={cmd.id}
+                  type="button"
+                  id={`${resultsId}-${cmd.id}`}
+                  role="option"
+                  aria-selected={isSelected}
                   onClick={() => handleSelect(cmd)}
+                  onFocus={() => setSelectedIndex(idx)}
                   onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${
+                  className={`w-full text-left flex items-center justify-between gap-2 p-3 rounded-xl cursor-pointer transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#46D7F2] ${
                     isSelected ? 'bg-white/10 text-white shadow-sm' : 'text-[#F2F5FC] hover:bg-white/5'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${isSelected ? 'bg-[#46D7F2]/20 text-[#46D7F2]' : 'bg-white/5 text-[#9EACC4]'}`}>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`shrink-0 p-2 rounded-lg ${isSelected ? 'bg-[#46D7F2]/20 text-[#46D7F2]' : 'bg-white/5 text-[#9EACC4]'}`}>
                       <Icon className="w-4 h-4" />
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-medium">{cmd.title}</span>
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-[#9EACC4] uppercase tracking-wider font-mono">
                           {cmd.category}
@@ -214,15 +264,15 @@ function CommandDialog() {
                   {isSelected && (
                     <ArrowRight className="w-4 h-4 text-[#46D7F2] animate-pulse" />
                   )}
-                </div>
+                </button>
               );
             })
           )}
         </div>
 
         {/* Footer shortcuts */}
-        <div className="flex items-center justify-between px-4 py-2.5 bg-[#0D1422] border-t border-white/5 text-[11px] text-[#9EACC4] font-mono">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-[#0D1422] border-t border-white/5 text-[11px] text-[#9EACC4] font-mono">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
             <span><kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white">↑↓</kbd> Navigate</span>
             <span><kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white">↵</kbd> Select</span>
             <span><kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white">ESC</kbd> Close</span>
