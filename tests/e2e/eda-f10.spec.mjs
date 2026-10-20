@@ -1,0 +1,56 @@
+import { test, expect } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+
+test('F10: interactive filters change EDA scope, correlation method, and exported evidence',async({page})=>{
+  await page.goto('/app/datasets');
+  await page.getByRole('button',{name:'Try sample dataset'}).click();
+  const lab=page.getByRole('region',{name:'Dataset profile dashboard'});
+  await expect(lab).toContainText('120 original / 120 analyzed');
+  await lab.getByRole('combobox',{name:'Filter column'}).selectOption('label');
+  await lab.getByRole('textbox',{name:'Filter value'}).fill('1');
+  await lab.getByRole('button',{name:'Add filter'}).click();
+  await expect(lab).toContainText('120 original / 60 analyzed');
+  await lab.getByRole('button',{name:'Correlations',exact:true}).click();
+  await lab.getByRole('combobox',{name:'Correlation method'}).selectOption('spearman');
+  await expect(lab.getByRole('region',{name:'Correlation matrix'})).toBeVisible();
+  await lab.getByRole('button',{name:'Inspect correlation feature_x and feature_y'}).click();
+  await expect(lab.getByRole('region',{name:'Correlation pair evidence'})).toContainText('spearman coefficient');
+  await lab.getByRole('button',{name:'Missingness'}).click();
+  await expect(lab.getByRole('region',{name:'Missingness by column'})).toBeVisible();
+  await lab.getByRole('button',{name:'Row Explorer'}).click();
+  await expect(lab.getByRole('region',{name:'Filtered source row table'})).toBeVisible();
+  await lab.getByRole('button',{name:'Evidence & export'}).click();
+  await lab.getByRole('textbox',{name:'EDA research observations'}).fill('The subset contains a single class.');
+  const downloading=page.waitForEvent('download');
+  await lab.getByRole('button',{name:'Export JSON'}).click();
+  const file=await downloading;
+  expect(file.suggestedFilename()).toBe('neuroforge-eda.json');
+  const report=JSON.parse(await readFile(await file.path(),'utf8'));
+  expect(report.selectedCount).toBe(60);
+  expect(report.sourceCount).toBe(120);
+  expect(report.datasetDigest).toMatch(/^[a-f0-9]{64}$/);
+  expect(report.observations).toBe('The subset contains a single class.');
+  expect(report).not.toHaveProperty('rows');
+  await lab.getByRole('button',{name:/Clear all/}).click();
+  await expect(lab).toContainText('120 original / 120 analyzed');
+});
+
+test('F10: imported source rows drill down and explicit subset handoff retains original values',async({page})=>{
+  await page.goto('/app/datasets');
+  const csv='x,y,label,segment,note\n1,2,0,A,ok\n2,4,1,A,ok\n3,6,0,A,ok\n4,8,1,A,ok\n5,10,0,B,ok\n6,12,1,B,ok\n7,14,0,B,ok\n8,16,1,B,ok\n9,18,0,B,\n10,20,1,B,ok\n';
+  await page.getByLabel('CSV file').setInputFiles({name:'f10.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
+  let lab=page.getByRole('region',{name:'Dataset profile dashboard'});
+  await lab.getByRole('button',{name:'Missingness'}).click();
+  await expect(lab.getByRole('region',{name:'Missingness by column'})).toContainText('note');
+  await lab.getByRole('button',{name:'Quality Pro'}).click();
+  await expect(lab.getByRole('region',{name:'Advanced data quality'})).toContainText('Missing observations in note');
+  await lab.getByRole('combobox',{name:'Filter column'}).selectOption('segment');
+  await lab.getByRole('textbox',{name:'Filter value'}).fill('B');
+  await lab.getByRole('button',{name:'Add filter'}).click();
+  await expect(lab).toContainText('10 original / 6 analyzed');
+  await lab.getByRole('button',{name:'Evidence & export'}).click();
+  await lab.getByRole('button',{name:'Use filtered rows for preparation'}).click();
+  lab=page.getByRole('region',{name:'Dataset profile dashboard'});
+  await expect(lab).toContainText('6 original / 6 analyzed');
+  await expect(page.getByRole('region',{name:'CSV preparation'}).filter({hasText:'6 source rows'}).first()).toBeVisible();
+});
