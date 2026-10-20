@@ -12,7 +12,6 @@ export default function OptimizerLandscapeLab() {
   const model = useMemo(()=>simulateOptimizer({method,learningRate,steps}),[method,learningRate,steps]);
   const visible = model.history.filter(row=>Math.abs(row.x)<=4&&Math.abs(row.y)<=4);
   const clipped=model.history.length-visible.length;
-  const final=model.history.at(-1);
   return <section role="region" aria-label="Optimizer landscape simulator" className="space-y-4 rounded-xl border border-violet-400/20 bg-[#151E30] p-3 sm:p-5">
     <div>
       <h3 className="text-lg font-semibold text-white">Optimizer Landscape Simulator</h3>
