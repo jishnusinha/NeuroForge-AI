@@ -84,7 +84,7 @@ function ImportancePanel({ importance, job, onStart, onCancel }) {
 }
 
 function LocalPanel({ explanation }) {
-  const linear=explanation.contributions.length>0;
+  const linear=(explanation.contributions?.length??0)>0;
   return <section aria-label="F13 local explanation" className="space-y-3">
     <h5 className="font-semibold">Local model explanation</h5>
     <p className="text-sm">Prediction: <strong>{displayPrediction(explanation.modelOutput.predicted)}</strong>

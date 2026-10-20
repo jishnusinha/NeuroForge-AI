@@ -33,7 +33,7 @@ export async function createExplanationReceipt({
     local:local?{
       method:local.method,scale:local.scale??null,
       prediction:local.modelOutput.predicted,
-      contributions:local.contributions.map(item=>({
+      contributions:(local.contributions??[]).map(item=>({
         feature:item.feature,contribution:item.contribution,
       })),intercept:local.intercept??null,
       reconstruction:local.reconstructed??null,
