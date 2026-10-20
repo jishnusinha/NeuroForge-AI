@@ -120,6 +120,11 @@ export default function AppShell() {
         }`}
       >
         <WorkspaceHeader />
+        {import.meta.env?.VITE_STATIC_DEMO === 'true' && (
+          <div role="status" className="border-b border-amber-400/20 bg-amber-400/5 px-4 py-2 text-xs text-amber-100">
+            Public browser-only demo: training and local drafts work here. Cloud accounts, cross-device sync and shareable server reports need the separately deployed API. Do not enter sensitive data.
+          </div>
+        )}
 
         {/* Workspace Canvas / Viewport */}
         <main className="flex-1 flex flex-col overflow-x-hidden bg-[#080D18]">
