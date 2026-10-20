@@ -1,14 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { isMissingValue, sortEdaRows } from '../../../ml/edaFilters.js';
 const PER_PAGE = 25;
 
 export default function EdaRowExplorer({ dataset, selectedRowId, onSelectRow }) {
   const [column, setColumn] = useState(dataset.headers[0] ?? '');
   const [direction, setDirection] = useState('asc');
-  const [page, setPage] = useState(0);
   const sorted = useMemo(()=>sortEdaRows(dataset.rows,column,direction),[dataset.rows,column,direction]);
-  const selectedIndex = sorted.findIndex((row,index)=>String(row.id??'row-'+(index+1))===selectedRowId);
-  useEffect(()=>{if(selectedIndex>=0)setPage(Math.floor(selectedIndex/PER_PAGE));},[selectedIndex]);
+  const [page, setPage] = useState(() => {
+    const index = selectedRowId ? sorted.findIndex((row,position)=>String(row.id??'row-'+(position+1))===selectedRowId) : -1;
+    return index>=0 ? Math.floor(index/PER_PAGE) : 0;
+  });
   const pageCount = Math.max(1,Math.ceil(sorted.length/PER_PAGE));
   const current = Math.min(page,pageCount-1);
   const visible = sorted.slice(current*PER_PAGE,(current+1)*PER_PAGE);
