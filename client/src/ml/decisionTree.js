@@ -39,10 +39,16 @@ export function trainDecisionTree(rows, { maxDepth = 3, minLeaf = 2 } = {}) {
           - (rightCount/count)*gini(rightPositive,rightCount);
         const threshold = (ordered[i][feature] / 2) + (ordered[i+1][feature] / 2);
         if (!Number.isFinite(threshold)) continue;
-        if (gain > (best?.gain ?? 1e-12) + 1e-12) best = { feature, threshold, gain };
+        // A zero-gain first split can still reveal interactions (e.g. XOR) one level deeper.
+        // Prefer balanced partitions on ties to make that exploration deterministic.
+        const balance = Math.abs(leftCount - rightCount);
+        if (!best || gain > best.gain + 1e-12 ||
+            (Math.abs(gain - best.gain) <= 1e-12 && balance < best.balance)) {
+          best = { feature, threshold, gain, balance };
+        }
       }
     }
-    if (!best) return leaf;
+    if (!best || (best.gain <= 1e-12 && depth >= maxDepth - 1)) return leaf;
     const left = points.filter(row => row[best.feature] <= best.threshold);
     const right = points.filter(row => row[best.feature] > best.threshold);
     if (left.length < minLeaf || right.length < minLeaf) return leaf;
