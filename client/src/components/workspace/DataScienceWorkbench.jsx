@@ -8,8 +8,8 @@ const format = value => Number.isFinite(value)
   : 'Not available';
 
 function Metric({ label, value }) {
-  return <div className="rounded-xl border border-white/10 bg-[#151E30] p-3">
-    <dt className="text-xs text-[#9EACC4]">{label}</dt>
+  return <div className="rounded-xl border border-white/10 bg-obsidian p-3">
+    <dt className="text-xs text-text-muted">{label}</dt>
     <dd className="mt-1 text-xl font-semibold text-white tabular-nums">{value}</dd>
   </div>;
 }
@@ -20,10 +20,10 @@ function Distribution({ column }) {
     : column.categories;
   const max = Math.max(1, ...bars.map(bar => bar.count));
   return <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(230px,0.65fr)]">
-    <div className="rounded-xl border border-white/10 bg-[#151E30] p-3">
-      <p className="mb-2 text-xs text-[#9EACC4]">{column.type === 'numeric' ? 'Observed numeric distribution' : 'Most frequent observed categories'} · Missing values excluded</p>
+    <div className="rounded-xl border border-white/10 bg-obsidian p-3">
+      <p className="mb-2 text-xs text-text-muted">{column.type === 'numeric' ? 'Observed numeric distribution' : 'Most frequent observed categories'} · Missing values excluded</p>
       {bars.length ? <svg role="img" aria-label={`${column.name} distribution: ${bars.map(bar => `${bar.label}, ${bar.count} rows`).join('; ')}`}
-        viewBox="0 0 520 240" className="w-full rounded-lg bg-[#080D18]" preserveAspectRatio="xMidYMid meet">
+        viewBox="0 0 520 240" className="w-full rounded-lg bg-deep-space" preserveAspectRatio="xMidYMid meet">
         <line x1="36" x2="504" y1="204" y2="204" stroke="#9EACC4" strokeWidth="1" />
         {bars.map((bar,index) => {
           const space = 468 / bars.length, x = 36 + index*space + 5;
@@ -34,13 +34,13 @@ function Distribution({ column }) {
             <text x={x+(space-10)/2} y="224" fill="#9EACC4" textAnchor="middle" fontSize="10">{index+1}</text>
           </g>;
         })}
-      </svg> : <p role="status" className="p-5 text-sm text-[#9EACC4]">No observed values to chart.</p>}
-      <p className="mt-2 text-xs text-[#9EACC4]">Chart indexes correspond to the numbered groups in the table. Counts are actual rows, not percentages.</p>
+      </svg> : <p role="status" className="p-5 text-sm text-text-muted">No observed values to chart.</p>}
+      <p className="mt-2 text-xs text-text-muted">Chart indexes correspond to the numbered groups in the table. Counts are actual rows, not percentages.</p>
     </div>
     <div tabIndex={0} role="region" aria-label="Distribution values" className="max-h-[330px] overflow-auto rounded-xl border border-white/10">
       <table className="w-full text-left text-xs">
-        <caption className="p-3 text-left text-[#9EACC4]">Distribution of {column.name}</caption>
-        <thead className="bg-[#202B43] text-[#F2F5FC]"><tr><th scope="col" className="p-2">Group</th><th scope="col" className="p-2">Range or category</th><th scope="col" className="p-2">Rows</th></tr></thead>
+        <caption className="p-3 text-left text-text-muted">Distribution of {column.name}</caption>
+        <thead className="bg-surface-elevated text-text-primary"><tr><th scope="col" className="p-2">Group</th><th scope="col" className="p-2">Range or category</th><th scope="col" className="p-2">Rows</th></tr></thead>
         <tbody>{bars.map((bar,index) => <tr key={index} className="border-t border-white/10">
           <th scope="row" className="p-2">{index+1}</th><td className="p-2 break-words">{bar.label}</td><td className="p-2 tabular-nums">{bar.count}</td>
         </tr>)}
@@ -55,17 +55,17 @@ export default function DataScienceWorkbench({ dataset, name }) {
   const [tab, setTab] = useState('overview');
   const [selectedColumn, setSelectedColumn] = useState(dataset?.headers?.[0] ?? '');
   const report = useMemo(() => dataset ? profileDataset(dataset) : null, [dataset]);
-  if (!report) return <div className="rounded-xl border border-dashed border-white/20 p-5 text-sm text-[#9EACC4]" role="status">
+  if (!report) return <div className="rounded-xl border border-dashed border-white/20 p-5 text-sm text-text-muted" role="status">
     Import a CSV using the form above, or select <strong className="text-white">Try sample dataset</strong> to explore statistical evidence. Processing stays entirely in this browser.
   </div>;
 
   const active = report.columns.find(column=>column.name===selectedColumn) ?? report.columns[0];
   const tabs = [{id:'overview',name:'Overview'}, {id:'distributions',name:'Distributions'}, {id:'relationships',name:'Relationships'}, {id:'balance',name:'Class balance'}, {id:'outliers',name:'Outliers & quality'}, {id:'algorithms',name:'Algorithms'}, {id:'correlations',name:'Correlations'}, {id:'preview',name:'Row preview'}];
-  return <section role="region" aria-label="Dataset profile dashboard" className="space-y-4 rounded-xl border border-white/10 bg-[#0D1422] p-3 sm:p-4">
+  return <section role="region" aria-label="Dataset profile dashboard" className="space-y-4 rounded-xl border border-white/10 bg-surface-dark p-3 sm:p-4">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div className="min-w-0">
         <h4 className="text-lg font-semibold text-white">Exploratory data analysis</h4>
-        <p className="text-xs text-[#9EACC4]">Source: {name || 'Imported CSV'} · Exploratory statistics only; not fitted model parameters.</p>
+        <p className="text-xs text-text-muted">Source: {name || 'Imported CSV'} · Exploratory statistics only; not fitted model parameters.</p>
       </div>
       <span className="rounded-full border border-emerald-400/25 px-3 py-1 text-xs text-emerald-200">Local-only analysis</span>
     </div>
@@ -77,16 +77,16 @@ export default function DataScienceWorkbench({ dataset, name }) {
     </dl>
     <div role="group" aria-label="Workbench views" className="flex flex-wrap gap-2">
       {tabs.map(item => <button key={item.id} type="button" aria-pressed={tab===item.id} onClick={()=>setTab(item.id)}
-        className={`min-h-10 rounded-lg border px-3 py-2 text-sm font-medium ${tab===item.id ? 'border-cyan-400 bg-cyan-400/15 text-cyan-200' : 'border-white/10 bg-[#151E30] text-[#9EACC4] hover:text-white'}`}>
+        className={`min-h-10 rounded-lg border px-3 py-2 text-sm font-medium ${tab===item.id ? 'border-cyan-400 bg-cyan-400/15 text-cyan-200' : 'border-white/10 bg-obsidian text-text-muted hover:text-white'}`}>
         {item.name}
       </button>)}
     </div>
     {tab==='overview' && <div className="space-y-3">
-      <p className="text-xs text-[#9EACC4]">Numeric summaries use only observed finite values. Missingness counts exclude empty, null and NaN fields.</p>
+      <p className="text-xs text-text-muted">Numeric summaries use only observed finite values. Missingness counts exclude empty, null and NaN fields.</p>
       <div role="region" aria-label="Column quality profile" tabIndex={0} className="max-w-full overflow-x-auto rounded-xl border border-white/10">
         <table className="w-full min-w-[680px] text-left text-xs">
           <caption className="p-3 text-left font-semibold text-white">Column summary and missingness</caption>
-          <thead className="bg-[#202B43]"><tr>{['Column','Inferred type','Observed','Missing','Distinct','Mean','Median','Min','Max'].map(h=><th key={h} scope="col" className="p-2">{h}</th>)}</tr></thead>
+          <thead className="bg-surface-elevated"><tr>{['Column','Inferred type','Observed','Missing','Distinct','Mean','Median','Min','Max'].map(h=><th key={h} scope="col" className="p-2">{h}</th>)}</tr></thead>
           <tbody>{report.columns.map(col=><tr key={col.name} className="border-t border-white/10">
             <th scope="row" className="p-2 font-semibold">{col.name}</th>
             <td className="p-2">{col.type}</td><td className="p-2 tabular-nums">{col.present}</td>
@@ -104,11 +104,11 @@ export default function DataScienceWorkbench({ dataset, name }) {
     {tab==='distributions' && <div className="space-y-3">
       <label className="block text-sm font-medium text-white">Feature to inspect
         <select aria-label="Distribution column" value={active.name} onChange={event=>setSelectedColumn(event.target.value)}
-          className="mt-2 block min-h-11 w-full max-w-sm rounded-lg border border-white/20 bg-[#151E30] p-2 text-sm text-white">
+          className="mt-2 block min-h-11 w-full max-w-sm rounded-lg border border-white/20 bg-obsidian p-2 text-sm text-white">
           {report.columns.map(col=><option key={col.name} value={col.name}>{col.name} · {col.type}</option>)}
         </select>
       </label>
-      <div className="flex flex-wrap gap-3 text-xs text-[#9EACC4]">
+      <div className="flex flex-wrap gap-3 text-xs text-text-muted">
         <span>Observed: {active.present}</span><span>Missing: {active.missing}</span><span>Unique: {active.unique}</span>
         {active.type==='numeric' && <><span>Q1: {format(active.q1)}</span><span>Q3: {format(active.q3)}</span><span>Sample SD: {format(active.standardDeviation)}</span></>}
       </div>
@@ -117,21 +117,21 @@ export default function DataScienceWorkbench({ dataset, name }) {
     {['relationships','balance','outliers'].includes(tab) && <DatasetInvestigation dataset={dataset} report={report} mode={tab} />}
     {tab==='algorithms' && <AlgorithmInsights dataset={dataset} report={report} />}
     {tab==='correlations' && <div className="space-y-3">
-      <p className="text-sm text-[#9EACC4]">Pairwise-complete Pearson correlation, not causation. Each cell uses only rows where both numeric features were measured. Constant columns and fewer than 3 valid pairs are marked unavailable.</p>
+      <p className="text-sm text-text-muted">Pairwise-complete Pearson correlation, not causation. Each cell uses only rows where both numeric features were measured. Constant columns and fewer than 3 valid pairs are marked unavailable.</p>
       {report.numericNames.length<2
-        ? <p role="status" className="rounded-xl bg-[#151E30] p-4 text-sm">At least two numeric columns are required for a correlation matrix.</p>
+        ? <p role="status" className="rounded-xl bg-obsidian p-4 text-sm">At least two numeric columns are required for a correlation matrix.</p>
         : <>
           {report.columns.filter(col=>col.type==='numeric').length>8 && <p className="text-xs text-amber-200">Showing the first eight numeric columns to keep the matrix readable.</p>}
           <div role="region" aria-label="Correlation matrix" tabIndex={0} className="max-w-full overflow-x-auto rounded-xl border border-white/10">
             <table className="w-full min-w-[500px] border-collapse text-center text-xs">
-              <caption className="p-3 text-left text-[#9EACC4]">Pairwise Pearson coefficients (r). Each cell includes its paired sample count.</caption>
-              <thead className="bg-[#202B43]"><tr><th scope="col" className="p-3">Feature</th>{report.numericNames.map(name=><th key={name} scope="col" className="p-3 break-words">{name}</th>)}</tr></thead>
+              <caption className="p-3 text-left text-text-muted">Pairwise Pearson coefficients (r). Each cell includes its paired sample count.</caption>
+              <thead className="bg-surface-elevated"><tr><th scope="col" className="p-3">Feature</th>{report.numericNames.map(name=><th key={name} scope="col" className="p-3 break-words">{name}</th>)}</tr></thead>
               <tbody>{report.numericNames.map((name,rowIndex)=><tr key={name} className="border-t border-white/10">
                 <th scope="row" className="p-3 text-left">{name}</th>
                 {report.correlations[rowIndex].map((cell,colIndex)=><td key={report.numericNames[colIndex]} className="p-3 tabular-nums"
                   style={cell.r===null ? undefined : {backgroundColor:cell.r>=0?`rgba(70,215,242,${Math.abs(cell.r)*.23})`:`rgba(167,139,250,${Math.abs(cell.r)*.23})`}}>
                   <span className="block font-semibold">{cell.r===null?'N/A':cell.r.toFixed(3)}</span>
-                  <span className="text-[10px] text-[#9EACC4]">n={cell.count}</span>
+                  <span className="text-[10px] text-text-muted">n={cell.count}</span>
                 </td>)}
               </tr>)}</tbody>
             </table>
@@ -140,8 +140,8 @@ export default function DataScienceWorkbench({ dataset, name }) {
     </div>}
     {tab==='preview' && <div role="region" aria-label="Uploaded row preview" tabIndex={0} className="max-w-full overflow-auto rounded-xl border border-white/10">
       <table className="w-full min-w-[500px] text-left text-xs">
-        <caption className="p-3 text-left text-[#9EACC4]">First {Math.min(12,report.rowCount)} of {report.rowCount} rows. Original values only; no imputation or scaling applied.</caption>
-        <thead className="bg-[#202B43]"><tr>{dataset.headers.map(header=><th key={header} scope="col" className="p-2">{header}</th>)}</tr></thead>
+        <caption className="p-3 text-left text-text-muted">First {Math.min(12,report.rowCount)} of {report.rowCount} rows. Original values only; no imputation or scaling applied.</caption>
+        <thead className="bg-surface-elevated"><tr>{dataset.headers.map(header=><th key={header} scope="col" className="p-2">{header}</th>)}</tr></thead>
         <tbody>{dataset.rows.slice(0,12).map((row,index)=><tr key={row.id??index} className="border-t border-white/10">
           {dataset.headers.map(header=><td key={header} className="p-2">{row[header] === null || row[header] === undefined ? <span className="text-amber-200">Missing</span> : String(row[header])}</td>)}
         </tr>)}</tbody>

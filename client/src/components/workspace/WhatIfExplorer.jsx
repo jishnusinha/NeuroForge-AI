@@ -40,28 +40,28 @@ export default function WhatIfExplorer({ predictProbability, trainPoints, thresh
       setError('');
     }catch(reason){setSearch(null);setError(reason.message);}
   };
-  return <section role="region" aria-label="Model-backed What-If Lab" className="space-y-4 rounded-xl border border-cyan-400/20 bg-[#151E30] p-3 sm:p-5">
+  return <section role="region" aria-label="Model-backed What-If Lab" className="space-y-4 rounded-xl border border-cyan-400/20 bg-obsidian p-3 sm:p-5">
     <h3 className="text-lg font-semibold text-white">What-If Lab · real model inference</h3>
-    <p className="text-xs leading-relaxed text-[#9EACC4]">
+    <p className="text-xs leading-relaxed text-text-muted">
       Probe the currently fitted classifier. Changing coordinates only queries the model; it does not edit datasets,
       retrain, alter saved runs or inspect held-out true labels. Counterfactuals are candidate input changes, not causal guarantees.
     </p>
     <div className="grid gap-3 sm:grid-cols-2" role="group" aria-label="What-If feature inputs">
-      {[['x',x,limits.x],['y',y,limits.y]].map(([key,value,bounds])=><label key={key} className="text-xs font-medium text-[#9EACC4]">
+      {[['x',x,limits.x],['y',y,limits.y]].map(([key,value,bounds])=><label key={key} className="text-xs font-medium text-text-muted">
         Feature {key.toUpperCase()}
         <input type="range" aria-label={`What-If ${key.toUpperCase()} coordinate`} min={bounds[0]} max={bounds[1]} step={(bounds[1]-bounds[0])/100}
           value={value} onChange={event=>update(key,event.target.value)} className="mt-3 block w-full accent-cyan-300"/>
         <input type="number" aria-label={`What-If ${key.toUpperCase()} value`} step="0.05" value={Number(value.toFixed(4))}
-          onChange={event=>update(key,event.target.value)} className="mt-2 min-h-10 w-full rounded-lg border border-white/20 bg-[#0D1422] px-3 text-sm text-white"/>
+          onChange={event=>update(key,event.target.value)} className="mt-2 min-h-10 w-full rounded-lg border border-white/20 bg-surface-dark px-3 text-sm text-white"/>
       </label>)}
     </div>
     {original.error ? <p role="alert" className="text-sm text-red-300">{original.error}</p> : <>
-      <div role="status" className="rounded-lg border border-white/10 bg-[#0D1422] p-3">
-        <div className="text-xs text-[#9EACC4]">Live predicted class / probability (threshold {threshold.toFixed(2)})</div>
+      <div role="status" className="rounded-lg border border-white/10 bg-surface-dark p-3">
+        <div className="text-xs text-text-muted">Live predicted class / probability (threshold {threshold.toFixed(2)})</div>
         <div className="mt-1 text-lg font-semibold text-white tabular-nums">
           Class {original.evidence.baseline.predictedClass} · {(original.evidence.baseline.predictedProbability*100).toFixed(2)}%
         </div>
-        <p className="mt-1 text-xs text-[#9EACC4]">
+        <p className="mt-1 text-xs text-text-muted">
           Sensitivity from a positive local input step: ΔP(+X) = {display(original.evidence.xPlusDelta)},
           {' '}ΔP(+Y) = {display(original.evidence.yPlusDelta)}. These are finite-difference probes, not learned weights.
         </p>
@@ -69,7 +69,7 @@ export default function WhatIfExplorer({ predictProbability, trainPoints, thresh
       <div className="flex flex-wrap gap-4 text-sm">
         <label className="flex items-center gap-2"><input type="checkbox" checked={lockX} onChange={event=>{setLockX(event.target.checked);setSearch(null);}}/> Lock X</label>
         <label className="flex items-center gap-2"><input type="checkbox" checked={lockY} onChange={event=>{setLockY(event.target.checked);setSearch(null);}}/> Lock Y</label>
-        <label className="text-xs text-[#9EACC4]">Search radius: {radius} steps
+        <label className="text-xs text-text-muted">Search radius: {radius} steps
           <input aria-label="Counterfactual search radius" type="range" min="1" max="12" step="1" value={radius}
             onChange={event=>{setRadius(Number(event.target.value));setSearch(null);}} className="ml-2 align-middle accent-cyan-300"/>
         </label>
@@ -78,8 +78,8 @@ export default function WhatIfExplorer({ predictProbability, trainPoints, thresh
         className="min-h-11 rounded-lg bg-cyan-700 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-600">
         Find nearest class flip
       </button>
-      {search && <div role="region" aria-label="Counterfactual search evidence" className="rounded-lg border border-white/10 bg-[#0D1422] p-3 text-sm">
-        <p className="text-[#9EACC4]">Evaluated {search.evaluated} real bounded model probes, respecting locked features and input ranges.</p>
+      {search && <div role="region" aria-label="Counterfactual search evidence" className="rounded-lg border border-white/10 bg-surface-dark p-3 text-sm">
+        <p className="text-text-muted">Evaluated {search.evaluated} real bounded model probes, respecting locked features and input ranges.</p>
         {search.candidate ? <>
           <p className="mt-2 font-semibold text-emerald-200">Observed class flip found in searched grid</p>
           <table className="mt-2 w-full text-left text-xs">
@@ -91,7 +91,7 @@ export default function WhatIfExplorer({ predictProbability, trainPoints, thresh
               <td className="p-2 tabular-nums">{(probe.predictedProbability*100).toFixed(2)}%</td>
             </tr>)}</tbody>
           </table>
-          <p className="mt-2 text-xs text-[#9EACC4]">
+          <p className="mt-2 text-xs text-text-muted">
             Input changes: X {display(search.candidate.deltaX)}, Y {display(search.candidate.deltaY)}.
             Nearest refers only to this normalized finite grid, not to a globally optimal or feasible real-world action.
           </p>

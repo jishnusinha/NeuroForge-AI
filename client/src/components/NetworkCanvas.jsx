@@ -171,14 +171,14 @@ export default function NetworkCanvas({
                   onClick={() => onSelectLayer(idx)}
                   className={`w-44 p-5 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between h-56 relative shadow-xl ${
                     isSelected
-                      ? 'bg-[#151E30] border-[#46D7F2] shadow-glow-cyan scale-105 z-10'
-                      : 'bg-[#151E30]/80 border-white/10 hover:border-white/30'
+                      ? 'bg-obsidian border-plasma-cyan shadow-glow-cyan scale-105 z-10'
+                      : 'bg-obsidian/80 border-white/10 hover:border-white/30'
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between">
                       <span className={`text-[10px] font-mono uppercase font-bold tracking-wider ${
-                        layer.type === 'Input' ? 'text-[#46D7F2]' : layer.type === 'Output' ? 'text-[#3CD5AA]' : 'text-[#A78BFA]'
+                        layer.type === 'Input' ? 'text-plasma-cyan' : layer.type === 'Output' ? 'text-quantum-mint' : 'text-neural-violet'
                       }`}>
                         {layer.type}
                       </span>
@@ -188,7 +188,7 @@ export default function NetworkCanvas({
                             e.stopPropagation();
                             onRemoveLayer(idx);
                           }}
-                          className="text-[#9EACC4] hover:text-red-400 p-1 rounded-lg transition-colors"
+                          className="text-text-muted hover:text-red-400 p-1 rounded-lg transition-colors"
                           title="Remove this layer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -204,14 +204,14 @@ export default function NetworkCanvas({
                       <div className="text-white font-semibold">
                         {layer.units} {layer.units === 1 ? 'Neuron' : 'Neurons'}
                       </div>
-                      <div className="text-[#9EACC4] text-[11px]">
-                        Act: <span className="text-[#A78BFA]">{layer.activation}</span>
+                      <div className="text-text-muted text-[11px]">
+                        Act: <span className="text-neural-violet">{layer.activation}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Weight calculation summary */}
-                  <div className="pt-3 border-t border-white/10 text-[10px] font-mono text-[#9EACC4] space-y-0.5">
+                  <div className="pt-3 border-t border-white/10 text-[10px] font-mono text-text-muted space-y-0.5">
                     {layer.type !== 'Input' ? (
                       <>
                         <div className="flex justify-between">
@@ -222,13 +222,13 @@ export default function NetworkCanvas({
                           <span>Biases (b):</span>
                           <span className="text-white">{biasCount}</span>
                         </div>
-                        <div className="flex justify-between text-[#3CD5AA] font-bold pt-0.5">
+                        <div className="flex justify-between text-quantum-mint font-bold pt-0.5">
                           <span>Params:</span>
                           <span>{paramCount}</span>
                         </div>
                       </>
                     ) : (
-                      <div className="text-[#46D7F2]">Feature Inputs: x1, x2</div>
+                      <div className="text-plasma-cyan">Feature Inputs: x1, x2</div>
                     )}
                   </div>
                 </div>
@@ -236,10 +236,10 @@ export default function NetworkCanvas({
                 {/* Animated Directional Connector */}
                 {idx < layers.length - 1 && (
                   <div className="flex flex-col items-center flex-shrink-0">
-                    <div className="w-8 h-0.5 bg-gradient-to-r from-[#A78BFA]/60 via-[#46D7F2] to-[#3CD5AA]/60 relative">
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[#46D7F2] shadow-sm animate-ping" />
+                    <div className="w-8 h-0.5 bg-gradient-to-r from-neural-violet/60 via-plasma-cyan to-quantum-mint/60 relative">
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-plasma-cyan shadow-sm animate-ping" />
                     </div>
-                    <span className="text-[9px] font-mono text-[#9EACC4] mt-1.5">
+                    <span className="text-[9px] font-mono text-text-muted mt-1.5">
                       {layers[idx].units}×{layers[idx + 1].units}
                     </span>
                   </div>
@@ -261,10 +261,10 @@ export default function NetworkCanvas({
 
       {/* Embedded 2D Decision Boundary Surface Thumbnail in Corner */}
       {gridSurface && (
-        <div className="absolute bottom-4 right-4 z-20 w-44 h-44 rounded-2xl border border-white/15 bg-[#080D18]/95 backdrop-blur-md p-2.5 shadow-2xl flex flex-col justify-between">
-          <div className="flex justify-between items-center text-[10px] font-mono text-[#9EACC4]">
-            <span className="text-[#46D7F2] font-semibold flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#3CD5AA] animate-pulse" />
+        <div className="absolute bottom-4 right-4 z-20 w-44 h-44 rounded-2xl border border-white/15 bg-deep-space/95 backdrop-blur-md p-2.5 shadow-2xl flex flex-col justify-between">
+          <div className="flex justify-between items-center text-[10px] font-mono text-text-muted">
+            <span className="text-plasma-cyan font-semibold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-quantum-mint animate-pulse" />
               Decision Surface
             </span>
             <span>2D</span>
@@ -294,7 +294,7 @@ export default function NetworkCanvas({
                 <div
                   key={idx}
                   className={`absolute w-1.5 h-1.5 rounded-full -translate-x-1/2 -translate-y-1/2 ${
-                    pt.label === 1 ? 'bg-[#A78BFA]' : 'bg-[#46D7F2]'
+                    pt.label === 1 ? 'bg-neural-violet' : 'bg-plasma-cyan'
                   }`}
                   style={{ left: `${leftPercent}%`, top: `${topPercent}%` }}
                 />
@@ -302,7 +302,7 @@ export default function NetworkCanvas({
             })}
           </div>
 
-          <div className="text-[9px] font-mono text-[#9EACC4] truncate">
+          <div className="text-[9px] font-mono text-text-muted truncate">
             Dataset: <span className="text-white">{datasetName}</span>
           </div>
         </div>

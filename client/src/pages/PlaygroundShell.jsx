@@ -322,9 +322,9 @@ export default function PlaygroundShell() {
       <div className="flex min-w-0 min-h-[620px] overflow-hidden">
 
         {/* Left: Dataset Setup Panel */}
-        <aside className="w-[260px] bg-[#151E30] border-r border-white/10 flex flex-col p-4 overflow-y-auto space-y-4 flex-shrink-0">
+        <aside className="w-[260px] bg-obsidian border-r border-white/10 flex flex-col p-4 overflow-y-auto space-y-4 flex-shrink-0">
           <div>
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[#46D7F2] font-semibold">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-plasma-cyan font-semibold">
               01 • Dataset Setup
             </span>
             <h3 className="text-sm font-semibold text-white mt-0.5">2D Synthetic Generators</h3>
@@ -332,7 +332,7 @@ export default function PlaygroundShell() {
 
           {/* Presets List */}
           <div className="space-y-1">
-            <label className="text-xs text-[#9EACC4] font-medium">Dataset Preset</label>
+            <label className="text-xs text-text-muted font-medium">Dataset Preset</label>
             {presets.map((preset) => (
               <button
                 key={preset}
@@ -345,8 +345,8 @@ export default function PlaygroundShell() {
                 }}
                 className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
                   selectedPreset === preset
-                    ? 'bg-[#46D7F2]/15 text-[#46D7F2] border border-[#46D7F2]/40 shadow-sm'
-                    : 'text-[#9EACC4] hover:bg-white/5 hover:text-white border border-transparent'
+                    ? 'bg-plasma-cyan/15 text-plasma-cyan border border-plasma-cyan/40 shadow-sm'
+                    : 'text-text-muted hover:bg-white/5 hover:text-white border border-transparent'
                 }`}
               >
                 {preset}
@@ -363,7 +363,7 @@ export default function PlaygroundShell() {
           <div className="pt-2 border-t border-white/5 space-y-3.5">
             <div>
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-[#9EACC4]">Gaussian Noise</span>
+                <span className="text-text-muted">Gaussian Noise</span>
                 <span className="font-mono text-white text-xs">{noiseLevel}%</span>
               </div>
               <input
@@ -376,14 +376,14 @@ export default function PlaygroundShell() {
                   generateDataset(selectedPreset, Number(e.target.value));
                   setIsStale(true);
                 }}
-                className="w-full h-1.5 bg-[#202B43] rounded-lg appearance-none cursor-pointer accent-[#46D7F2]"
+                className="w-full h-1.5 bg-surface-elevated rounded-lg appearance-none cursor-pointer accent-plasma-cyan"
               />
             </div>
 
             {selectedAlgorithm !== 'K-Means Clustering' && (
               <div>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="text-[#9EACC4]">Train / Test Split</span>
+                  <span className="text-text-muted">Train / Test Split</span>
                   <span className="font-mono text-white text-xs">{(trainRatio * 100).toFixed(0)}% / {((1 - trainRatio) * 100).toFixed(0)}%</span>
                 </div>
                 <input
@@ -397,7 +397,7 @@ export default function PlaygroundShell() {
                     setTrainRatio(Number(e.target.value) / 100);
                     setIsStale(true);
                   }}
-                  className="w-full h-1.5 bg-[#202B43] rounded-lg appearance-none cursor-pointer accent-[#3CD5AA]"
+                  className="w-full h-1.5 bg-surface-elevated rounded-lg appearance-none cursor-pointer accent-quantum-mint"
                 />
               </div>
             )}
@@ -405,13 +405,13 @@ export default function PlaygroundShell() {
 
           {/* Draw Class Picker (when Draw Tool active) */}
           {activeTool === 'draw' && (
-            <div className="p-3 rounded-xl bg-[#080D18] border border-[#46D7F2]/30 space-y-2">
-              <span className="text-[11px] font-mono text-[#9EACC4]">Click canvas to place:</span>
+            <div className="p-3 rounded-xl bg-deep-space border border-plasma-cyan/30 space-y-2">
+              <span className="text-[11px] font-mono text-text-muted">Click canvas to place:</span>
               <div className="flex gap-2">
                 <button
                   onClick={() => setDrawClass(0)}
                   className={`flex-1 py-1.5 rounded-lg text-xs font-mono font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                    drawClass === 0 ? 'bg-[#46D7F2] text-[#080D18]' : 'bg-white/5 text-[#46D7F2] border border-[#46D7F2]/30'
+                    drawClass === 0 ? 'bg-plasma-cyan text-ink-on-accent' : 'bg-white/5 text-plasma-cyan border border-plasma-cyan/30'
                   }`}
                 >
                   <span className="w-2 h-2 rounded-full bg-current" />
@@ -420,7 +420,7 @@ export default function PlaygroundShell() {
                 <button
                   onClick={() => setDrawClass(1)}
                   className={`flex-1 py-1.5 rounded-lg text-xs font-mono font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                    drawClass === 1 ? 'bg-[#A78BFA] text-[#080D18]' : 'bg-white/5 text-[#A78BFA] border border-[#A78BFA]/30'
+                    drawClass === 1 ? 'bg-neural-violet text-ink-on-accent' : 'bg-white/5 text-neural-violet border border-neural-violet/30'
                   }`}
                 >
                   <span className="w-2 h-2 rounded-full bg-current" />
@@ -431,18 +431,18 @@ export default function PlaygroundShell() {
           )}
 
           {/* Dataset Metrics */}
-          <div className="p-3 rounded-xl bg-[#080D18] border border-white/5 text-[11px] font-mono space-y-1">
-            <div className="flex justify-between text-[#9EACC4]">
+          <div className="p-3 rounded-xl bg-deep-space border border-white/5 text-[11px] font-mono space-y-1">
+            <div className="flex justify-between text-text-muted">
               <span>Total Points:</span>
               <span className="text-white font-bold">{allPoints.length}</span>
             </div>
-            <div className="flex justify-between text-[#9EACC4]">
+            <div className="flex justify-between text-text-muted">
               <span>Train / Test:</span>
-              <span className="text-[#3CD5AA]">{trainPoints.length} / {testPoints.length}</span>
+              <span className="text-quantum-mint">{trainPoints.length} / {testPoints.length}</span>
             </div>
-            <div className="flex justify-between text-[#9EACC4]">
+            <div className="flex justify-between text-text-muted">
               <span>Coordinate Range:</span>
-              <span className="text-[#46D7F2]">[-2.5, 2.5]</span>
+              <span className="text-plasma-cyan">[-2.5, 2.5]</span>
             </div>
           </div>
 
@@ -451,7 +451,7 @@ export default function PlaygroundShell() {
               generateDataset(selectedPreset, noiseLevel);
               showToast('Reset dataset seed.', 'info');
             }}
-            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-medium text-[#9EACC4] hover:text-white transition-colors"
+            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-medium text-text-muted hover:text-white transition-colors"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Regenerate Points</span>
@@ -459,10 +459,10 @@ export default function PlaygroundShell() {
         </aside>
 
         {/* Center: Interactive Canvas */}
-        <section className="flex-1 min-w-0 flex flex-col bg-[#080D18] relative overflow-hidden">
+        <section className="flex-1 min-w-0 flex flex-col bg-deep-space relative overflow-hidden">
 
           {/* Floating Canvas Toolbar */}
-          <div role="toolbar" aria-label="Dataset canvas tools" className="absolute top-2 left-2 sm:top-4 sm:left-4 z-20 flex items-center gap-1 p-1 rounded-xl bg-[#151E30]/90 backdrop-blur-md border border-white/10 shadow-lg">
+          <div role="toolbar" aria-label="Dataset canvas tools" className="absolute top-2 left-2 sm:top-4 sm:left-4 z-20 flex items-center gap-1 p-1 rounded-xl bg-obsidian/90 backdrop-blur-md border border-white/10 shadow-lg">
             {[
               { id: 'select', icon: MousePointer, label: 'Select / Drag Points' },
               { id: 'draw', icon: Pencil, label: 'Draw New Points' },
@@ -479,8 +479,8 @@ export default function PlaygroundShell() {
                   aria-pressed={activeTool === tool.id}
                   className={`min-w-9 min-h-9 p-2 rounded-lg text-xs font-medium transition-all ${
                     activeTool === tool.id
-                      ? 'bg-[#46D7F2]/20 text-[#46D7F2] border border-[#46D7F2]/40 shadow-sm'
-                      : 'text-[#9EACC4] hover:text-white hover:bg-white/5'
+                      ? 'bg-plasma-cyan/20 text-plasma-cyan border border-plasma-cyan/40 shadow-sm'
+                      : 'text-text-muted hover:text-white hover:bg-white/5'
                   }`}
                   title={tool.label}
                 >
@@ -492,12 +492,12 @@ export default function PlaygroundShell() {
 
           {/* Stale Result Alert if user mutated data */}
           {isStale && (
-            <div className="absolute top-14 right-2 left-2 sm:left-auto sm:top-4 sm:right-4 z-20 flex flex-wrap items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#F3B65E]/15 border border-[#F3B65E]/40 text-[#F3B65E] text-xs font-medium backdrop-blur-md shadow-lg animate-in fade-in">
+            <div className="absolute top-14 right-2 left-2 sm:left-auto sm:top-4 sm:right-4 z-20 flex flex-wrap items-center gap-2 px-3.5 py-1.5 rounded-xl bg-signal-amber/15 border border-signal-amber/40 text-signal-amber text-xs font-medium backdrop-blur-md shadow-lg animate-in fade-in">
               <AlertTriangle className="w-3.5 h-3.5" />
               <span>Inputs changed: Boundary is stale reference.</span>
               <button
                 onClick={executeSolver}
-                className="ml-2 px-2.5 py-0.5 rounded-lg bg-[#F3B65E] hover:opacity-90 text-[#080D18] font-bold text-[11px] shadow-sm transition-opacity"
+                className="ml-2 px-2.5 py-0.5 rounded-lg bg-signal-amber hover:opacity-90 text-ink-on-accent font-bold text-[11px] shadow-sm transition-opacity"
               >
                 Recalculate
               </button>
@@ -526,9 +526,9 @@ export default function PlaygroundShell() {
         </section>
 
         {/* Right: Model Controls & Real-Time Parameters */}
-        <aside className="w-[320px] bg-[#151E30] border-l border-white/10 flex flex-col p-4 overflow-y-auto space-y-4 flex-shrink-0">
+        <aside className="w-[320px] bg-obsidian border-l border-white/10 flex flex-col p-4 overflow-y-auto space-y-4 flex-shrink-0">
           <div>
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[#A78BFA] font-semibold">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-neural-violet font-semibold">
               02 • Model Controls
             </span>
             <h3 className="text-sm font-semibold text-white mt-0.5">Algorithm Configuration</h3>
@@ -536,14 +536,14 @@ export default function PlaygroundShell() {
 
           {/* Algorithm Picker */}
           <div className="space-y-1">
-            <label className="text-xs text-[#9EACC4] font-medium">Selected Algorithm</label>
+            <label className="text-xs text-text-muted font-medium">Selected Algorithm</label>
             <select
               value={selectedAlgorithm}
               onChange={(e) => {
                 setSelectedAlgorithm(e.target.value);
                 setProbePoint(null);
               }}
-              className="w-full px-3 py-2 rounded-xl bg-[#080D18] border border-white/10 text-xs text-white focus:outline-none focus:border-[#46D7F2]"
+              className="w-full px-3 py-2 rounded-xl bg-deep-space border border-white/10 text-xs text-white focus:outline-none focus:border-plasma-cyan"
             >
               <option value="Logistic Regression">Logistic Regression (Sigmoid Line)</option>
               <option value="Linear Regression">Linear Regression (OLS / GD)</option>
@@ -558,7 +558,7 @@ export default function PlaygroundShell() {
               <>
                 <div>
                   <div className="flex justify-between text-xs mb-1">
-                    <span className="text-[#9EACC4]">Learning Rate (α)</span>
+                    <span className="text-text-muted">Learning Rate (α)</span>
                     <span className="font-mono text-white text-xs">{learningRate}</span>
                   </div>
                   <input
@@ -571,13 +571,13 @@ export default function PlaygroundShell() {
                       setLearningRate(Number(e.target.value));
                       setIsStale(true);
                     }}
-                    className="w-full h-1.5 bg-[#202B43] rounded-lg appearance-none cursor-pointer accent-[#A78BFA]"
+                    className="w-full h-1.5 bg-surface-elevated rounded-lg appearance-none cursor-pointer accent-neural-violet"
                   />
                 </div>
 
                 <div>
                   <div className="flex justify-between text-xs mb-1">
-                    <span className="text-[#9EACC4]">L2 Regularization (λ)</span>
+                    <span className="text-text-muted">L2 Regularization (λ)</span>
                     <span className="font-mono text-white text-xs">{regularization}</span>
                   </div>
                   <input
@@ -590,14 +590,14 @@ export default function PlaygroundShell() {
                       setRegularization(Number(e.target.value));
                       setIsStale(true);
                     }}
-                    className="w-full h-1.5 bg-[#202B43] rounded-lg appearance-none cursor-pointer accent-[#A78BFA]"
+                    className="w-full h-1.5 bg-surface-elevated rounded-lg appearance-none cursor-pointer accent-neural-violet"
                   />
                 </div>
 
                 <div>
                   <div className="flex justify-between text-xs mb-1">
-                    <span className="text-[#9EACC4]">Decision Threshold</span>
-                    <span className="font-mono text-[#3CD5AA] text-xs">{threshold}</span>
+                    <span className="text-text-muted">Decision Threshold</span>
+                    <span className="font-mono text-quantum-mint text-xs">{threshold}</span>
                   </div>
                   <input
                     type="range"
@@ -609,27 +609,27 @@ export default function PlaygroundShell() {
                       setThreshold(Number(e.target.value));
                       setIsStale(true);
                     }}
-                    className="w-full h-1.5 bg-[#202B43] rounded-lg appearance-none cursor-pointer accent-[#3CD5AA]"
+                    className="w-full h-1.5 bg-surface-elevated rounded-lg appearance-none cursor-pointer accent-quantum-mint"
                   />
                 </div>
               </>
             )}
 
             {selectedAlgorithm === 'Linear Regression' && (
-              <div className="p-3 rounded-xl bg-[#080D18] border border-white/5 space-y-1.5 text-xs font-mono">
-                <label>Solver<select aria-label="Regression solver" className="block w-full bg-[#151E30] p-2" value={regressionMethod} onChange={e => setRegressionMethod(e.target.value)}><option value="ols">Ordinary least squares</option><option value="gd">Gradient descent</option></select></label>
+              <div className="p-3 rounded-xl bg-deep-space border border-white/5 space-y-1.5 text-xs font-mono">
+                <label>Solver<select aria-label="Regression solver" className="block w-full bg-obsidian p-2" value={regressionMethod} onChange={e => setRegressionMethod(e.target.value)}><option value="ols">Ordinary least squares</option><option value="gd">Gradient descent</option></select></label>
                 {regressionMethod === 'gd' && <label>Learning rate<input aria-label="Regression learning rate" type="range" min="0.001" max="0.5" step="0.001" value={learningRate} onChange={e => setLearningRate(Number(e.target.value))} />{learningRate}</label>}
-                <div className="flex justify-between text-[#9EACC4]">
+                <div className="flex justify-between text-text-muted">
                   <span>Fitted Slope (w):</span>
-                  <span className="text-[#46D7F2] font-bold">{modelResult?.slope ?? 'Not fitted'}</span>
+                  <span className="text-plasma-cyan font-bold">{modelResult?.slope ?? 'Not fitted'}</span>
                 </div>
-                <div className="flex justify-between text-[#9EACC4]">
+                <div className="flex justify-between text-text-muted">
                   <span>Intercept (b):</span>
                   <span className="text-white font-bold">{modelResult?.intercept ?? 'Not fitted'}</span>
                 </div>
-                <div className="flex justify-between text-[#9EACC4]">
+                <div className="flex justify-between text-text-muted">
                   <span>Formula:</span>
-                  <span className="text-[#3CD5AA]">{modelResult?.slope != null ? `y = ${modelResult.slope}x + ${modelResult.intercept}` : 'Run the model to fit a line'}</span>
+                  <span className="text-quantum-mint">{modelResult?.slope != null ? `y = ${modelResult.slope}x + ${modelResult.intercept}` : 'Run the model to fit a line'}</span>
                 </div>
               </div>
             )}
@@ -638,8 +638,8 @@ export default function PlaygroundShell() {
               <>
                 <div>
                   <div className="flex justify-between text-xs mb-1">
-                    <span className="text-[#9EACC4]">Neighbors (k)</span>
-                    <span className="font-mono text-[#46D7F2] text-xs">{knnK}</span>
+                    <span className="text-text-muted">Neighbors (k)</span>
+                    <span className="font-mono text-plasma-cyan text-xs">{knnK}</span>
                   </div>
                   <input
                     type="range"
@@ -651,19 +651,19 @@ export default function PlaygroundShell() {
                       setKnnK(Number(e.target.value));
                       setIsStale(true);
                     }}
-                    className="w-full h-1.5 bg-[#202B43] rounded-lg appearance-none cursor-pointer accent-[#46D7F2]"
+                    className="w-full h-1.5 bg-surface-elevated rounded-lg appearance-none cursor-pointer accent-plasma-cyan"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs text-[#9EACC4]">Distance Metric</label>
+                  <label className="text-xs text-text-muted">Distance Metric</label>
                   <select
                     value={knnMetric}
                     onChange={(e) => {
                       setKnnMetric(e.target.value);
                       setIsStale(true);
                     }}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-[#080D18] border border-white/10 text-xs text-white"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-deep-space border border-white/10 text-xs text-white"
                   >
                     <option value="euclidean">Euclidean (L2 Norm)</option>
                     <option value="manhattan">Manhattan (L1 Norm)</option>
@@ -671,7 +671,7 @@ export default function PlaygroundShell() {
                 </div>
 
                 <div className="flex items-center justify-between pt-1">
-                  <span className="text-xs text-[#9EACC4]">Distance Weighting</span>
+                  <span className="text-xs text-text-muted">Distance Weighting</span>
                   <input
                     type="checkbox"
                     checked={knnWeighted}
@@ -679,7 +679,7 @@ export default function PlaygroundShell() {
                       setKnnWeighted(e.target.checked);
                       setIsStale(true);
                     }}
-                    className="w-4 h-4 accent-[#46D7F2] rounded cursor-pointer"
+                    className="w-4 h-4 accent-plasma-cyan rounded cursor-pointer"
                   />
                 </div>
               </>
@@ -689,8 +689,8 @@ export default function PlaygroundShell() {
               <>
                 <div>
                   <div className="flex justify-between text-xs mb-1">
-                    <span className="text-[#9EACC4]">Clusters (k)</span>
-                    <span className="font-mono text-[#3CD5AA] text-xs">{kMeansClusters}</span>
+                    <span className="text-text-muted">Clusters (k)</span>
+                    <span className="font-mono text-quantum-mint text-xs">{kMeansClusters}</span>
                   </div>
                   <input
                     type="range"
@@ -704,7 +704,7 @@ export default function PlaygroundShell() {
                       setKCentroids(initC);
                       setIsStale(true);
                     }}
-                    className="w-full h-1.5 bg-[#202B43] rounded-lg appearance-none cursor-pointer accent-[#3CD5AA]"
+                    className="w-full h-1.5 bg-surface-elevated rounded-lg appearance-none cursor-pointer accent-quantum-mint"
                   />
                 </div>
 
@@ -713,12 +713,12 @@ export default function PlaygroundShell() {
                     onClick={handleStepKMeans}
                     className="py-2 px-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all"
                   >
-                    <StepForward className="w-3.5 h-3.5 text-[#46D7F2]" />
+                    <StepForward className="w-3.5 h-3.5 text-plasma-cyan" />
                     <span>Step Iteration</span>
                   </button>
                   <button
                     onClick={executeSolver}
-                    className="py-2 px-3 rounded-xl bg-[#3CD5AA]/15 hover:bg-[#3CD5AA]/25 border border-[#3CD5AA]/30 text-xs font-semibold text-[#3CD5AA] flex items-center justify-center gap-1.5 transition-all"
+                    className="py-2 px-3 rounded-xl bg-quantum-mint/15 hover:bg-quantum-mint/25 border border-quantum-mint/30 text-xs font-semibold text-quantum-mint flex items-center justify-center gap-1.5 transition-all"
                   >
                     <FastForward className="w-3.5 h-3.5" />
                     <span>Converge</span>
@@ -731,35 +731,35 @@ export default function PlaygroundShell() {
           {/* Action Button */}
           <button
             onClick={executeSolver}
-            className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#46D7F2] to-[#3CD5AA] hover:opacity-95 text-[#080D18] font-bold text-xs flex items-center justify-center gap-2 shadow-glow-cyan transition-all"
+            className="w-full py-2.5 rounded-xl bg-gradient-to-r from-plasma-cyan to-quantum-mint hover:opacity-95 text-ink-on-accent font-bold text-xs flex items-center justify-center gap-2 shadow-glow-cyan transition-all"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
             <span>Recalculate Model Boundary</span>
           </button>
 
           {/* Model Mathematical Formulation Card */}
-          <div className="p-3 rounded-xl bg-[#0D1422] border border-white/5 space-y-1.5">
+          <div className="p-3 rounded-xl bg-surface-dark border border-white/5 space-y-1.5">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
-              <Info className="w-3.5 h-3.5 text-[#46D7F2]" />
+              <Info className="w-3.5 h-3.5 text-plasma-cyan" />
               <span>Scientific Formulation</span>
             </div>
             {selectedAlgorithm === 'Logistic Regression' && (
-              <p className="text-[11px] text-[#9EACC4] leading-relaxed">
-                Computes non-linear probability via Sigmoid. Decision boundary line exists where <code className="text-[#46D7F2]">w₁x₁ + w₂x₂ + b = 0</code>.
+              <p className="text-[11px] text-text-muted leading-relaxed">
+                Computes non-linear probability via Sigmoid. Decision boundary line exists where <code className="text-plasma-cyan">w₁x₁ + w₂x₂ + b = 0</code>.
               </p>
             )}
             {selectedAlgorithm === 'Linear Regression' && (
-              <p className="text-[11px] text-[#9EACC4] leading-relaxed">
+              <p className="text-[11px] text-text-muted leading-relaxed">
                 Minimizes sum of squared residuals via analytical closed-form Ordinary Least Squares.
               </p>
             )}
             {selectedAlgorithm === 'K-Nearest Neighbors (KNN)' && (
-              <p className="text-[11px] text-[#9EACC4] leading-relaxed">
+              <p className="text-[11px] text-text-muted leading-relaxed">
                 Non-parametric local voting based on top-{knnK} nearest coordinate distances. Click canvas with "Inspect" to cast voting rays.
               </p>
             )}
             {selectedAlgorithm === 'K-Means Clustering' && (
-              <p className="text-[11px] text-[#9EACC4] leading-relaxed">
+              <p className="text-[11px] text-text-muted leading-relaxed">
                 Iteratively updates Voronoi partition centers by minimizing within-cluster inertia sum of squares. Drag centroids to inspect cluster re-assignment!
               </p>
             )}
@@ -767,8 +767,8 @@ export default function PlaygroundShell() {
 
           {/* Guided View Insights */}
           {workspaceViewMode === 'guided' && (
-            <div className="p-3 rounded-xl bg-[#46D7F2]/10 border border-[#46D7F2]/20 text-xs text-[#9EACC4] space-y-1 font-mono">
-              <span className="font-semibold text-[#46D7F2] block">Guided Algorithm Insight</span>
+            <div className="p-3 rounded-xl bg-plasma-cyan/10 border border-plasma-cyan/20 text-xs text-text-muted space-y-1 font-mono">
+              <span className="font-semibold text-plasma-cyan block">Guided Algorithm Insight</span>
               <p className="text-[11px] leading-relaxed">
                 {selectedAlgorithm === 'Logistic Regression' && 'Draw points or adjust noise to see how the linear boundary separates the classes.'}
                 {selectedAlgorithm === 'Linear Regression' && 'Add or move points to observe how the best-fitting slope and intercept adapt.'}
@@ -786,7 +786,7 @@ export default function PlaygroundShell() {
 
       {/* Bottom: Analysis & Metrics Dock */}
       <footer
-        className={`bg-[#0D1422] border-t border-white/10 transition-all duration-300 flex flex-col flex-shrink-0 ${
+        className={`bg-surface-dark border-t border-white/10 transition-all duration-300 flex flex-col flex-shrink-0 ${
           bottomDockCollapsed ? 'h-9' : 'h-52'
         }`}
       >
@@ -794,30 +794,30 @@ export default function PlaygroundShell() {
           onClick={() => setBottomDockCollapsed(value => !value)}
           aria-expanded={!bottomDockCollapsed}
           aria-label={bottomDockCollapsed ? 'Expand Playground analysis' : 'Collapse Playground analysis'}
-          className="w-full min-h-9 px-4 bg-[#151E30]/70 flex items-center justify-between text-left cursor-pointer border-b border-white/5 hover:bg-[#151E30]"
+          className="w-full min-h-9 px-4 bg-obsidian/70 flex items-center justify-between text-left cursor-pointer border-b border-white/5 hover:bg-obsidian"
         >
           <div className="flex items-center gap-3">
             <span className="text-xs font-mono font-semibold text-white flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#3CD5AA]" />
+              <span className="w-2 h-2 rounded-full bg-quantum-mint" />
               Empirical Metrics Timeline & Error Analysis
             </span>
           </div>
-          <span aria-hidden="true" className="text-[#9EACC4]">
+          <span aria-hidden="true" className="text-text-muted">
             {bottomDockCollapsed ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </span>
         </button>
 
-        {!bottomDockCollapsed && (isStale ? <p role="status" className="p-4 text-sm text-[#9EACC4]">No current measurements. Run the model to evaluate these inputs.</p> : (
+        {!bottomDockCollapsed && (isStale ? <p role="status" className="p-4 text-sm text-text-muted">No current measurements. Run the model to evaluate these inputs.</p> : (
           <div className="flex-1 p-4 grid grid-cols-1 md:grid-cols-3 gap-4 overflow-hidden">
 
             {/* Metric 1: Loss or Residuals */}
-            <div className="p-3 rounded-xl bg-[#151E30] border border-white/5 flex flex-col justify-between">
+            <div className="p-3 rounded-xl bg-obsidian border border-white/5 flex flex-col justify-between">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-[#9EACC4]">
+                <span className="text-text-muted">
                   {selectedAlgorithm === 'Linear Regression' ? 'Mean Squared Error (MSE)' :
                    selectedAlgorithm === 'K-Means Clustering' ? 'Cluster Inertia (J)' : 'Binary Cross-Entropy Loss'}
                 </span>
-                <span className="font-mono text-[#46D7F2] font-semibold">
+                <span className="font-mono text-plasma-cyan font-semibold">
                   {selectedAlgorithm === 'Linear Regression' ? modelResult?.mse :
                    selectedAlgorithm === 'K-Means Clustering' ? (modelResult?.finalInertia || modelResult?.inertia || 0) :
                    modelResult?.history?.[modelResult.history.length - 1]?.trainLoss ?? 'Not available'}
@@ -850,14 +850,14 @@ export default function PlaygroundShell() {
                   modelResult.history.slice(-10).map((h, idx) => (
                     <div key={idx} className="flex-1 h-full flex flex-col items-center justify-end gap-1">
                       <div
-                        className="w-full bg-[#46D7F2]/60 hover:bg-[#46D7F2] rounded-t transition-all"
+                        className="w-full bg-plasma-cyan/60 hover:bg-plasma-cyan rounded-t transition-all"
                         style={{ height: `${(h.trainLoss ?? h.inertia ?? 0) / Math.max(1e-9,...modelResult.history.map(row => row.trainLoss ?? row.inertia ?? 0)) * 80}%` }}
                       />
-                      <span className="text-[9px] font-mono text-[#9EACC4]">{h.epoch || h.iteration || idx}</span>
+                      <span className="text-[9px] font-mono text-text-muted">{h.epoch || h.iteration || idx}</span>
                     </div>
                   ))
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xs font-mono text-[#9EACC4]">
+                  <div className="w-full h-full flex items-center justify-center text-xs font-mono text-text-muted">
                     {selectedAlgorithm === 'Linear Regression' ? 'Closed-form solution computed' : 'No iterative history for this result'}
                   </div>
                 )}
@@ -865,13 +865,13 @@ export default function PlaygroundShell() {
             </div>
 
             {/* Metric 2: Accuracy / R2 / Iterations */}
-            <div className="p-3 rounded-xl bg-[#151E30] border border-white/5 flex flex-col justify-between">
+            <div className="p-3 rounded-xl bg-obsidian border border-white/5 flex flex-col justify-between">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-[#9EACC4]">
+                <span className="text-text-muted">
                   {selectedAlgorithm === 'Linear Regression' ? 'Goodness of Fit (R² Score)' :
                    selectedAlgorithm === 'K-Means Clustering' ? 'Completed Iterations' : 'Test Set Accuracy'}
                 </span>
-                <span className="font-mono text-[#3CD5AA] font-semibold">
+                <span className="font-mono text-quantum-mint font-semibold">
                   {selectedAlgorithm === 'Linear Regression' ? `${((modelResult?.r2 || 0) * 100).toFixed(1)}%` :
                    selectedAlgorithm === 'K-Means Clustering' ? `${kMeansIteration} steps` :
                    `${((modelResult?.testAccuracy || 0) * 100).toFixed(1)}%`}
@@ -881,42 +881,42 @@ export default function PlaygroundShell() {
               {selectedAlgorithm === 'Logistic Regression' && modelResult?.confusion ? (
                 /* Confusion Matrix Display */
                 <div className="grid grid-cols-2 gap-2 text-center text-xs font-mono py-1">
-                  <div className="p-1.5 rounded bg-[#46D7F2]/10 border border-[#46D7F2]/20">
-                    <span className="text-[9px] text-[#9EACC4] block">True 0 (TN)</span>
+                  <div className="p-1.5 rounded bg-plasma-cyan/10 border border-plasma-cyan/20">
+                    <span className="text-[9px] text-text-muted block">True 0 (TN)</span>
                     <strong className="text-white">{modelResult.confusion.tn}</strong>
                   </div>
                   <div className="p-1.5 rounded bg-red-500/10 border border-red-500/20">
-                    <span className="text-[9px] text-[#9EACC4] block">False 1 (FP)</span>
+                    <span className="text-[9px] text-text-muted block">False 1 (FP)</span>
                     <strong className="text-red-400">{modelResult.confusion.fp}</strong>
                   </div>
                   <div className="p-1.5 rounded bg-red-500/10 border border-red-500/20">
-                    <span className="text-[9px] text-[#9EACC4] block">False 0 (FN)</span>
+                    <span className="text-[9px] text-text-muted block">False 0 (FN)</span>
                     <strong className="text-red-400">{modelResult.confusion.fn}</strong>
                   </div>
-                  <div className="p-1.5 rounded bg-[#A78BFA]/10 border border-[#A78BFA]/20">
-                    <span className="text-[9px] text-[#9EACC4] block">True 1 (TP)</span>
+                  <div className="p-1.5 rounded bg-neural-violet/10 border border-neural-violet/20">
+                    <span className="text-[9px] text-text-muted block">True 1 (TP)</span>
                     <strong className="text-white">{modelResult.confusion.tp}</strong>
                   </div>
                 </div>
               ) : (
                 <div className="p-2 rounded bg-black/30 text-xs font-mono space-y-1">
-                  <div className="flex justify-between text-[#9EACC4]">
+                  <div className="flex justify-between text-text-muted">
                     <span>Sample Size:</span>
                     <span className="text-white">{allPoints.length} points</span>
                   </div>
-                  <div className="flex justify-between text-[#9EACC4]">
+                  <div className="flex justify-between text-text-muted">
                     <span>Evaluation Protocol:</span>
-                    <span className="text-[#3CD5AA]">{selectedAlgorithm === 'K-Means Clustering' ? 'Full dataset clustering' : 'Train/Test Isolated'}</span>
+                    <span className="text-quantum-mint">{selectedAlgorithm === 'K-Means Clustering' ? 'Full dataset clustering' : 'Train/Test Isolated'}</span>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Metric 3: Scientific Interpretation */}
-            <div className="p-3.5 rounded-xl bg-[#151E30] border border-white/5 flex flex-col justify-between">
+            <div className="p-3.5 rounded-xl bg-obsidian border border-white/5 flex flex-col justify-between">
               <div>
                 <span className="text-xs font-semibold text-white">Generalization Analysis</span>
-                <p className="mt-1 text-xs text-[#9EACC4] leading-relaxed">
+                <p className="mt-1 text-xs text-text-muted leading-relaxed">
                   {selectedPreset === 'XOR Problem' && selectedAlgorithm === 'Logistic Regression'
                     ? 'Expected Failure: The single linear hyperplane fails to separate the diagonal XOR classes, proving the necessity of multi-layer architectures.'
                     : selectedAlgorithm === 'Linear Regression'
@@ -924,7 +924,7 @@ export default function PlaygroundShell() {
                     : isStale ? 'Inputs changed. Run the model to evaluate the current configuration.' : 'Inspect the measured result; training performance alone does not establish generalization.'}
                 </p>
               </div>
-              <div className="flex justify-between items-center pt-2 border-t border-white/5 text-[11px] font-mono text-[#3CD5AA]">
+              <div className="flex justify-between items-center pt-2 border-t border-white/5 text-[11px] font-mono text-quantum-mint">
                 <span>Status: {isStale ? 'Awaiting calculation' : 'Computed locally'}</span>
                 <span>Deterministic Seed: #42</span>
               </div>

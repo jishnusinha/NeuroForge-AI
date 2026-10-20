@@ -62,10 +62,10 @@ export default function DatasetPreparation({ initialData = null, onParsed }) {
     }
   };
 
-  return <section aria-label="CSV preparation" className="space-y-4 rounded-xl border border-white/10 bg-[#151E30]/50 p-3 sm:p-4">
+  return <section aria-label="CSV preparation" className="space-y-4 rounded-xl border border-white/10 bg-obsidian/50 p-3 sm:p-4">
     <div className="space-y-1">
       <h3 className="text-lg font-semibold text-white">Visual preparation pipeline</h3>
-      <p className="text-xs leading-relaxed text-[#9EACC4]">
+      <p className="text-xs leading-relaxed text-text-muted">
         Import a CSV up to 2 MB and 2,000 rows, choose two numeric features and a 0/1 target, then inspect
         the real split and train-fitted transformations before launching either lab.
         Validation and test rows never contribute to imputer or scaler parameters.
@@ -74,7 +74,7 @@ export default function DatasetPreparation({ initialData = null, onParsed }) {
     <label className="block max-w-xl text-sm font-medium text-white">
       Upload CSV dataset
       <input aria-label="CSV file" type="file" accept=".csv,text/csv"
-        className="mt-2 block w-full max-w-xl rounded-lg border border-white/20 bg-[#0D1422] px-3 py-3 text-xs"
+        className="mt-2 block w-full max-w-xl rounded-lg border border-white/20 bg-surface-dark px-3 py-3 text-xs"
         onChange={async event => {
           try {
             const file = event.target.files[0];
@@ -90,42 +90,42 @@ export default function DatasetPreparation({ initialData = null, onParsed }) {
     </label>
 
     {data && <>
-      <p className="text-sm text-[#9EACC4]">{data.rowCount} source rows · {data.headers.length} original columns · All data remains local</p>
+      <p className="text-sm text-text-muted">{data.rowCount} source rows · {data.headers.length} original columns · All data remains local</p>
       <div className="grid gap-3 sm:grid-cols-3" role="group" aria-label="Feature and target selection">
-        {['x', 'y', 'target'].map(key => <label key={key} className="block text-xs font-semibold uppercase tracking-wide text-[#9EACC4]">
+        {['x', 'y', 'target'].map(key => <label key={key} className="block text-xs font-semibold uppercase tracking-wide text-text-muted">
           {key === 'target' ? 'Target (binary)' : 'Feature ' + key.toUpperCase()}
           <select aria-label={'CSV ' + key} value={columns[key]} onChange={event => {
             setColumns(previous => ({...previous, [key]:event.target.value}));
             setError('');
-          }} className="mt-1.5 block min-h-11 w-full min-w-0 rounded-lg border border-white/20 bg-[#0D1422] px-2 text-sm text-white">
+          }} className="mt-1.5 block min-h-11 w-full min-w-0 rounded-lg border border-white/20 bg-surface-dark px-2 text-sm text-white">
             {!columns[key] && <option value="">Select a column</option>}
             {data.headers.map(header => <option key={header} value={header}>{header}</option>)}
           </select>
         </label>)}
       </div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" role="group" aria-label="Pipeline settings">
-        <label className="text-xs font-semibold text-[#9EACC4]">Missing values
+        <label className="text-xs font-semibold text-text-muted">Missing values
           <select aria-label="CSV imputation" value={imputation} onChange={event => {setImputation(event.target.value);setError('');}}
-            className="mt-1.5 block min-h-11 w-full rounded-lg border border-white/20 bg-[#0D1422] px-2 text-sm text-white">
+            className="mt-1.5 block min-h-11 w-full rounded-lg border border-white/20 bg-surface-dark px-2 text-sm text-white">
             <option value="mean">Training mean</option><option value="median">Training median</option><option value="none">No imputation</option>
           </select>
         </label>
-        <label className="text-xs font-semibold text-[#9EACC4]">Feature scaling
+        <label className="text-xs font-semibold text-text-muted">Feature scaling
           <select aria-label="CSV scaling" value={scaling} onChange={event => {setScaling(event.target.value);setError('');}}
-            className="mt-1.5 block min-h-11 w-full rounded-lg border border-white/20 bg-[#0D1422] px-2 text-sm text-white">
+            className="mt-1.5 block min-h-11 w-full rounded-lg border border-white/20 bg-surface-dark px-2 text-sm text-white">
             <option value="standardize">Standardize</option><option value="minmax">Min-max</option><option value="none">None</option>
           </select>
         </label>
-        <label className="text-xs font-semibold text-[#9EACC4]">Train / validation / test
+        <label className="text-xs font-semibold text-text-muted">Train / validation / test
           <select aria-label="CSV split preset" value={splitPreset} onChange={event => {setSplitPreset(event.target.value);setError('');}}
-            className="mt-1.5 block min-h-11 w-full rounded-lg border border-white/20 bg-[#0D1422] px-2 text-sm text-white">
+            className="mt-1.5 block min-h-11 w-full rounded-lg border border-white/20 bg-surface-dark px-2 text-sm text-white">
             {Object.keys(SPLIT_PRESETS).map(preset => <option key={preset}>{preset}</option>)}
           </select>
         </label>
-        <label className="text-xs font-semibold text-[#9EACC4]">Reproducible split seed
+        <label className="text-xs font-semibold text-text-muted">Reproducible split seed
           <input aria-label="CSV split seed" type="number" min="0" max="4294967295" step="1" value={seed}
             onChange={event => {setSeed(Number(event.target.value));setError('');}}
-            className="mt-1.5 block min-h-11 w-full rounded-lg border border-white/20 bg-[#0D1422] px-2 text-sm text-white"/>
+            className="mt-1.5 block min-h-11 w-full rounded-lg border border-white/20 bg-surface-dark px-2 text-sm text-white"/>
         </label>
       </div>
       <h4 className="text-sm font-semibold text-white">Pipeline graph</h4>
@@ -136,27 +136,27 @@ export default function DatasetPreparation({ initialData = null, onParsed }) {
           {id:'impute',title:'Missing values',detail:imputation},
           {id:'scale',title:'Scaling',detail:scaling},
           {id:'output',title:'Two-feature lab',detail:'Awaiting valid inputs'},
-        ]).map((stage, index) => <li key={stage.id} className="min-w-0 rounded-xl border border-cyan-400/20 bg-[#0D1422] p-3">
+        ]).map((stage, index) => <li key={stage.id} className="min-w-0 rounded-xl border border-cyan-400/20 bg-surface-dark p-3">
           <span className="font-mono text-[10px] text-cyan-300">STEP {index+1}/5</span>
           <p className="mt-1 text-sm font-semibold text-white">{stage.title}</p>
-          <p className="mt-1 break-words text-xs text-[#9EACC4]">{stage.detail}</p>
+          <p className="mt-1 break-words text-xs text-text-muted">{stage.detail}</p>
         </li>)}
       </ol>
       {result.issue && <p role="status" className="rounded-lg border border-amber-400/30 bg-amber-400/5 p-3 text-sm text-amber-200">
         Pipeline preview unavailable: {result.issue}
       </p>}
-      {result.plan && <div role="region" aria-label="Leakage-safe pipeline preview" className="space-y-3 rounded-xl border border-emerald-400/20 bg-[#0D1422] p-3 sm:p-4">
+      {result.plan && <div role="region" aria-label="Leakage-safe pipeline preview" className="space-y-3 rounded-xl border border-emerald-400/20 bg-surface-dark p-3 sm:p-4">
         <p className="text-sm font-semibold text-emerald-200">Pipeline ready · Train-only fitted statistics</p>
         <dl className="grid grid-cols-3 gap-2 text-center text-sm">
           {[['Train',result.plan.counts.train],['Validation',result.plan.counts.validation],['Test (held out)',result.plan.counts.test]].map(([label,value]) =>
-            <div key={label} className="rounded-lg border border-white/10 bg-[#151E30] p-2">
-              <dt className="text-[11px] text-[#9EACC4]">{label}</dt><dd className="font-semibold tabular-nums text-white">{value}</dd>
+            <div key={label} className="rounded-lg border border-white/10 bg-obsidian p-2">
+              <dt className="text-[11px] text-text-muted">{label}</dt><dd className="font-semibold tabular-nums text-white">{value}</dd>
             </div>)}
         </dl>
         <div role="region" aria-label="Training-only fitted parameters" tabIndex={0} className="overflow-x-auto rounded-lg border border-white/10">
           <table className="w-full min-w-[480px] text-left text-xs">
-            <caption className="p-3 text-left text-[#9EACC4]">Observed training features only — no validation or test statistics used</caption>
-            <thead className="bg-[#202B43]"><tr>
+            <caption className="p-3 text-left text-text-muted">Observed training features only — no validation or test statistics used</caption>
+            <thead className="bg-surface-elevated"><tr>
               {['Feature','Training observed','Train missing','Train mean','Train median','Imputation value'].map(label=><th scope="col" key={label} className="p-2">{label}</th>)}
             </tr></thead>
             <tbody>{Object.entries(result.plan.statistics).map(([key,value])=><tr key={key} className="border-t border-white/10">
@@ -170,8 +170,8 @@ export default function DatasetPreparation({ initialData = null, onParsed }) {
         </div>
         <div role="region" aria-label="Prepared row comparison" tabIndex={0} className="overflow-x-auto rounded-lg border border-white/10">
           <table className="w-full min-w-[600px] text-left text-xs">
-            <caption className="p-3 text-left text-[#9EACC4]">First {result.plan.previews.length} original and transformed rows, labeled by split. Evaluation remains held out from fitting.</caption>
-            <thead className="bg-[#202B43]"><tr>
+            <caption className="p-3 text-left text-text-muted">First {result.plan.previews.length} original and transformed rows, labeled by split. Evaluation remains held out from fitting.</caption>
+            <thead className="bg-surface-elevated"><tr>
               {['Source ID','Split','Original X','Original Y','Prepared X','Prepared Y'].map(label=><th scope="col" key={label} className="p-2">{label}</th>)}
             </tr></thead>
             <tbody>{result.plan.previews.map(row=><tr key={row.id} className="border-t border-white/10">
@@ -181,7 +181,7 @@ export default function DatasetPreparation({ initialData = null, onParsed }) {
             </tr>)}</tbody>
           </table>
         </div>
-        <p className="text-xs text-[#9EACC4]">Changing inputs, split, or steps creates a new deterministic preview. Prepared features are transformed using training-derived parameters; labels are never imputed. No model is trained until you open a lab.</p>
+        <p className="text-xs text-text-muted">Changing inputs, split, or steps creates a new deterministic preview. Prepared features are transformed using training-derived parameters; labels are never imputed. No model is trained until you open a lab.</p>
       </div>}
       <div className="flex flex-wrap items-center gap-3">
         <button type="button" className="min-h-11 rounded-xl bg-cyan-700 px-4 py-2 font-semibold text-white hover:bg-cyan-600"

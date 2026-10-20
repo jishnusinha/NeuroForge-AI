@@ -9,6 +9,7 @@ export function ThemeProvider({children}){
  useEffect(()=>{
   document.documentElement.dataset.theme=theme;
   document.documentElement.style.colorScheme=theme==='paper'?'light':'dark';
+  document.documentElement.classList.toggle('dark', theme !== 'paper');
   try{localStorage.setItem(THEME_STORAGE_KEY,theme);}catch{/* Storage may be disabled. */}
  },[theme]);
  return <ThemeContext.Provider value={{theme,setTheme}}>{children}</ThemeContext.Provider>;

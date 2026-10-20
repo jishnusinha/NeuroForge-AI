@@ -37,11 +37,11 @@ export default function DatasetsPage() {
   return <div className="p-6 space-y-5 max-w-6xl mx-auto w-full">
     <h2 className="text-2xl font-bold">Dataset Explorer & Microscope</h2>
     {isFeatureEnabled('anti_leakage_prep') && (
-      <section aria-label="Data Science Workbench" className="space-y-4 rounded-2xl border border-cyan-400/20 bg-[#0D1422] p-3 sm:p-5">
+      <section aria-label="Data Science Workbench" className="space-y-4 rounded-2xl border border-cyan-400/20 bg-surface-dark p-3 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 className="text-xl font-semibold text-white">Data Science Workbench</h3>
-            <p className="mt-1 max-w-2xl text-sm text-[#9EACC4]">Explore real CSV columns, missingness and relationships locally before preparing a leakage-safe model.</p>
+            <p className="mt-1 max-w-2xl text-sm text-text-muted">Explore real CSV columns, missingness and relationships locally before preparing a leakage-safe model.</p>
           </div>
           <button type="button" onClick={loadSampleForAnalysis}
             className="rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-4 py-2.5 text-sm font-semibold text-cyan-200 hover:bg-cyan-400/20">
@@ -56,10 +56,10 @@ export default function DatasetsPage() {
         <DataScienceWorkbench key={datasetRevision} dataset={exploredFile?.data} name={exploredFile?.name} />
       </section>
     )}
-    <label className="block text-sm">Search datasets<input aria-label="Search datasets" className="block p-2 bg-[#151E30] rounded w-full" value={query} onChange={e=>setQuery(e.target.value)} /></label>
+    <label className="block text-sm">Search datasets<input aria-label="Search datasets" className="block p-2 bg-obsidian rounded w-full" value={query} onChange={e=>setQuery(e.target.value)} /></label>
     <div className="flex flex-wrap gap-2">{Object.keys(presets).filter(n=>n.toLowerCase().includes(query.toLowerCase())).map(n=><button key={n} aria-pressed={name===n} onClick={()=>setName(n)} className={`p-2 rounded border ${name===n?'border-cyan-300':'border-white/10'}`}>{n}</button>)}</div>
     <div className="grid lg:grid-cols-[1fr_260px] gap-5">
-      <svg role="img" aria-label={`${name} with ${points.length} points; validation points are hollow`} viewBox="0 0 400 400" className="bg-[#151E30] rounded-xl w-full max-h-[500px]">
+      <svg role="img" aria-label={`${name} with ${points.length} points; validation points are hollow`} viewBox="0 0 400 400" className="bg-obsidian rounded-xl w-full max-h-[500px]">
         <line x1="200" y1="0" x2="200" y2="400" stroke="#9EACC4" opacity=".3"/><line x1="0" y1="200" x2="400" y2="200" stroke="#9EACC4" opacity=".3"/>
         {split.all.map(p=><circle key={p.id} cx={200+p.x/extent*180} cy={200-p.y/extent*180} r="3" stroke={colors[p.label]} fill={p.isTest?'none':colors[p.label]}><title>{`Class ${p.label}; x=${p.x.toFixed(2)}, y=${p.y.toFixed(2)}; ${p.isTest?'validation':'training'}`}</title></circle>)}
       </svg>

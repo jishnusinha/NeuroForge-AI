@@ -375,17 +375,17 @@ export default function StudioShell() {
       <div className="flex min-w-0 min-h-[620px] overflow-hidden">
 
         {/* Left: Architecture Presets & Layer Library (260px) */}
-        <aside className="w-[260px] bg-[#151E30] border-r border-white/10 flex flex-col p-4 overflow-y-auto space-y-4 flex-shrink-0">
+        <aside className="w-[260px] bg-obsidian border-r border-white/10 flex flex-col p-4 overflow-y-auto space-y-4 flex-shrink-0">
           <div>
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[#A78BFA] font-semibold">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-neural-violet font-semibold">
               01 • Architecture Library
             </span>
             <h3 className="text-sm font-semibold text-white mt-0.5">Topology & Presets</h3>
           </div>
 
           {workspaceViewMode === 'guided' && (
-            <div className="p-2.5 rounded-xl bg-[#46D7F2]/10 border border-[#46D7F2]/25 text-xs text-[#9EACC4] space-y-1 font-mono">
-              <span className="font-semibold text-[#46D7F2] block">Guided Exploration Tip</span>
+            <div className="p-2.5 rounded-xl bg-plasma-cyan/10 border border-plasma-cyan/25 text-xs text-text-muted space-y-1 font-mono">
+              <span className="font-semibold text-plasma-cyan block">Guided Exploration Tip</span>
               <p className="text-[11px] leading-relaxed">
                 Compare <strong className="text-white">XOR Linear Baseline</strong> with <strong className="text-white">XOR Non-linear</strong> to observe how hidden neurons create non-linear boundaries.
               </p>
@@ -395,7 +395,7 @@ export default function StudioShell() {
 
           {/* Standard Presets */}
           <div className="space-y-1">
-            <label className="text-xs text-[#9EACC4] font-medium">Standard Presets</label>
+            <label className="text-xs text-text-muted font-medium">Standard Presets</label>
             {[
               { id: 'XOR Non-linear', desc: 'Hidden layer: 2-4-1; inspect measured results' },
               { id: 'XOR Linear Baseline (Fails)', desc: 'Linear baseline: cannot perfectly separate XOR' },
@@ -408,7 +408,7 @@ export default function StudioShell() {
                 className="w-full text-left p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 text-xs text-white transition-colors"
               >
                 <div className="font-semibold truncate">{p.id}</div>
-                <div className="text-[10px] text-[#9EACC4] font-mono mt-0.5">{p.desc}</div>
+                <div className="text-[10px] text-text-muted font-mono mt-0.5">{p.desc}</div>
               </button>
             ))}
           </div>
@@ -416,11 +416,11 @@ export default function StudioShell() {
           {/* Add Layer Component */}
           <div className="flex gap-2 text-xs"><button disabled={isTraining || !canUndoLayers} onClick={undoLayers} className="p-2 bg-white/10 rounded disabled:opacity-30">Undo architecture</button><button disabled={isTraining || !canRedoLayers} onClick={redoLayers} className="p-2 bg-white/10 rounded disabled:opacity-30">Redo</button></div>
           <div className="pt-2 border-t border-white/5 space-y-2">
-            <label className="text-xs text-[#9EACC4] font-medium">Layer Manipulation</label>
+            <label className="text-xs text-text-muted font-medium">Layer Manipulation</label>
             <button
               disabled={isTraining}
               onClick={handleAddLayer}
-              className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-[#A78BFA]/15 hover:bg-[#A78BFA]/25 border border-[#A78BFA]/30 text-xs font-semibold text-[#A78BFA] transition-all"
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-neural-violet/15 hover:bg-neural-violet/25 border border-neural-violet/30 text-xs font-semibold text-neural-violet transition-all"
             >
               <Plus className="w-4 h-4" />
               <span>Add Dense Hidden Layer</span>
@@ -428,16 +428,16 @@ export default function StudioShell() {
           </div>
 
           {/* Interactive Probe Coordinate Input */}
-          <div className="p-3 rounded-xl bg-[#080D18] border border-white/5 space-y-2">
-            <div className="flex items-center justify-between text-xs font-mono text-[#9EACC4]">
+          <div className="p-3 rounded-xl bg-deep-space border border-white/5 space-y-2">
+            <div className="flex items-center justify-between text-xs font-mono text-text-muted">
               <span className="flex items-center gap-1.5 text-white font-medium">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-[#46D7F2]" />
+                <SlidersHorizontal className="w-3.5 h-3.5 text-plasma-cyan" />
                 Probe Input Sample
               </span>
-              <span className="text-[#46D7F2]">({probeInput[0]}, {probeInput[1]})</span>
+              <span className="text-plasma-cyan">({probeInput[0]}, {probeInput[1]})</span>
             </div>
             <div>
-              <div className="flex justify-between text-[10px] font-mono text-[#9EACC4] mb-0.5">
+              <div className="flex justify-between text-[10px] font-mono text-text-muted mb-0.5">
                 <span>x₁ Feature</span>
                 <span>{probeInput[0]}</span>
               </div>
@@ -449,11 +449,11 @@ export default function StudioShell() {
                 step="0.1"
                 value={probeInput[0]}
                 onChange={(e) => setProbeInput([Number(e.target.value), probeInput[1]])}
-                className="w-full h-1 bg-[#202B43] rounded appearance-none cursor-pointer accent-[#46D7F2]"
+                className="w-full h-1 bg-surface-elevated rounded appearance-none cursor-pointer accent-plasma-cyan"
               />
             </div>
             <div>
-              <div className="flex justify-between text-[10px] font-mono text-[#9EACC4] mb-0.5">
+              <div className="flex justify-between text-[10px] font-mono text-text-muted mb-0.5">
                 <span>x₂ Feature</span>
                 <span>{probeInput[1]}</span>
               </div>
@@ -465,42 +465,42 @@ export default function StudioShell() {
                 step="0.1"
                 value={probeInput[1]}
                 onChange={(e) => setProbeInput([probeInput[0], Number(e.target.value)])}
-                className="w-full h-1 bg-[#202B43] rounded appearance-none cursor-pointer accent-[#A78BFA]"
+                className="w-full h-1 bg-surface-elevated rounded appearance-none cursor-pointer accent-neural-violet"
               />
             </div>
           </div>
 
           {/* Topology Summary */}
-          <div className="p-3 rounded-xl bg-[#080D18] border border-white/5 text-[11px] font-mono space-y-1">
-            <div className="flex justify-between text-[#9EACC4]">
+          <div className="p-3 rounded-xl bg-deep-space border border-white/5 text-[11px] font-mono space-y-1">
+            <div className="flex justify-between text-text-muted">
               <span>Layers:</span>
               <span className="text-white font-bold">{layers.length} Total</span>
             </div>
-            <div className="flex justify-between text-[#9EACC4]">
+            <div className="flex justify-between text-text-muted">
               <span>Dataset:</span>
-              <span className="text-[#46D7F2]">{selectedDatasetName}</span>
+              <span className="text-plasma-cyan">{selectedDatasetName}</span>
             </div>
-            <div className="flex justify-between text-[#9EACC4]">
+            <div className="flex justify-between text-text-muted">
               <span>Runtime Engine:</span>
-              <span className="text-[#3CD5AA]">TensorFlow.js (Client)</span>
+              <span className="text-quantum-mint">TensorFlow.js (Client)</span>
             </div>
           </div>
         </aside>
 
         {/* Center: Visual Network Canvas */}
-        <section className="flex-1 min-w-0 flex flex-col bg-[#080D18] relative overflow-hidden">
+        <section className="flex-1 min-w-0 flex flex-col bg-deep-space relative overflow-hidden">
 
           {/* Visual Mode Toolbar */}
-          <div className="min-h-12 border-b border-white/10 px-3 sm:px-6 py-2 bg-[#0D1422] flex flex-wrap gap-2 items-center justify-between">
+          <div className="min-h-12 border-b border-white/10 px-3 sm:px-6 py-2 bg-surface-dark flex flex-wrap gap-2 items-center justify-between">
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <span className="text-xs font-mono text-[#9EACC4]">Visual Mode:</span>
-              <div className="flex rounded-lg bg-[#151E30] p-0.5 border border-white/10">
+              <span className="text-xs font-mono text-text-muted">Visual Mode:</span>
+              <div className="flex rounded-lg bg-obsidian p-0.5 border border-white/10">
                 <button
                   onClick={() => setViewMode('architecture')}
                   className={`px-2 sm:px-3 py-2 sm:py-1 rounded-md text-[11px] sm:text-xs font-medium transition-all ${
                     viewMode === 'architecture'
-                      ? 'bg-[#A78BFA] text-[#080D18] font-bold shadow-sm'
-                      : 'text-[#9EACC4] hover:text-white'
+                      ? 'bg-neural-violet text-ink-on-accent font-bold shadow-sm'
+                      : 'text-text-muted hover:text-white'
                   }`}
                 >
                   Architecture Blocks
@@ -509,8 +509,8 @@ export default function StudioShell() {
                   onClick={() => setViewMode('neurons')}
                   className={`px-2 sm:px-3 py-2 sm:py-1 rounded-md text-[11px] sm:text-xs font-medium transition-all ${
                     viewMode === 'neurons'
-                      ? 'bg-[#46D7F2] text-[#080D18] font-bold shadow-sm'
-                      : 'text-[#9EACC4] hover:text-white'
+                      ? 'bg-plasma-cyan text-ink-on-accent font-bold shadow-sm'
+                      : 'text-text-muted hover:text-white'
                   }`}
                 >
                   Neuron & Weight Links
@@ -519,8 +519,8 @@ export default function StudioShell() {
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="text-xs font-mono text-[#3CD5AA] flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${isTraining ? 'bg-[#3CD5AA] animate-ping' : 'bg-[#3CD5AA]'}`} />
+              <span className="text-xs font-mono text-quantum-mint flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${isTraining ? 'bg-quantum-mint animate-ping' : 'bg-quantum-mint'}`} />
                 Epoch: {currentEpoch}/{totalEpochs}
               </span>
             </div>
@@ -550,9 +550,9 @@ export default function StudioShell() {
         </section>
 
         {/* Right: Neuron Inspector & Training Controls (320px) */}
-        <aside className="w-[320px] bg-[#151E30] border-l border-white/10 flex flex-col p-4 overflow-y-auto space-y-4 flex-shrink-0">
+        <aside className="w-[320px] bg-obsidian border-l border-white/10 flex flex-col p-4 overflow-y-auto space-y-4 flex-shrink-0">
           <div>
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[#46D7F2] font-semibold">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-plasma-cyan font-semibold">
               02 • Neuron & Layer Inspector
             </span>
             <h3 className="text-sm font-semibold text-white mt-0.5">
@@ -561,12 +561,12 @@ export default function StudioShell() {
           </div>
 
           {/* Layer Settings */}
-          <label className="text-xs text-[#9EACC4]">Select layer<select aria-label="Selected layer" value={selectedLayerIndex} onChange={e => { setSelectedLayerIndex(Number(e.target.value)); setSelectedNeuronIndex(0); }} className="w-full bg-[#080D18] p-2 rounded">{layers.map((layer,index) => <option key={layer.id} value={index}>{index + 1}. {layer.type} ({layer.units} units)</option>)}</select></label>
-          <label className="text-xs text-[#9EACC4]">Inspect neuron<input aria-label="Selected neuron" type="number" min="1" max={selectedLayer.units} value={selectedNeuronIndex+1} onChange={e => setSelectedNeuronIndex(Math.max(0, Math.min(selectedLayer.units-1, Number(e.target.value)-1 || 0)))} className="w-full bg-[#080D18] p-2 rounded" /></label>
+          <label className="text-xs text-text-muted">Select layer<select aria-label="Selected layer" value={selectedLayerIndex} onChange={e => { setSelectedLayerIndex(Number(e.target.value)); setSelectedNeuronIndex(0); }} className="w-full bg-deep-space p-2 rounded">{layers.map((layer,index) => <option key={layer.id} value={index}>{index + 1}. {layer.type} ({layer.units} units)</option>)}</select></label>
+          <label className="text-xs text-text-muted">Inspect neuron<input aria-label="Selected neuron" type="number" min="1" max={selectedLayer.units} value={selectedNeuronIndex+1} onChange={e => setSelectedNeuronIndex(Math.max(0, Math.min(selectedLayer.units-1, Number(e.target.value)-1 || 0)))} className="w-full bg-deep-space p-2 rounded" /></label>
           <div className="space-y-3.5">
             <div>
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-[#9EACC4]">Neuron Units</span>
+                <span className="text-text-muted">Neuron Units</span>
                 <span className="font-mono text-white text-xs">{selectedLayer.units}</span>
               </div>
               <input
@@ -582,12 +582,12 @@ export default function StudioShell() {
                   setLayers(updated);
                   setExperimentStatus('Inputs changed');
                 }}
-                className="w-full h-1.5 bg-[#202B43] rounded-lg appearance-none cursor-pointer accent-[#46D7F2] disabled:opacity-30"
+                className="w-full h-1.5 bg-surface-elevated rounded-lg appearance-none cursor-pointer accent-plasma-cyan disabled:opacity-30"
               />
             </div>
 
             <div>
-              <label className="text-xs text-[#9EACC4] font-medium block mb-1">Activation Function</label>
+              <label className="text-xs text-text-muted font-medium block mb-1">Activation Function</label>
               <select
                 disabled={isTraining || selectedLayer.type === 'Input' || selectedLayer.type === 'Output'}
                 value={selectedLayer.activation}
@@ -598,7 +598,7 @@ export default function StudioShell() {
                   setLayers(updated);
                   setExperimentStatus('Inputs changed');
                 }}
-                className="w-full px-2.5 py-1.5 rounded-xl bg-[#080D18] border border-white/10 text-xs text-white focus:outline-none focus:border-[#46D7F2] disabled:opacity-30"
+                className="w-full px-2.5 py-1.5 rounded-xl bg-deep-space border border-white/10 text-xs text-white focus:outline-none focus:border-plasma-cyan disabled:opacity-30"
               >
                 <option value="ReLU">Rectified Linear Unit (ReLU)</option>
                 <option value="Sigmoid">Logistic Sigmoid (σ)</option>
@@ -611,18 +611,18 @@ export default function StudioShell() {
           {/* Training Control Buttons */}
           <label>Model seed<input aria-label="Model seed" type="number" min="0" max="4294967295" disabled={isTraining} value={modelSeed} onChange={event=>setModelSeed(Math.max(0,Math.min(4294967295,Math.floor(Number(event.target.value)||0))))}/></label>
           <label><input aria-label="Early stopping" type="checkbox" disabled={isTraining} checked={earlyStopping.enabled} onChange={event=>{setEarlyStopping({...earlyStopping,enabled:event.target.checked});setActiveRun(null);setExperimentStatus('Inputs changed');}}/>Stop after 5 validation epochs without improvement (final weights)</label>
-          <label className="text-xs text-[#9EACC4]">Optimizer<select aria-label="Optimizer" disabled={isTraining} value={optimizer} onChange={e => setOptimizer(e.target.value)} className="w-full p-2 bg-[#080D18] rounded"><option value="adam">Adam</option><option value="sgd">SGD</option><option value="momentum">Momentum</option></select></label>
-          <label className="text-xs text-[#9EACC4]">Batch size<input aria-label="Batch size" type="number" min="1" max="128" disabled={isTraining} value={batchSize} onChange={e => setBatchSize(Math.max(1, Math.min(128, Math.round(Number(e.target.value) || 1))))} className="w-full p-2 bg-[#080D18] rounded" /></label>
-          {checkpoints.length > 0 && <label className="text-xs text-[#9EACC4]">Inspect recorded checkpoint
-            <select aria-label="Recorded checkpoint" value={scrubberEpoch} disabled={isTraining} onChange={e => restoreCheckpoint(Number(e.target.value))} className="w-full p-2 bg-[#080D18] rounded">
+          <label className="text-xs text-text-muted">Optimizer<select aria-label="Optimizer" disabled={isTraining} value={optimizer} onChange={e => setOptimizer(e.target.value)} className="w-full p-2 bg-deep-space rounded"><option value="adam">Adam</option><option value="sgd">SGD</option><option value="momentum">Momentum</option></select></label>
+          <label className="text-xs text-text-muted">Batch size<input aria-label="Batch size" type="number" min="1" max="128" disabled={isTraining} value={batchSize} onChange={e => setBatchSize(Math.max(1, Math.min(128, Math.round(Number(e.target.value) || 1))))} className="w-full p-2 bg-deep-space rounded" /></label>
+          {checkpoints.length > 0 && <label className="text-xs text-text-muted">Inspect recorded checkpoint
+            <select aria-label="Recorded checkpoint" value={scrubberEpoch} disabled={isTraining} onChange={e => restoreCheckpoint(Number(e.target.value))} className="w-full p-2 bg-deep-space rounded">
               {checkpoints.map(c => <option key={c.epoch} value={c.epoch}>Epoch {c.epoch}</option>)}
             </select>
           </label>}
-          <label className="text-xs text-[#9EACC4]">Learning rate
-            <input aria-label="Learning rate" type="number" min="0.001" max="0.5" step="0.001" value={learningRate} disabled={isTraining} onChange={e => setLearningRate(Math.max(0.001, Math.min(0.5, Number(e.target.value) || 0.001)))} className="w-full bg-[#080D18] p-2 rounded" />
+          <label className="text-xs text-text-muted">Learning rate
+            <input aria-label="Learning rate" type="number" min="0.001" max="0.5" step="0.001" value={learningRate} disabled={isTraining} onChange={e => setLearningRate(Math.max(0.001, Math.min(0.5, Number(e.target.value) || 0.001)))} className="w-full bg-deep-space p-2 rounded" />
           </label>
-          <label className="text-xs text-[#9EACC4]">Epochs
-            <input aria-label="Epochs" type="number" min="1" max="500" value={totalEpochs} disabled={isTraining} onChange={e => { setTotalEpochs(Math.max(1, Math.min(500, Math.round(Number(e.target.value) || 1)))); setActiveRun(null); setExperimentStatus('Inputs changed'); }} className="w-full bg-[#080D18] p-2 rounded" />
+          <label className="text-xs text-text-muted">Epochs
+            <input aria-label="Epochs" type="number" min="1" max="500" value={totalEpochs} disabled={isTraining} onChange={e => { setTotalEpochs(Math.max(1, Math.min(500, Math.round(Number(e.target.value) || 1)))); setActiveRun(null); setExperimentStatus('Inputs changed'); }} className="w-full bg-deep-space p-2 rounded" />
           </label>
           <div className="pt-2 border-t border-white/5 space-y-2">
             <button
@@ -630,7 +630,7 @@ export default function StudioShell() {
               className={`w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-glow-violet transition-all ${
                 isTraining
                   ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30'
-                  : 'bg-gradient-to-r from-[#A78BFA] to-[#46D7F2] text-[#080D18] hover:opacity-95'
+                  : 'bg-gradient-to-r from-neural-violet to-plasma-cyan text-ink-on-accent hover:opacity-95'
               }`}
             >
               {isTraining ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
@@ -639,7 +639,7 @@ export default function StudioShell() {
             <button
               disabled={isTraining}
               onClick={initModel}
-              className="w-full py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs text-[#9EACC4] hover:text-white flex items-center justify-center gap-1.5 transition-colors"
+              className="w-full py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs text-text-muted hover:text-white flex items-center justify-center gap-1.5 transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset Weights</span>
@@ -647,24 +647,24 @@ export default function StudioShell() {
           </div>
 
           {/* Detailed Mathematical Formulation Panel */}
-          <div className="p-3.5 rounded-xl bg-[#0D1422] border border-white/5 space-y-2">
+          <div className="p-3.5 rounded-xl bg-surface-dark border border-white/5 space-y-2">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
-              <BrainCircuit className="w-3.5 h-3.5 text-[#3CD5AA]" />
+              <BrainCircuit className="w-3.5 h-3.5 text-quantum-mint" />
               <span>Neuron Mathematical Values</span>
             </div>
 
             <div className="p-2.5 rounded bg-black/50 text-center font-mono text-[11px] space-y-0.5">
-              <div className="text-[#46D7F2]">
+              <div className="text-plasma-cyan">
                 z = ∑ wᵢ · xᵢ + b
               </div>
-              <div className="text-[#3CD5AA] font-bold">
+              <div className="text-quantum-mint font-bold">
                 a = {selectedLayer.activation}(z) = {activeNeuronActivation !== undefined ? activeNeuronActivation.toFixed(4) : '0.0000'}
               </div>
             </div>
 
             {/* Incoming Weights Table */}
             {selectedLayerIndex > 0 && activeNeuronWeights && (
-              <div className="space-y-1 text-[10px] font-mono text-[#9EACC4] pt-1">
+              <div className="space-y-1 text-[10px] font-mono text-text-muted pt-1">
                 <span className="font-semibold text-white block">Incoming Connections:</span>
                 <div className="max-h-24 overflow-y-auto space-y-0.5 pr-1">
                   {activeNeuronWeights.map((row, prevNIdx) => {
@@ -672,7 +672,7 @@ export default function StudioShell() {
                     return (
                       <div key={prevNIdx} className="flex justify-between items-center py-0.5 px-1.5 rounded bg-white/[0.02]">
                         <span>w[{prevNIdx + 1} → {selectedNeuronIndex + 1}]:</span>
-                        <span className={wVal >= 0 ? 'text-[#46D7F2]' : 'text-[#F3B65E]'}>
+                        <span className={wVal >= 0 ? 'text-plasma-cyan' : 'text-signal-amber'}>
                           {wVal !== undefined ? wVal.toFixed(3) : '0.000'}
                         </span>
                       </div>
@@ -695,7 +695,7 @@ export default function StudioShell() {
 
       {/* Bottom: Training Lifecycle & Checkpoint Scrubber Dock */}
       <footer
-        className={`bg-[#0D1422] border-t border-white/10 transition-all duration-300 flex flex-col flex-shrink-0 ${
+        className={`bg-surface-dark border-t border-white/10 transition-all duration-300 flex flex-col flex-shrink-0 ${
           bottomDockCollapsed ? 'h-9' : 'h-52'
         }`}
       >
@@ -703,18 +703,18 @@ export default function StudioShell() {
           onClick={() => setBottomDockCollapsed(value => !value)}
           aria-expanded={!bottomDockCollapsed}
           aria-label={bottomDockCollapsed ? 'Expand Studio training analysis' : 'Collapse Studio training analysis'}
-          className="w-full min-h-9 px-4 bg-[#151E30]/70 flex items-center justify-between text-left cursor-pointer border-b border-white/5 hover:bg-[#151E30]"
+          className="w-full min-h-9 px-4 bg-obsidian/70 flex items-center justify-between text-left cursor-pointer border-b border-white/5 hover:bg-obsidian"
         >
           <div className="flex items-center gap-3">
             <span className="text-xs font-mono font-semibold text-white flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${isTraining ? 'bg-[#A78BFA] animate-ping' : 'bg-[#A78BFA]'}`} />
+              <span className={`w-2 h-2 rounded-full ${isTraining ? 'bg-neural-violet animate-ping' : 'bg-neural-violet'}`} />
               TensorFlow.js Real-Time Loss & Accuracy Trajectory
             </span>
-            <span className="text-[11px] font-mono text-[#9EACC4] pl-3 border-l border-white/10">
+            <span className="text-[11px] font-mono text-text-muted pl-3 border-l border-white/10">
               Optimizer: {optimizer} (α={learningRate}) · Batch: {batchSize} · Seeded fixed order
             </span>
           </div>
-          <span aria-hidden="true" className="text-[#9EACC4]">
+          <span aria-hidden="true" className="text-text-muted">
             {bottomDockCollapsed ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </span>
         </button>
@@ -749,16 +749,16 @@ export default function StudioShell() {
             />
 
             {/* Scientific Verification */}
-            <div className="p-3.5 rounded-xl bg-[#151E30] border border-white/5 flex flex-col justify-between font-mono text-xs">
+            <div className="p-3.5 rounded-xl bg-obsidian border border-white/5 flex flex-col justify-between font-mono text-xs">
               <div>
                 <span className="text-xs font-semibold text-white">XOR Non-Linearity Verification</span>
-                <p className="mt-1 text-xs text-[#9EACC4] leading-relaxed">
+                <p className="mt-1 text-xs text-text-muted leading-relaxed">
                   {layers.length === 2 && selectedDatasetName === 'XOR Problem'
                     ? 'A linear classifier cannot perfectly separate the XOR pattern. Inspect measured validation performance.'
                     : 'Hidden layers can represent nonlinear boundaries. Training and validation measurements determine how well this run learned.'}
                 </p>
               </div>
-              <div className="flex justify-between items-center pt-2 border-t border-white/5 text-[11px] font-mono text-[#3CD5AA]">
+              <div className="flex justify-between items-center pt-2 border-t border-white/5 text-[11px] font-mono text-quantum-mint">
                 <span>Status: {isTraining ? 'Optimizing...' : 'Tensor State Intact'}</span>
                 <span>Checkpoints: {checkpoints.length} Saved</span>
               </div>

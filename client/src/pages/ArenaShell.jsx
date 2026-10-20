@@ -57,7 +57,7 @@ export default function ArenaShell() {
   return <div className="p-4 lg:p-6 space-y-5 overflow-auto">
     <h2 className="text-xl font-bold">Experiment Arena</h2>
     <div className="grid md:grid-cols-2 gap-4">
-      {[['Baseline', baselineId, setBaselineId], ['Variant', variantId, setVariantId]].map(([label, id, setter]) => <label key={label} className="space-y-2 text-sm">{label}<select aria-label={label} value={id} onChange={e => setter(e.target.value)} className="block w-full p-3 rounded-xl bg-[#151E30] border border-white/10"><option value="">Select a run</option>{runs.map(run => <option key={run._id} value={run._id}>{run.name}</option>)}</select></label>)}
+      {[['Baseline', baselineId, setBaselineId], ['Variant', variantId, setVariantId]].map(([label, id, setter]) => <label key={label} className="space-y-2 text-sm">{label}<select aria-label={label} value={id} onChange={e => setter(e.target.value)} className="block w-full p-3 rounded-xl bg-obsidian border border-white/10"><option value="">Select a run</option>{runs.map(run => <option key={run._id} value={run._id}>{run.name}</option>)}</select></label>)}
     </div>
     <p role="status" className={`p-3 rounded-xl border ${compatible ? 'border-emerald-400 text-emerald-300' : 'border-amber-400 text-amber-300'}`}>
       {compatible ? 'Matched task, dataset fingerprint, evaluation split, and preprocessing.' : 'Direct comparison unavailable: select runs with matching tasks, recorded datasets, evaluation splits, and preprocessing. Clustering runs are inspected individually.'}
@@ -65,7 +65,7 @@ export default function ArenaShell() {
     <div className="grid md:grid-cols-2 gap-4">{[a, b].map((run, i) => {
       if (!run) return <p key={i}>Select a run.</p>;
       const metrics = metricAt(run, selectedEpoch);
-      return <article key={i} className="p-4 rounded-xl bg-[#151E30] space-y-2">
+      return <article key={i} className="p-4 rounded-xl bg-obsidian space-y-2">
         <h3 className="font-semibold">{run.name}</h3><p className="text-xs text-slate-400">{run.algorithm} · {run.dataset?.name}</p>
         <dl className="text-sm grid grid-cols-2 gap-2"><dt>Training loss / MSE</dt><dd>{display(metrics.loss)}</dd><dt>Validation loss / MSE</dt><dd>{display(metrics.valLoss)}</dd><dt>Validation accuracy</dt><dd>{Number.isFinite(metrics.acc) ? `${(metrics.acc * 100).toFixed(1)}%` : 'Not recorded'}</dd><dt>Inertia</dt><dd>{display(run.metrics?.inertia)}</dd></dl>
         <p className="text-xs text-slate-400">{detectsOverfitting(run) ? 'Validation loss rises after its minimum while training loss declines; this suggests overfitting.' : 'Recorded history does not establish an overfitting trend.'}</p>
@@ -77,17 +77,17 @@ export default function ArenaShell() {
       <p className="text-xs text-slate-400">Values use the last recorded epoch at or before the selected time. Missing measurements remain unavailable.</p>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-3" role="group" aria-label="Comparison metric">
-          {['loss', 'accuracy'].map(value => <button type="button" key={value} aria-pressed={metric === value} onClick={() => setMetric(value)} className="rounded bg-[#202B43] px-3 py-2 capitalize">{value}</button>)}
+          {['loss', 'accuracy'].map(value => <button type="button" key={value} aria-pressed={metric === value} onClick={() => setMetric(value)} className="rounded bg-surface-elevated px-3 py-2 capitalize">{value}</button>)}
         </div>
         <button type="button" aria-pressed={showDataTable} onClick={() => setShowDataTable(value => !value)} className="rounded border border-cyan-400/30 px-3 py-2 text-sm text-cyan-200 hover:bg-cyan-400/10">
           {showDataTable ? 'Show comparison chart' : 'Show comparison data table'}
         </button>
       </div>
       {showDataTable ? (
-        <div role="region" aria-label="Recorded comparison data" tabIndex={0} className="max-h-80 max-w-full overflow-auto rounded-xl border border-white/10 bg-[#151E30]">
+        <div role="region" aria-label="Recorded comparison data" tabIndex={0} className="max-h-80 max-w-full overflow-auto rounded-xl border border-white/10 bg-obsidian">
           <table className="w-full min-w-[540px] text-left text-xs">
             <caption className="px-3 py-2 text-left text-slate-300">Recorded {metric} measurements — selected epoch {selectedEpoch}. Missing measurements are not inferred.</caption>
-            <thead className="sticky top-0 bg-[#202B43] text-slate-200"><tr>
+            <thead className="sticky top-0 bg-surface-elevated text-slate-200"><tr>
               <th scope="col" className="p-3">Epoch</th>
               <th scope="col" className="p-3">Baseline train</th>
               <th scope="col" className="p-3">Baseline validation</th>
@@ -103,7 +103,7 @@ export default function ArenaShell() {
           </table>
         </div>
       ) : (
-        <svg role="img" aria-label={`Recorded ${metric} curves: cyan baseline, violet variant; dashed validation`} viewBox="0 0 600 210" className="w-full max-h-80 bg-[#151E30] rounded-xl">
+        <svg role="img" aria-label={`Recorded ${metric} curves: cyan baseline, violet variant; dashed validation`} viewBox="0 0 600 210" className="w-full max-h-80 bg-obsidian rounded-xl">
           <text x="20" y="15" fill="#9EACC4" fontSize="10">{maxValue.toFixed(3)}</text>
           {histories.map((history, i) => fields.map((field, j) => <path key={`${i}-${field}`} d={path(history, field)} fill="none" stroke={i ? '#A78BFA' : '#46D7F2'} strokeWidth="2" strokeDasharray={j ? '5 4' : undefined} />))}
           {/* Sparse checkpoints must still be visible when interpolation is intentionally omitted. */}

@@ -188,33 +188,33 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-[#080D18] text-[#F2F5FC] overflow-x-hidden">
+    <div className="relative min-h-screen bg-deep-space text-text-primary overflow-x-hidden">
       <CommandPalette />
       <Toast />
       {/* Top Navigation */}
-      <header className="h-16 border-b border-white/10 px-6 sm:px-12 flex items-center justify-between sticky top-0 z-40 bg-[#080D18]/80 backdrop-blur-md">
+      <header className="h-16 border-b border-white/10 px-6 sm:px-12 flex items-center justify-between sticky top-0 z-40 bg-deep-space/80 backdrop-blur-md">
         <Link to="/" className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#46D7F2]/20 to-[#A78BFA]/30 border border-[#46D7F2]/40 flex items-center justify-center font-display font-bold text-lg text-[#46D7F2] shadow-glow-cyan">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-plasma-cyan/20 to-neural-violet/30 border border-plasma-cyan/40 flex items-center justify-center font-display font-bold text-lg text-plasma-cyan shadow-glow-cyan">
             N
           </div>
           <span className="font-display font-bold tracking-tight text-lg text-white">
-            NeuroForge <span className="text-[#46D7F2] font-mono text-xs">AI</span>
+            NeuroForge <span className="text-plasma-cyan font-mono text-xs">AI</span>
           </span>
         </Link>
 
         <div className="flex items-center gap-4">
           <button
             onClick={() => setCommandPaletteOpen(true)}
-            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs text-[#9EACC4] transition-colors"
+            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs text-text-muted transition-colors"
           >
-            <Terminal className="w-3.5 h-3.5 text-[#46D7F2]" />
+            <Terminal className="w-3.5 h-3.5 text-plasma-cyan" />
             <span>Search or command</span>
             <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] text-white">Ctrl+K</kbd>
           </button>
 
           <Link
             to="/showcase"
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#A78BFA]/10 hover:bg-[#A78BFA]/20 border border-[#A78BFA]/30 text-xs font-medium text-[#A78BFA] transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-neural-violet/10 hover:bg-neural-violet/20 border border-neural-violet/30 text-xs font-medium text-neural-violet transition-all"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>Showcase Tour</span>
@@ -222,7 +222,7 @@ export default function LandingPage() {
 
           <Link
             to="/app"
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#46D7F2] to-[#A78BFA] text-[#080D18] text-xs font-semibold hover:opacity-95 shadow-glow-cyan transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-plasma-cyan to-neural-violet text-ink-on-accent text-xs font-semibold hover:opacity-95 shadow-glow-cyan transition-all"
           >
             <span>Launch Lab</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -233,20 +233,20 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative px-6 pt-16 pb-20 sm:pt-24 sm:pb-28 max-w-7xl mx-auto flex flex-col items-center text-center">
         {/* Glow ambient background */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-[#46D7F2]/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-plasma-cyan/10 rounded-full blur-[120px] pointer-events-none" />
 
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/10 text-xs font-mono text-[#46D7F2] mb-6">
-          <Activity className="w-3.5 h-3.5 text-[#3CD5AA]" />
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/10 text-xs font-mono text-plasma-cyan mb-6">
+          <Activity className="w-3.5 h-3.5 text-quantum-mint" />
           <span>Interactive Machine Learning & Deep Learning Universe</span>
         </div>
 
         {/* Main Headline */}
         <h1 className="font-display font-extrabold text-4xl sm:text-6xl md:text-7xl tracking-tight max-w-4xl text-white">
-          See how <span className="bg-gradient-to-r from-[#46D7F2] via-[#A78BFA] to-[#3CD5AA] bg-clip-text text-transparent">intelligence</span> learns.
+          See how <span className="bg-gradient-to-r from-plasma-cyan via-neural-violet to-quantum-mint bg-clip-text text-transparent">intelligence</span> learns.
         </h1>
 
-        <p className="mt-6 text-base sm:text-lg md:text-xl text-[#9EACC4] max-w-2xl font-normal leading-relaxed">
+        <p className="mt-6 text-base sm:text-lg md:text-xl text-text-muted max-w-2xl font-normal leading-relaxed">
           An interactive laboratory for exploring the mathematics, models, and mysteries of machine learning.
           Manipulate raw data, build neural architectures, watch real backpropagation, and evaluate empirical evidence.
         </p>
@@ -255,7 +255,7 @@ export default function LandingPage() {
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <Link
             to="/app"
-            className="flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#46D7F2] to-[#3CD5AA] text-[#080D18] font-semibold text-sm shadow-glow-cyan hover:scale-[1.02] transition-transform"
+            className="flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-plasma-cyan to-quantum-mint text-ink-on-accent font-semibold text-sm shadow-glow-cyan hover:scale-[1.02] transition-transform"
           >
             <Zap className="w-4 h-4 fill-current" />
             <span>Launch Interactive Lab</span>
@@ -269,13 +269,13 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        <p className="mt-3 text-xs text-[#9EACC4]/70 font-mono">
+        <p className="mt-3 text-xs text-text-muted/70 font-mono">
           ✓ Real browser-based ML computation • No login required for instant guest experimentation
         </p>
 
         {/* Interactive Neural Canvas Hero Frame */}
-        <div className="mt-14 w-full max-w-5xl relative rounded-2xl border border-white/10 bg-[#0D1422]/90 shadow-2xl overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#151E30]/70 text-xs font-mono text-[#9EACC4]">
+        <div className="mt-14 w-full max-w-5xl relative rounded-2xl border border-white/10 bg-surface-dark/90 shadow-2xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-obsidian/70 text-xs font-mono text-text-muted">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
               <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
@@ -283,8 +283,8 @@ export default function LandingPage() {
               <span className="ml-2 text-white font-medium">live_network_visualization.tfjs</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-[#3CD5AA] flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#3CD5AA] animate-pulse" />
+              <span className="text-quantum-mint flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-quantum-mint animate-pulse" />
                 Forward-Pass Active
               </span>
               <span>Click any node to inspect math</span>
@@ -296,24 +296,24 @@ export default function LandingPage() {
 
             {/* Floating Node Inspector Modal if clicked */}
             {activeNodeInfo && (
-              <div className="absolute top-4 right-4 z-20 w-64 bg-[#151E30]/95 backdrop-blur-md border border-[#46D7F2]/40 rounded-xl p-4 shadow-xl text-left animate-in fade-in duration-150">
+              <div className="absolute top-4 right-4 z-20 w-64 bg-obsidian/95 backdrop-blur-md border border-plasma-cyan/40 rounded-xl p-4 shadow-xl text-left animate-in fade-in duration-150">
                 <div className="flex items-center justify-between border-b border-white/10 pb-2 mb-2">
-                  <span className="font-mono text-xs text-[#46D7F2] font-semibold">{activeNodeInfo.layer}</span>
+                  <span className="font-mono text-xs text-plasma-cyan font-semibold">{activeNodeInfo.layer}</span>
                   <button 
                     onClick={() => setActiveNodeInfo(null)}
-                    className="text-xs text-[#9EACC4] hover:text-white"
+                    className="text-xs text-text-muted hover:text-white"
                   >
                     ✕
                   </button>
                 </div>
-                <div className="text-xs space-y-1.5 font-mono text-[#F2F5FC]">
-                  <div><span className="text-[#9EACC4]">Identifier:</span> {activeNodeInfo.neuron}</div>
-                  <div><span className="text-[#9EACC4]">Activation (a):</span> <span className="text-[#3CD5AA]">{activeNodeInfo.activation}</span></div>
-                  <div><span className="text-[#9EACC4]">Learned Bias (b):</span> {activeNodeInfo.bias}</div>
-                  <div><span className="text-[#9EACC4]">Weight (w_avg):</span> {activeNodeInfo.weight}</div>
+                <div className="text-xs space-y-1.5 font-mono text-text-primary">
+                  <div><span className="text-text-muted">Identifier:</span> {activeNodeInfo.neuron}</div>
+                  <div><span className="text-text-muted">Activation (a):</span> <span className="text-quantum-mint">{activeNodeInfo.activation}</span></div>
+                  <div><span className="text-text-muted">Learned Bias (b):</span> {activeNodeInfo.bias}</div>
+                  <div><span className="text-text-muted">Weight (w_avg):</span> {activeNodeInfo.weight}</div>
                 </div>
-                <div className="mt-3 pt-2 border-t border-white/10 text-[11px] text-[#9EACC4]">
-                  Formula: <code className="text-[#A78BFA]">a = ReLU(Σ w_i·x_i + b)</code>
+                <div className="mt-3 pt-2 border-t border-white/10 text-[11px] text-text-muted">
+                  Formula: <code className="text-neural-violet">a = ReLU(Σ w_i·x_i + b)</code>
                 </div>
               </div>
             )}
@@ -324,11 +324,11 @@ export default function LandingPage() {
       {/* Three Major Workspaces Overview */}
       <section className="px-6 py-20 max-w-7xl mx-auto border-t border-white/5">
         <div className="text-center mb-14">
-          <span className="text-xs font-mono uppercase tracking-widest text-[#46D7F2]">Architecture & Modules</span>
+          <span className="text-xs font-mono uppercase tracking-widest text-plasma-cyan">Architecture & Modules</span>
           <h2 className="mt-2 text-3xl sm:text-4xl font-display font-bold text-white">
             Three Core Laboratories. One Seamless Platform.
           </h2>
-          <p className="mt-3 text-[#9EACC4] max-w-xl mx-auto text-sm">
+          <p className="mt-3 text-text-muted max-w-xl mx-auto text-sm">
             Move between classical algorithms, deep learning architecture, and empirical model arena without losing your dataset state.
           </p>
         </div>
@@ -337,21 +337,21 @@ export default function LandingPage() {
           {/* Card 1: Playground */}
           <Link
             to="/app/playground"
-            className="group p-6 rounded-2xl bg-[#151E30]/60 hover:bg-[#151E30] border border-white/10 hover:border-[#46D7F2]/50 transition-all shadow-lg flex flex-col justify-between"
+            className="group p-6 rounded-2xl bg-obsidian/60 hover:bg-obsidian border border-white/10 hover:border-plasma-cyan/50 transition-all shadow-lg flex flex-col justify-between"
           >
             <div>
-              <div className="w-12 h-12 rounded-xl bg-[#46D7F2]/10 border border-[#46D7F2]/30 flex items-center justify-center text-[#46D7F2] mb-5 group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 rounded-xl bg-plasma-cyan/10 border border-plasma-cyan/30 flex items-center justify-center text-plasma-cyan mb-5 group-hover:scale-110 transition-transform">
                 <Sliders className="w-6 h-6" />
               </div>
-              <span className="text-xs font-mono text-[#46D7F2]">01 — Flagship</span>
-              <h3 className="text-xl font-display font-semibold text-white mt-1 group-hover:text-[#46D7F2] transition-colors">
+              <span className="text-xs font-mono text-plasma-cyan">01 — Flagship</span>
+              <h3 className="text-xl font-display font-semibold text-white mt-1 group-hover:text-plasma-cyan transition-colors">
                 ML Algorithm Playground
               </h3>
-              <p className="mt-2 text-sm text-[#9EACC4] leading-relaxed">
+              <p className="mt-2 text-sm text-text-muted leading-relaxed">
                 Draw custom 2D data points, add Gaussian noise, and test Linear/Logistic regression, K-Means clustering, and KNN in real time.
               </p>
             </div>
-            <div className="mt-6 flex items-center gap-1.5 text-xs font-medium text-[#46D7F2]">
+            <div className="mt-6 flex items-center gap-1.5 text-xs font-medium text-plasma-cyan">
               <span>Open Playground</span>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </div>
@@ -360,21 +360,21 @@ export default function LandingPage() {
           {/* Card 2: Neural Studio */}
           <Link
             to="/app/studio"
-            className="group p-6 rounded-2xl bg-[#151E30]/60 hover:bg-[#151E30] border border-white/10 hover:border-[#A78BFA]/50 transition-all shadow-lg flex flex-col justify-between"
+            className="group p-6 rounded-2xl bg-obsidian/60 hover:bg-obsidian border border-white/10 hover:border-neural-violet/50 transition-all shadow-lg flex flex-col justify-between"
           >
             <div>
-              <div className="w-12 h-12 rounded-xl bg-[#A78BFA]/10 border border-[#A78BFA]/30 flex items-center justify-center text-[#A78BFA] mb-5 group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 rounded-xl bg-neural-violet/10 border border-neural-violet/30 flex items-center justify-center text-neural-violet mb-5 group-hover:scale-110 transition-transform">
                 <Network className="w-6 h-6" />
               </div>
-              <span className="text-xs font-mono text-[#A78BFA]">02 — Flagship</span>
-              <h3 className="text-xl font-display font-semibold text-white mt-1 group-hover:text-[#A78BFA] transition-colors">
+              <span className="text-xs font-mono text-neural-violet">02 — Flagship</span>
+              <h3 className="text-xl font-display font-semibold text-white mt-1 group-hover:text-neural-violet transition-colors">
                 Neural Network Studio
               </h3>
-              <p className="mt-2 text-sm text-[#9EACC4] leading-relaxed">
+              <p className="mt-2 text-sm text-text-muted leading-relaxed">
                 Visually construct dense sequential networks. Switch between high-level layer topology and deep neuron-level forward/backward passes.
               </p>
             </div>
-            <div className="mt-6 flex items-center gap-1.5 text-xs font-medium text-[#A78BFA]">
+            <div className="mt-6 flex items-center gap-1.5 text-xs font-medium text-neural-violet">
               <span>Open Studio</span>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </div>
@@ -383,21 +383,21 @@ export default function LandingPage() {
           {/* Card 3: Arena */}
           <Link
             to="/app/arena"
-            className="group p-6 rounded-2xl bg-[#151E30]/60 hover:bg-[#151E30] border border-white/10 hover:border-[#3CD5AA]/50 transition-all shadow-lg flex flex-col justify-between"
+            className="group p-6 rounded-2xl bg-obsidian/60 hover:bg-obsidian border border-white/10 hover:border-quantum-mint/50 transition-all shadow-lg flex flex-col justify-between"
           >
             <div>
-              <div className="w-12 h-12 rounded-xl bg-[#3CD5AA]/10 border border-[#3CD5AA]/30 flex items-center justify-center text-[#3CD5AA] mb-5 group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 rounded-xl bg-quantum-mint/10 border border-quantum-mint/30 flex items-center justify-center text-quantum-mint mb-5 group-hover:scale-110 transition-transform">
                 <Scale className="w-6 h-6" />
               </div>
-              <span className="text-xs font-mono text-[#3CD5AA]">03 — Flagship</span>
-              <h3 className="text-xl font-display font-semibold text-white mt-1 group-hover:text-[#3CD5AA] transition-colors">
+              <span className="text-xs font-mono text-quantum-mint">03 — Flagship</span>
+              <h3 className="text-xl font-display font-semibold text-white mt-1 group-hover:text-quantum-mint transition-colors">
                 Experiment Arena
               </h3>
-              <p className="mt-2 text-sm text-[#9EACC4] leading-relaxed">
+              <p className="mt-2 text-sm text-text-muted leading-relaxed">
                 Benchmark candidate runs head-to-head. Synchronize epoch scrubber playback and discover why one model overfits while another generalizes.
               </p>
             </div>
-            <div className="mt-6 flex items-center gap-1.5 text-xs font-medium text-[#3CD5AA]">
+            <div className="mt-6 flex items-center gap-1.5 text-xs font-medium text-quantum-mint">
               <span>Enter Arena</span>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </div>
@@ -406,21 +406,21 @@ export default function LandingPage() {
       </section>
 
       {/* Signature XOR Highlight Section */}
-      <section className="px-6 py-16 max-w-5xl mx-auto my-12 rounded-3xl border border-white/10 bg-gradient-to-b from-[#151E30] to-[#0D1422] p-8 sm:p-12">
+      <section className="px-6 py-16 max-w-5xl mx-auto my-12 rounded-3xl border border-white/10 bg-gradient-to-b from-obsidian to-surface-dark p-8 sm:p-12">
         <div className="flex flex-col md:flex-row items-center gap-8 justify-between">
           <div className="max-w-md">
-            <span className="text-xs font-mono uppercase tracking-widest text-[#F3B65E]">The Signature Experience</span>
+            <span className="text-xs font-mono uppercase tracking-widest text-signal-amber">The Signature Experience</span>
             <h3 className="mt-2 text-2xl sm:text-3xl font-display font-bold text-white">
               Why does a neural network need hidden layers?
             </h3>
-            <p className="mt-3 text-sm text-[#9EACC4] leading-relaxed">
+            <p className="mt-3 text-sm text-text-muted leading-relaxed">
               Start with an XOR dataset. Watch a standard linear model fail to classify diagonally opposite points.
               Add a single hidden layer, retrain, and see the decision boundary transform into a non-linear hyper-surface.
             </p>
             <div className="mt-6">
               <Link
                 to="/showcase"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#F3B65E] to-[#A78BFA] text-[#080D18] text-xs font-bold hover:opacity-90 shadow-md transition-all"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-signal-amber to-neural-violet text-ink-on-accent text-xs font-bold hover:opacity-90 shadow-md transition-all"
               >
                 <span>Launch 90-Second Walkthrough</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -429,22 +429,22 @@ export default function LandingPage() {
           </div>
 
           {/* Graphical XOR Illustration */}
-          <div className="w-full md:w-64 h-64 rounded-2xl bg-[#080D18] border border-white/10 relative p-4 flex flex-col justify-between">
-            <div className="flex justify-between items-center text-[10px] font-mono text-[#9EACC4]">
+          <div className="w-full md:w-64 h-64 rounded-2xl bg-deep-space border border-white/10 relative p-4 flex flex-col justify-between">
+            <div className="flex justify-between items-center text-[10px] font-mono text-text-muted">
               <span>XOR Decision Space</span>
-              <span className="text-[#F3B65E]">Linear Separator: Fails</span>
+              <span className="text-signal-amber">Linear Separator: Fails</span>
             </div>
             <div className="relative w-full h-40">
               {/* Points */}
-              <div className="absolute top-4 left-6 w-5 h-5 rounded-full bg-[#46D7F2] border-2 border-white/30 flex items-center justify-center text-[9px] font-bold text-[#080D18]">0</div>
-              <div className="absolute top-4 right-6 w-5 h-5 rounded-full bg-[#A78BFA] border-2 border-white/30 flex items-center justify-center text-[9px] font-bold text-[#080D18]">1</div>
-              <div className="absolute bottom-4 left-6 w-5 h-5 rounded-full bg-[#A78BFA] border-2 border-white/30 flex items-center justify-center text-[9px] font-bold text-[#080D18]">1</div>
-              <div className="absolute bottom-4 right-6 w-5 h-5 rounded-full bg-[#46D7F2] border-2 border-white/30 flex items-center justify-center text-[9px] font-bold text-[#080D18]">0</div>
+              <div className="absolute top-4 left-6 w-5 h-5 rounded-full bg-plasma-cyan border-2 border-white/30 flex items-center justify-center text-[9px] font-bold text-ink-on-accent">0</div>
+              <div className="absolute top-4 right-6 w-5 h-5 rounded-full bg-neural-violet border-2 border-white/30 flex items-center justify-center text-[9px] font-bold text-ink-on-accent">1</div>
+              <div className="absolute bottom-4 left-6 w-5 h-5 rounded-full bg-neural-violet border-2 border-white/30 flex items-center justify-center text-[9px] font-bold text-ink-on-accent">1</div>
+              <div className="absolute bottom-4 right-6 w-5 h-5 rounded-full bg-plasma-cyan border-2 border-white/30 flex items-center justify-center text-[9px] font-bold text-ink-on-accent">0</div>
               
               {/* Failed straight line */}
               <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-red-400/80 -rotate-45 transform origin-center shadow-sm" />
             </div>
-            <div className="text-[10px] text-center font-mono text-[#9EACC4]">
+            <div className="text-[10px] text-center font-mono text-text-muted">
               Accuracy: 50% (Random guess)
             </div>
           </div>
@@ -454,44 +454,44 @@ export default function LandingPage() {
       {/* Engineering Behind the Lab */}
       <section className="px-6 py-16 max-w-7xl mx-auto border-t border-white/5">
         <div className="max-w-2xl mb-12">
-          <span className="text-xs font-mono uppercase tracking-widest text-[#46D7F2]">Technical Architecture</span>
+          <span className="text-xs font-mono uppercase tracking-widest text-plasma-cyan">Technical Architecture</span>
           <h2 className="mt-2 text-2xl sm:text-3xl font-display font-bold text-white">
             Engineered for Deep Interview Technical Discussions
           </h2>
-          <p className="mt-2 text-sm text-[#9EACC4]">
+          <p className="mt-2 text-sm text-text-muted">
             Every screen demonstrates deliberate architectural choices rather than naive frontend mocks.
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-5 rounded-xl bg-[#151E30]/40 border border-white/10">
-            <Code2 className="w-5 h-5 text-[#46D7F2] mb-3" />
+          <div className="p-5 rounded-xl bg-obsidian/40 border border-white/10">
+            <Code2 className="w-5 h-5 text-plasma-cyan mb-3" />
             <h4 className="text-sm font-semibold text-white">True Client-Side ML</h4>
-            <p className="mt-1 text-xs text-[#9EACC4] leading-relaxed">
+            <p className="mt-1 text-xs text-text-muted leading-relaxed">
               TensorFlow.js executes real gradient descent in the browser with tensor lifecycle management and Web Workers.
             </p>
           </div>
 
-          <div className="p-5 rounded-xl bg-[#151E30]/40 border border-white/10">
-            <BrainCircuit className="w-5 h-5 text-[#A78BFA] mb-3" />
+          <div className="p-5 rounded-xl bg-obsidian/40 border border-white/10">
+            <BrainCircuit className="w-5 h-5 text-neural-violet mb-3" />
             <h4 className="text-sm font-semibold text-white">Mathematical Transparency</h4>
-            <p className="mt-1 text-xs text-[#9EACC4] leading-relaxed">
+            <p className="mt-1 text-xs text-text-muted leading-relaxed">
               Explicit neuron formulas for forward-propagation and real loss landscapes instead of canned animations.
             </p>
           </div>
 
-          <div className="p-5 rounded-xl bg-[#151E30]/40 border border-white/10">
-            <CheckCircle2 className="w-5 h-5 text-[#3CD5AA] mb-3" />
+          <div className="p-5 rounded-xl bg-obsidian/40 border border-white/10">
+            <CheckCircle2 className="w-5 h-5 text-quantum-mint mb-3" />
             <h4 className="text-sm font-semibold text-white">Empirical Comparability</h4>
-            <p className="mt-1 text-xs text-[#9EACC4] leading-relaxed">
+            <p className="mt-1 text-xs text-text-muted leading-relaxed">
               Fair comparison guards prevent misleading cross-dataset conclusions and clearly separates train vs. val loss.
             </p>
           </div>
 
-          <div className="p-5 rounded-xl bg-[#151E30]/40 border border-white/10">
-            <Layers className="w-5 h-5 text-[#F3B65E] mb-3" />
+          <div className="p-5 rounded-xl bg-obsidian/40 border border-white/10">
+            <Layers className="w-5 h-5 text-signal-amber mb-3" />
             <h4 className="text-sm font-semibold text-white">Full-Stack Persistence</h4>
-            <p className="mt-1 text-xs text-[#9EACC4] leading-relaxed">
+            <p className="mt-1 text-xs text-text-muted leading-relaxed">
               Express REST API and MongoDB schema store immutable experiment runs, hyperparameters, and bounded metrics.
             </p>
           </div>
@@ -499,7 +499,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 py-8 px-6 text-center text-xs text-[#9EACC4] font-mono">
+      <footer className="border-t border-white/10 py-8 px-6 text-center text-xs text-text-muted font-mono">
         <p>NeuroForge AI • Interactive Intelligence Laboratory • Built with React, Tailwind, and TensorFlow.js</p>
       </footer>
     </div>

@@ -90,12 +90,12 @@ export default function AppShell() {
     if (recovery.wasInterrupted) showToast('Draft restored. Previous training was interrupted; start a new run.', 'info');
   };
   if (isLab && (recovery === undefined || !checked)) return <p role="status" className="p-8">Checking saved drafts?</p>;
-  if (isLab && recovery) return <div role="dialog" aria-modal="true" aria-label="Recover draft" className="p-8 bg-[#080D18] min-h-screen text-white space-y-4"><h2>Recover your last draft</h2><p>{recovery.legacyIncomplete ? 'The older draft stored settings but omitted dataset rows. Restoring creates a copy with those settings and newly generated default data; the original record is retained.' : recovery.wasInterrupted ? 'Training was interrupted. Configuration is available; completed metrics will not be invented.' : 'A saved draft is available on this device.'}</p><button autoFocus className="p-3 bg-cyan-800 rounded" onClick={() => restore().catch(error => showToast(error.message,'error'))}>Restore draft</button><button className="p-3" onClick={() => draftManager.dismissRecovery().then(() => setRecovery(null)).catch(error => showToast(error.message,'error'))}>Start fresh</button></div>;
+  if (isLab && recovery) return <div role="dialog" aria-modal="true" aria-label="Recover draft" className="p-8 bg-deep-space min-h-screen text-white space-y-4"><h2>Recover your last draft</h2><p>{recovery.legacyIncomplete ? 'The older draft stored settings but omitted dataset rows. Restoring creates a copy with those settings and newly generated default data; the original record is retained.' : recovery.wasInterrupted ? 'Training was interrupted. Configuration is available; completed metrics will not be invented.' : 'A saved draft is available on this device.'}</p><button autoFocus className="p-3 bg-cyan-800 rounded" onClick={() => restore().catch(error => showToast(error.message,'error'))}>Restore draft</button><button className="p-3" onClick={() => draftManager.dismissRecovery().then(() => setRecovery(null)).catch(error => showToast(error.message,'error'))}>Start fresh</button></div>;
 
   // Landing page has its own standalone public layout
   if (isLandingPage) {
     return (
-      <div className="min-h-screen bg-[#080D18] text-[#F2F5FC]">
+      <div className="min-h-screen bg-deep-space text-text-primary">
         <CommandPalette />
         <Toast />
         {isFeatureEnabled('workspace_system') && <NotificationDrawer />}
@@ -105,11 +105,11 @@ export default function AppShell() {
   }
 
   return (
-    <div className="min-h-screen bg-[#080D18] text-[#F2F5FC] flex flex-col font-sans">
+    <div className="min-h-screen bg-deep-space text-text-primary flex flex-col font-sans">
       <button
         type="button"
         onClick={() => document.getElementById('main-content')?.focus()}
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-lg focus:bg-[#46D7F2] focus:px-4 focus:py-2 focus:text-[#080D18] focus:font-semibold"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-lg focus:bg-plasma-cyan focus:px-4 focus:py-2 focus:text-ink-on-accent focus:font-semibold"
       >
         Skip to main content
       </button>
@@ -134,7 +134,7 @@ export default function AppShell() {
         )}
 
         {/* Workspace Canvas / Viewport */}
-        <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col overflow-x-hidden bg-[#080D18]">
+        <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col overflow-x-hidden bg-deep-space">
           <Outlet key={location.key} />
         </main>
       </div>

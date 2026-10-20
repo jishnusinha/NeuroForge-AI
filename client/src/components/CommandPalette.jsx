@@ -178,7 +178,7 @@ function CommandDialog() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-4 sm:pt-20 px-3 sm:px-4 bg-[#080D18]/80 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-4 sm:pt-20 px-3 sm:px-4 bg-deep-space/80 backdrop-blur-md"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) setCommandPaletteOpen(false);
       }}
@@ -187,11 +187,11 @@ function CommandDialog() {
         ref={dialogRef}
         role="dialog" aria-modal="true" aria-label="Quick commands"
         onKeyDown={handleModalKeyDown}
-        className="w-full max-w-2xl max-h-[calc(100dvh-2rem)] flex flex-col bg-[#151E30] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="w-full max-w-2xl max-h-[calc(100dvh-2rem)] flex flex-col bg-obsidian border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
       >
         {/* Search Input Bar */}
         <div className="flex items-center px-4 py-3.5 border-b border-white/10 gap-3">
-          <Search className="w-5 h-5 text-[#46D7F2]" />
+          <Search className="w-5 h-5 text-plasma-cyan" />
           <input
             aria-label="Search commands"
             role="combobox"
@@ -208,12 +208,12 @@ function CommandDialog() {
             }}
             onKeyDown={handleKeyDownList}
             placeholder="Type a command, experiment name, or destination..."
-            className="min-w-0 flex-1 bg-transparent text-[#F2F5FC] placeholder-[#9EACC4]/60 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#46D7F2] font-sans"
+            className="min-w-0 flex-1 bg-transparent text-text-primary placeholder-text-muted/60 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-plasma-cyan font-sans"
           />
           <button 
             aria-label="Close commands"
             onClick={() => setCommandPaletteOpen(false)}
-            className="p-2 rounded-lg text-[#9EACC4] hover:text-white hover:bg-white/5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#46D7F2]"
+            className="p-2 rounded-lg text-text-muted hover:text-white hover:bg-white/5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-plasma-cyan"
           >
             <X className="w-4 h-4" />
           </button>
@@ -226,8 +226,8 @@ function CommandDialog() {
         {/* Results List */}
         <div id={resultsId} role="listbox" aria-label="Matching commands" className="min-h-0 max-h-[min(60dvh,380px)] overflow-y-auto p-2 divide-y divide-white/5">
           {filteredCommands.length === 0 ? (
-            <div className="py-8 text-center text-sm text-[#9EACC4]">
-              No results found for <span className="text-[#46D7F2]">"{query}"</span>
+            <div className="py-8 text-center text-sm text-text-muted">
+              No results found for <span className="text-plasma-cyan">"{query}"</span>
             </div>
           ) : (
             filteredCommands.map((cmd, idx) => {
@@ -243,26 +243,26 @@ function CommandDialog() {
                   onClick={() => handleSelect(cmd)}
                   onFocus={() => setSelectedIndex(idx)}
                   onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`w-full text-left flex items-center justify-between gap-2 p-3 rounded-xl cursor-pointer transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#46D7F2] ${
-                    isSelected ? 'bg-white/10 text-white shadow-sm' : 'text-[#F2F5FC] hover:bg-white/5'
+                  className={`w-full text-left flex items-center justify-between gap-2 p-3 rounded-xl cursor-pointer transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-plasma-cyan ${
+                    isSelected ? 'bg-white/10 text-white shadow-sm' : 'text-text-primary hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className={`shrink-0 p-2 rounded-lg ${isSelected ? 'bg-[#46D7F2]/20 text-[#46D7F2]' : 'bg-white/5 text-[#9EACC4]'}`}>
+                    <div className={`shrink-0 p-2 rounded-lg ${isSelected ? 'bg-plasma-cyan/20 text-plasma-cyan' : 'bg-white/5 text-text-muted'}`}>
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-medium">{cmd.title}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-[#9EACC4] uppercase tracking-wider font-mono">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-text-muted uppercase tracking-wider font-mono">
                           {cmd.category}
                         </span>
                       </div>
-                      <p className="text-xs text-[#9EACC4] mt-0.5">{cmd.desc}</p>
+                      <p className="text-xs text-text-muted mt-0.5">{cmd.desc}</p>
                     </div>
                   </div>
                   {isSelected && (
-                    <ArrowRight className="w-4 h-4 text-[#46D7F2] animate-pulse" />
+                    <ArrowRight className="w-4 h-4 text-plasma-cyan animate-pulse" />
                   )}
                 </button>
               );
@@ -271,13 +271,13 @@ function CommandDialog() {
         </div>
 
         {/* Footer shortcuts */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-[#0D1422] border-t border-white/5 text-[11px] text-[#9EACC4] font-mono">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-surface-dark border-t border-white/5 text-[11px] text-text-muted font-mono">
           <div className="flex flex-wrap items-center gap-3 sm:gap-4">
             <span><kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white">↑↓</kbd> Navigate</span>
             <span><kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white">↵</kbd> Select</span>
             <span><kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white">ESC</kbd> Close</span>
           </div>
-          <div className="flex items-center gap-1.5 text-[#46D7F2]">
+          <div className="flex items-center gap-1.5 text-plasma-cyan">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Antigravity Quick Command</span>
           </div>

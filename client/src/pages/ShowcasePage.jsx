@@ -22,7 +22,7 @@ export default function ShowcasePage() {
     <p className="text-violet-300 text-xs uppercase tracking-widest">Guided interview showcase</p><h2 className="text-3xl font-bold">Explore → Build → Train → Compare</h2>
     <p className="text-slate-400">A suggested three-minute route through real experiments. Save each run before opening the next workspace.</p>
     <nav aria-label="Showcase steps" className="flex flex-wrap gap-2">{steps.map((s,i)=><button key={s.title} aria-current={step===i?'step':undefined} onClick={()=>setStep(i)} className={`p-3 rounded-xl border ${step===i?'border-cyan-300 bg-cyan-300/10':'border-white/10'}`}>{i+1}. {s.title}</button>)}</nav>
-    <article className="p-6 rounded-2xl bg-[#151E30] border border-white/10 space-y-5"><p className="text-xs text-violet-300">{steps[step].time}</p><h3 className="text-xl font-bold">{steps[step].title}</h3><p className="text-slate-300 leading-relaxed">{steps[step].text}</p>{steps[step].action}</article>
+    <article className="p-6 rounded-2xl bg-obsidian border border-white/10 space-y-5"><p className="text-xs text-violet-300">{steps[step].time}</p><h3 className="text-xl font-bold">{steps[step].title}</h3><p className="text-slate-300 leading-relaxed">{steps[step].text}</p>{steps[step].action}</article>
     <div className="flex justify-between"><button disabled={step===0} onClick={()=>setStep(s=>s-1)} className="p-3 rounded bg-white/10 disabled:opacity-30">Previous</button><button disabled={step===steps.length-1} onClick={()=>setStep(s=>s+1)} className="p-3 rounded bg-violet-400/20 disabled:opacity-30">Next</button></div>
   </div>;
 }
