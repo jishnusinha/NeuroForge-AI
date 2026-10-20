@@ -1,4 +1,5 @@
 // Logistic Regression Classifier with Binary Cross-Entropy and L2 Regularization
+import { mulberry32 } from './datasets.js';
 
 function sigmoid(z) {
   // Clamp z to avoid numerical overflow
@@ -12,10 +13,13 @@ export function trainLogisticRegression(
   learningRate = 0.1, 
   regularization = 0.001, 
   epochs = 80,
-  threshold = 0.5
+  threshold = 0.5,
+  seed = 42
 ) {
-  let w1 = (Math.random() - 0.5) * 0.2;
-  let w2 = (Math.random() - 0.5) * 0.2;
+  if ([...trainPoints, ...testPoints].some(p => ![0, 1].includes(p.label))) throw new Error('Binary classification requires labels 0 and 1.');
+  const random = mulberry32(seed);
+  let w1 = (random() - 0.5) * 0.2;
+  let w2 = (random() - 0.5) * 0.2;
   let b = 0.0;
 
   const n = trainPoints.length;
@@ -64,10 +68,14 @@ export function trainLogisticRegression(
     w2 -= learningRate * gradW2;
     b -= learningRate * gradB;
 
-    trainLoss = (trainLoss / n) + 0.5 * regularization * (w1 * w1 + w2 * w2);
+    if (![w1,w2,b].every(Number.isFinite)) throw new Error('Training diverged. Reduce the learning rate or rescale the data.');
+    trainLoss = trainPoints.reduce((sum, p) => {
+      const prob = Math.max(1e-12, Math.min(1-1e-12, sigmoid(w1*p.x+w2*p.y+b)));
+      return sum - p.label*Math.log(prob) - (1-p.label)*Math.log(1-prob);
+    },0) / n + 0.5 * regularization * (w1*w1+w2*w2);
 
     // Validation loss calculation
-    let valLoss = 0;
+    let valLoss = testPoints.length ? 0 : null;
     if (testPoints.length > 0) {
       testPoints.forEach((p) => {
         const yHat = sigmoid(w1 * p.x + w2 * p.y + b);
@@ -80,7 +88,7 @@ export function trainLogisticRegression(
     history.push({
       epoch: ep + 1,
       trainLoss: Number(trainLoss.toFixed(4)),
-      valLoss: Number(valLoss.toFixed(4)),
+      valLoss: valLoss == null ? null : Number(valLoss.toFixed(4)),
     });
   }
 
@@ -102,16 +110,22 @@ export function trainLogisticRegression(
 
   // Evaluation on test set
   let testCorrect = 0;
+  const testConfusion = {tp:0,fp:0,tn:0,fn:0};
   if (testPoints.length > 0) {
     testPoints.forEach((p) => {
       const prob = sigmoid(w1 * p.x + w2 * p.y + b);
       const pred = prob >= threshold ? 1 : 0;
       if (pred === p.label) testCorrect++;
+      if (pred === 1 && p.label === 1) testConfusion.tp++;
+      else if (pred === 1) testConfusion.fp++;
+      else if (p.label === 0) testConfusion.tn++;
+      else testConfusion.fn++;
     });
   }
-  const testAccuracy = testPoints.length > 0 ? testCorrect / testPoints.length : accuracy;
+  const testAccuracy = testPoints.length > 0 ? testCorrect / testPoints.length : null;
 
   return {
+    threshold,
     weights: {
       w1: Number(w1.toFixed(4)),
       w2: Number(w2.toFixed(4)),
@@ -119,19 +133,19 @@ export function trainLogisticRegression(
     },
     history,
     accuracy: Number(accuracy.toFixed(4)),
-    testAccuracy: Number(testAccuracy.toFixed(4)),
+    testAccuracy: testAccuracy == null ? null : Number(testAccuracy.toFixed(4)),
     precision: Number(precision.toFixed(4)),
     recall: Number(recall.toFixed(4)),
     f1: Number(f1.toFixed(4)),
-    confusion: { tp, fp, tn, fn },
+    confusion: testPoints.length ? testConfusion : null,
     predictProbability: (x, y) => sigmoid(w1 * x + w2 * y + b),
     predictClass: (x, y) => (sigmoid(w1 * x + w2 * y + b) >= threshold ? 1 : 0),
     // Returns line boundary endpoints for canvas rendering: w1*x + w2*y + b = 0
     getBoundaryLine: (xMin, xMax) => {
       if (Math.abs(w2) < 1e-6) return null;
       return {
-        yAtXMin: -(w1 * xMin + b) / w2,
-        yAtXMax: -(w1 * xMax + b) / w2,
+        yAtXMin: (Math.log(threshold / (1 - threshold)) - w1 * xMin - b) / w2,
+        yAtXMax: (Math.log(threshold / (1 - threshold)) - w1 * xMax - b) / w2,
       };
     }
   };

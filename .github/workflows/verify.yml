@@ -1,0 +1,39 @@
+name: Verify NeuroForge
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mongo:
+        image: mongo:8.0
+        ports:
+          - 27017:27017
+    env:
+      NEUROFORGE_TEST_MONGODB_URI: mongodb://127.0.0.1:27017
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            client/package-lock.json
+            server/package-lock.json
+      - run: npm ci
+      - run: npm --prefix client ci
+      - run: npm --prefix server ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run check
+      - run: npm run test:e2e:memory
+      - run: npm run baseline:summary
+        if: always()
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification-artifacts
+          path: .artifacts/
+          include-hidden-files: true

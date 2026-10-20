@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { fetchExperiments } from '../services/api';
 import { Link } from 'react-router-dom';
 import { 
   Sliders, 
@@ -6,19 +7,13 @@ import {
   Scale, 
   Play, 
   Sparkles, 
-  TrendingUp, 
-  CheckCircle2, 
-  Clock, 
   ArrowRight,
-  Database,
-  Cpu,
-  Zap,
   Activity
 } from 'lucide-react';
 import { useLabStore } from '../store/useLabStore';
 
 export default function MissionControl() {
-  const { setCommandPaletteOpen, showToast } = useLabStore();
+  const { setCommandPaletteOpen } = useLabStore();
 
   const stats = [
     { label: 'Available Algorithms', value: '5 Real Models', change: 'Classical + Deep Learning', color: 'text-[#46D7F2]' },
@@ -27,41 +22,16 @@ export default function MissionControl() {
     { label: 'Engine Runtime', value: 'TensorFlow.js', change: 'Browser GPU/WebGL Accelerated', color: 'text-[#F3B65E]' },
   ];
 
-  const recentExperiments = [
-    {
-      id: 'exp-01',
-      title: 'XOR Classification Challenge',
-      type: 'Multi-Layer Perceptron (2-4-1)',
-      dataset: 'XOR Presets',
-      metric: 'Accuracy: 100%',
-      loss: '0.012',
-      status: 'Converged',
-      time: '10 mins ago',
-      path: '/app/studio'
-    },
-    {
-      id: 'exp-02',
-      title: 'K-Means Voronoi Partitioning',
-      type: 'K-Means (k=3)',
-      dataset: 'Gaussian Blobs',
-      metric: 'Inertia: 42.8',
-      loss: 'Iter: 6',
-      status: 'Converged',
-      time: '1 hour ago',
-      path: '/app/playground'
-    },
-    {
-      id: 'exp-03',
-      title: 'Decision Boundary Overfitting Lab',
-      type: 'Logistic vs Dense 64',
-      dataset: 'Two Moons (Noise: 35%)',
-      metric: 'Val Loss: 0.28 vs 0.64',
-      loss: 'Overfitting detected',
-      status: 'Arena Compared',
-      time: 'Yesterday',
-      path: '/app/arena'
-    }
-  ];
+  const [recentExperiments,setRecentExperiments] = useState([]);
+  useEffect(() => {
+    let alive = true;
+    fetchExperiments().then(runs => { if (alive) setRecentExperiments(runs.slice(0,3).map(run => ({
+      id:run._id,title:run.name,type:run.algorithm,dataset:run.dataset?.name,
+      metric:Number.isFinite(run.metrics?.valAccuracy)?`Validation: ${(run.metrics.valAccuracy*100).toFixed(1)}%`:Number.isFinite(run.metrics?.mse)?`MSE: ${run.metrics.mse}`:Number.isFinite(run.metrics?.inertia)?`Inertia: ${run.metrics.inertia}`:'Metrics in report',
+      status:run.status,time:new Date(run.createdAt).toLocaleDateString(),path:`/app/experiments/${run.shareId || run._id}`,
+    }))); });
+    return () => { alive = false; };
+  },[]);
 
   return (
     <div className="p-6 sm:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-200">
@@ -192,7 +162,7 @@ export default function MissionControl() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-display font-bold text-white">Curated Benchmark Experiments</h3>
+            <h3 className="text-lg font-display font-bold text-white">Recent Saved Experiments</h3>
             <span className="text-xs px-2 py-0.5 rounded bg-[#3CD5AA]/15 text-[#3CD5AA] font-mono">Reproducible</span>
           </div>
           <Link to="/app/experiments" className="text-xs text-[#46D7F2] hover:underline flex items-center gap-1">
@@ -202,6 +172,7 @@ export default function MissionControl() {
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-[#151E30] overflow-hidden divide-y divide-white/5 shadow-sm">
+          {!recentExperiments.length && <p className="p-5 text-sm text-slate-400">Your saved runs will appear here. Start an experiment in a lab above.</p>}
           {recentExperiments.map((exp) => (
             <Link
               key={exp.id}

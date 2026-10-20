@@ -69,3 +69,19 @@
     background: radial-gradient(circle at 50% 20%, rgba(70, 215, 242, 0.08) 0%, transparent 60%);
   }
 }
+
+@media (min-width: 1280px) {
+  .lab-workspace > div > aside { resize: horizontal; min-width: 200px; max-width: 400px; overflow: auto; }
+  .lab-workspace > footer { resize: vertical; min-height: 36px; max-height: 45vh; overflow: auto; }
+}
+@media (max-width: 1279px) {
+  .lab-workspace { height: auto; overflow: visible; }
+  .lab-workspace > div { flex-direction: column; overflow: visible; }
+  .lab-workspace > div > section { order: -1; min-height: 440px; flex: none; }
+  .lab-workspace > div > aside { width: 100%; flex: none; max-height: none; }
+  .lab-workspace > footer { height: auto; min-height: 36px; }
+  .lab-workspace > footer > div { flex-wrap: wrap; height: auto; min-height: 36px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

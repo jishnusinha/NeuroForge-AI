@@ -62,7 +62,7 @@ export function createKNN(trainPoints, k = 5, metric = 'euclidean', weighted = f
 
   // Evaluate Accuracy on test points
   function evaluate(testPoints = []) {
-    if (!testPoints || testPoints.length === 0) return 1.0;
+    if (!testPoints || testPoints.length === 0) return null;
     let correct = 0;
     testPoints.forEach((p) => {
       const res = probe(p.x, p.y);

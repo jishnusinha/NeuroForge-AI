@@ -1,7 +1,7 @@
 // Synthetic 2D Dataset Generators with reproducible pseudo-random seed
 
 // Simple Mulberry32 PRNG for deterministic reproducibility
-function mulberry32(a) {
+export function mulberry32(a) {
   return function() {
     let t = a += 0x6D2B79F5;
     t = Math.imul(t ^ t >>> 15, t | 1);
@@ -133,7 +133,24 @@ export function generateLinearTrend(numPoints = 120, noise = 0.25, seed = 42) {
 }
 
 // Split array of points into deterministic train and test sets
-export function trainTestSplit(points, trainRatio = 0.8, seed = 42) {
+export function generateSpiral(numPoints = 200, noise = 0.12, seed = 42) {
+  const prng = mulberry32(seed);
+  return Array.from({ length: numPoints }, (_, i) => {
+    const label = i % 2;
+    const radius = Math.floor(i / 2) / Math.max(1, Math.ceil(numPoints / 2) - 1) * 1.8;
+    const angle = radius * 3.5 + label * Math.PI;
+    return { id: `spiral-${i}`, x: radius * Math.cos(angle) + randomGaussian(prng, 0, noise), y: radius * Math.sin(angle) + randomGaussian(prng, 0, noise), label };
+  });
+}
+
+export function trainTestSplit(points, trainRatio = 0.8, seed = 42, membership = null) {
+  if (membership) {
+    const ids=[...membership.train,...membership.validation,...membership.test];
+    if(ids.length!==points.length || new Set(ids).size!==ids.length || points.some(p=>!ids.includes(String(p.id))))throw new Error('INVALID_SPLIT_MEMBERSHIP');
+    const rows=keys=>keys.map(id=>points.find(p=>String(p.id)===id));
+    const train=rows(membership.train).map(p=>({...p,isTest:false})), test=rows(membership.validation).map(p=>({...p,isTest:true})), heldOut=rows(membership.test).map(p=>({...p,isTest:true}));
+    return {train,test,heldOut,all:[...train,...test,...heldOut]};
+  }
   const prng = mulberry32(seed);
   // Fisher-Yates shuffle with PRNG
   const shuffled = [...points];

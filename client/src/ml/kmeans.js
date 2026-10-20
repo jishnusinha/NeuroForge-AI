@@ -83,7 +83,10 @@ export function stepKMeans(points, currentCentroids) {
   return {
     points: assignments,
     centroids: newCentroids,
-    inertia: Number(inertia.toFixed(2)),
+    inertia: Number(assignments.reduce((sum, p) => {
+      const c = newCentroids.find(c => c.cluster === p.cluster);
+      return sum + (p.x - c.x) ** 2 + (p.y - c.y) ** 2;
+    }, 0).toFixed(2)),
     converged,
   };
 }
@@ -113,6 +116,7 @@ export function runKMeans(points, k = 3, initialCentroids = null, maxIterations 
     labeledPoints: currentPoints,
     finalInertia: history[history.length - 1]?.inertia || 0,
     iterations: history.length,
+    converged: history.at(-1)?.converged ?? false,
     history,
   };
 }

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Trash2, Plus, Sparkles, Activity } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 
 export default function NetworkCanvas({
   viewMode = 'architecture', // 'architecture' | 'neurons'
@@ -9,7 +9,6 @@ export default function NetworkCanvas({
   onSelectLayer,
   onSelectNeuron,
   onRemoveLayer,
-  onAddLayer,
   modelWeights = [],
   activations = [],
   gridSurface = null,
@@ -273,7 +272,8 @@ export default function NetworkCanvas({
 
           <div className="w-full h-28 relative rounded-lg overflow-hidden border border-white/10 bg-black">
             {/* Meshgrid Heatmap */}
-            <div className="grid grid-cols-20 h-full w-full">
+            <div role="img" aria-label="Model decision surface" className="grid h-full w-full"
+              style={{gridTemplateColumns:`repeat(${gridSurface.resolution}, minmax(0, 1fr))`,gridTemplateRows:`repeat(${gridSurface.resolution}, minmax(0, 1fr))`}}>
               {gridSurface.grid.flat().map((prob, idx) => (
                 <div
                   key={idx}
@@ -288,8 +288,8 @@ export default function NetworkCanvas({
 
             {/* Scatter Dots */}
             {datasetPoints.slice(0, 40).map((pt, idx) => {
-              const leftPercent = ((pt.x + 2.5) / 5) * 100;
-              const topPercent = ((-pt.y + 2.5) / 5) * 100;
+              const leftPercent = ((pt.x - gridSurface.min) / (gridSurface.max - gridSurface.min)) * 100;
+              const topPercent = ((gridSurface.max - pt.y) / (gridSurface.max - gridSurface.min)) * 100;
               return (
                 <div
                   key={idx}

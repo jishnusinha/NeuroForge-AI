@@ -8,15 +8,15 @@ import {
   ArrowRight, 
   Layers, 
   BrainCircuit, 
-  Cpu, 
   CheckCircle2, 
   Code2, 
   Terminal,
   Activity,
   Zap,
-  Info
 } from 'lucide-react';
 import { useLabStore } from '../store/useLabStore';
+import CommandPalette from '../components/CommandPalette';
+import Toast from '../components/Toast';
 
 export default function LandingPage() {
   const { setCommandPaletteOpen } = useLabStore();
@@ -29,6 +29,7 @@ export default function LandingPage() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let animationFrameId;
+    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     let width = (canvas.width = canvas.parentElement.clientWidth);
     let height = (canvas.height = canvas.parentElement.clientHeight || 460);
@@ -37,6 +38,11 @@ export default function LandingPage() {
       if (!canvas.parentElement) return;
       width = canvas.width = canvas.parentElement.clientWidth;
       height = canvas.height = canvas.parentElement.clientHeight || 460;
+      nodes.forEach(node => {
+        node.x = (node.layer + 1) * width / (layers.length + 1);
+        node.y = (node.index + 1) * height / (layers[node.layer] + 1);
+      });
+      if (motionPreference.matches) render();
     };
     window.addEventListener('resize', handleResize);
 
@@ -72,6 +78,7 @@ export default function LandingPage() {
       const rect = canvas.getBoundingClientRect();
       mouseX = e.clientX - rect.left;
       mouseY = e.clientY - rect.top;
+      if (motionPreference.matches) render();
     };
 
     canvas.addEventListener('mousemove', handleMouseMove);
@@ -84,9 +91,6 @@ export default function LandingPage() {
       for (let i = 0; i < nodes.length; i++) {
         for (let j = 0; j < nodes.length; j++) {
           if (nodes[j].layer === nodes[i].layer + 1) {
-            const dx = nodes[j].x - nodes[i].x;
-            const dy = nodes[j].y - nodes[i].y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
 
             // Check mouse proximity to line
             const midX = (nodes[i].x + nodes[j].x) / 2;
@@ -112,7 +116,7 @@ export default function LandingPage() {
 
       // Draw Nodes
       nodes.forEach((node) => {
-        node.pulse += 0.03;
+        if (!motionPreference.matches) node.pulse += 0.03;
         const pulseEffect = Math.sin(node.pulse) * 1.5;
 
         const distToMouse = Math.hypot(mouseX - node.x, mouseY - node.y);
@@ -143,10 +147,12 @@ export default function LandingPage() {
         ctx.shadowBlur = 0; // reset
       });
 
-      animationFrameId = requestAnimationFrame(render);
+      if (!motionPreference.matches) animationFrameId = requestAnimationFrame(render);
     };
 
     render();
+    const handleMotionChange = () => { cancelAnimationFrame(animationFrameId); render(); };
+    motionPreference.addEventListener('change', handleMotionChange);
 
     const handleClick = () => {
       // Find closest node to mouse
@@ -177,11 +183,14 @@ export default function LandingPage() {
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('click', handleClick);
       cancelAnimationFrame(animationFrameId);
+      motionPreference.removeEventListener('change', handleMotionChange);
     };
   }, []);
 
   return (
     <div className="relative min-h-screen bg-[#080D18] text-[#F2F5FC] overflow-x-hidden">
+      <CommandPalette />
+      <Toast />
       {/* Top Navigation */}
       <header className="h-16 border-b border-white/10 px-6 sm:px-12 flex items-center justify-between sticky top-0 z-40 bg-[#080D18]/80 backdrop-blur-md">
         <Link to="/" className="flex items-center gap-3">

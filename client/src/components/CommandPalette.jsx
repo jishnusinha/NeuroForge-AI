@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
-  Command, 
   ArrowRight, 
   Sliders, 
   Network, 
@@ -15,9 +14,26 @@ import {
   X 
 } from 'lucide-react';
 import { useLabStore } from '../store/useLabStore';
+import { generateXOR, generateGaussianBlobs } from '../ml/datasets';
 
 export default function CommandPalette() {
-  const { commandPaletteOpen, setCommandPaletteOpen, showToast } = useLabStore();
+  const { commandPaletteOpen, setCommandPaletteOpen } = useLabStore();
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setCommandPaletteOpen(!commandPaletteOpen);
+      }
+      if (event.key === 'Escape') setCommandPaletteOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [commandPaletteOpen, setCommandPaletteOpen]);
+  return commandPaletteOpen ? <CommandDialog /> : null;
+}
+
+function CommandDialog() {
+  const { setCommandPaletteOpen, loadRun, showToast } = useLabStore();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
@@ -63,6 +79,7 @@ export default function CommandPalette() {
       desc: 'Demonstrate why neural networks require hidden layers',
       icon: Play,
       action: () => {
+        loadRun({workspace:'studio',dataset:{name:'XOR Problem',points:generateXOR(180,.12,42),noise:.12,trainRatio:.8},hyperparameters:{layers:[{id:'in',type:'Input',units:2,activation:'Linear'},{id:'hidden',type:'Dense',units:4,activation:'ReLU'},{id:'out',type:'Output',units:1,activation:'Sigmoid'}]}});
         navigate('/app/studio');
         showToast('Loaded XOR Classification Benchmark', 'info');
       },
@@ -74,6 +91,7 @@ export default function CommandPalette() {
       desc: 'Manipulate centroids, step iterations, and observe Voronoi cells',
       icon: Layers,
       action: () => {
+        loadRun({workspace:'playground',algorithm:'K-Means Clustering',dataset:{name:'Gaussian Blobs',points:generateGaussianBlobs(210,.15,42),noise:.15,trainRatio:.8},hyperparameters:{k:3}});
         navigate('/app/playground');
         showToast('Switched to K-Means Clustering', 'info');
       },
@@ -103,27 +121,10 @@ export default function CommandPalette() {
   );
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setCommandPaletteOpen(!commandPaletteOpen);
-      }
-      if (e.key === 'Escape' && commandPaletteOpen) {
-        setCommandPaletteOpen(false);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [commandPaletteOpen, setCommandPaletteOpen]);
-
-  useEffect(() => {
-    if (commandPaletteOpen) {
-      setQuery('');
-      setSelectedIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
-  }, [commandPaletteOpen]);
+    const previous = document.activeElement;
+    inputRef.current?.focus();
+    return () => { if (previous?.isConnected) previous.focus(); };
+  }, []);
 
   const handleSelect = (cmd) => {
     setCommandPaletteOpen(false);
@@ -145,11 +146,10 @@ export default function CommandPalette() {
     }
   };
 
-  if (!commandPaletteOpen) return null;
-
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-[#080D18]/80 backdrop-blur-md">
       <div 
+        role="dialog" aria-modal="true" aria-label="Quick commands"
         className="w-full max-w-2xl bg-[#151E30] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
@@ -157,6 +157,7 @@ export default function CommandPalette() {
         <div className="flex items-center px-4 py-3.5 border-b border-white/10 gap-3">
           <Search className="w-5 h-5 text-[#46D7F2]" />
           <input
+            aria-label="Search commands"
             ref={inputRef}
             type="text"
             value={query}
@@ -169,6 +170,7 @@ export default function CommandPalette() {
             className="flex-1 bg-transparent text-[#F2F5FC] placeholder-[#9EACC4]/60 text-sm focus:outline-none font-sans"
           />
           <button 
+            aria-label="Close commands"
             onClick={() => setCommandPaletteOpen(false)}
             className="p-1 rounded-lg text-[#9EACC4] hover:text-white hover:bg-white/5 transition-colors"
           >

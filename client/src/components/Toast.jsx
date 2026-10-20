@@ -20,7 +20,7 @@ export default function Toast() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-5 duration-200">
+    <div role={toast.type === 'error' ? 'alert' : 'status'} className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-5 duration-200">
       <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border backdrop-blur-md shadow-2xl bg-[#151E30]/90 text-sm text-[#F2F5FC] ${borders[toast.type] || borders.info}`}>
         {icons[toast.type] || icons.info}
         <span className="font-medium text-xs sm:text-sm">{toast.message}</span>

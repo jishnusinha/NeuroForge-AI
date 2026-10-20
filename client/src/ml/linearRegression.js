@@ -2,7 +2,7 @@
 
 export function solveOLS(trainPoints, testPoints = []) {
   if (!trainPoints || trainPoints.length < 2) {
-    return { slope: 0, intercept: 0, mse: 0, mae: 0, r2: 0, testMse: 0 };
+    return { slope: 0, intercept: 0, mse: null, mae: null, r2: null, testMse: null, residuals: [], predict: () => null };
   }
 
   const n = trainPoints.length;
@@ -22,11 +22,7 @@ export function solveOLS(trainPoints, testPoints = []) {
   }
 
   const denominator = (n * sumX2 - sumX * sumX);
-  if (Math.abs(denominator) < 1e-12) {
-    return { slope: 0, intercept: sumY / n, mse: 0, mae: 0, r2: 0, testMse: 0 };
-  }
-
-  const slope = (n * sumXY - sumX * sumY) / denominator;
+  const slope = Math.abs(denominator) < 1e-12 ? 0 : (n * sumXY - sumX * sumY) / denominator;
   const intercept = (sumY - slope * sumX) / n;
 
   // Calculate training metrics
@@ -49,7 +45,7 @@ export function solveOLS(trainPoints, testPoints = []) {
   const r2 = ssTotal > 1e-9 ? Math.max(0, 1 - (ssRes / ssTotal)) : 1;
 
   // Calculate test metrics if testPoints provided
-  let testMse = 0;
+  let testMse = null;
   if (testPoints && testPoints.length > 0) {
     let testSsRes = 0;
     testPoints.forEach((p) => {
@@ -65,7 +61,7 @@ export function solveOLS(trainPoints, testPoints = []) {
     mse: Number(mse.toFixed(4)),
     mae: Number(mae.toFixed(4)),
     r2: Number(r2.toFixed(4)),
-    testMse: Number(testMse.toFixed(4)),
+    testMse: testMse == null ? null : Number(testMse.toFixed(4)),
     residuals,
     predict: (x) => slope * x + intercept,
   };
@@ -96,9 +92,11 @@ export function trainLinearRegressionGD(trainPoints, testPoints = [], learningRa
 
     slope -= learningRate * gradSlope;
     intercept -= learningRate * gradIntercept;
+    if (![slope,intercept].every(Number.isFinite)) throw new Error('Training diverged. Reduce the learning rate or rescale the data.');
+    trainLoss = trainPoints.reduce((sum,p) => sum + (slope*p.x+intercept-p.y)**2,0)/n;
 
     // Test loss
-    let valLoss = 0;
+    let valLoss = testPoints.length ? 0 : null;
     if (testPoints.length > 0) {
       testPoints.forEach((p) => {
         valLoss += (1 / testPoints.length) * Math.pow((slope * p.x + intercept) - p.y, 2);
@@ -108,13 +106,20 @@ export function trainLinearRegressionGD(trainPoints, testPoints = [], learningRa
     history.push({
       epoch: ep + 1,
       trainLoss: Number(trainLoss.toFixed(4)),
-      valLoss: Number(valLoss.toFixed(4)),
+      valLoss: valLoss == null ? null : Number(valLoss.toFixed(4)),
       slope: Number(slope.toFixed(4)),
       intercept: Number(intercept.toFixed(4)),
     });
   }
 
-  const finalMetrics = solveOLS(trainPoints, testPoints);
+  const residuals = trainPoints.map(p => ({ x: p.x, yTrue: p.y, yPred: slope * p.x + intercept, residual: p.y - slope * p.x - intercept }));
+  const mean = trainPoints.reduce((s, p) => s + p.y, 0) / n;
+  const ssRes = residuals.reduce((s, p) => s + p.residual ** 2, 0);
+  const ssTotal = trainPoints.reduce((s, p) => s + (p.y - mean) ** 2, 0);
+  const finalMetrics = { mse: ssRes / n, mae: residuals.reduce((s, p) => s + Math.abs(p.residual), 0) / n,
+    r2: ssTotal ? 1 - ssRes / ssTotal : ssRes === 0 ? 1 : 0,
+    testMse: testPoints.length ? testPoints.reduce((s, p) => s + (p.y - slope * p.x - intercept) ** 2, 0) / testPoints.length : null,
+    residuals, predict: x => slope * x + intercept };
   return {
     slope,
     intercept,

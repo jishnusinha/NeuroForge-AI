@@ -1,9 +1,43 @@
+import ChallengeHub from '../components/workspace/ChallengeHub.jsx';
+import { useLabStore } from '../store/useLabStore.js';
+import { isFeatureEnabled } from '../services/productionConfig.js';
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { BookOpen, HelpCircle, Eye, ArrowRight, CheckCircle2, Sparkles } from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
+
+import { generateXOR, generateLinearTrend } from '../ml/datasets';
+import { HelpCircle, Eye, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 export default function AcademyPage() {
+  const activeRun = useLabStore(state=>state.activeRun || state.savedRun);
+
   const [revealed, setRevealed] = useState({});
+  const [answers, setAnswers] = useState({});
+  const [progress, setProgress] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('neuroforge_learning_progress') || '{}'); } catch { return {}; }
+  });
+  const { slug } = useParams();
+  const { loadRun, setExperimentName } = useLabStore();
+  const choices = {
+    'lesson-xor': ['One straight line is sufficient', 'A hidden nonlinear representation is needed'],
+    'lesson-lr': ['The updates can overshoot and diverge', 'Larger steps always converge faster'],
+    'lesson-overfitting': ['The model necessarily generalizes well', 'Training and validation behavior suggest overfitting'],
+  };
+  const correct = { 'lesson-xor': 1, 'lesson-lr': 0, 'lesson-overfitting': 1 };
+  const answer = (id, index) => {
+    setAnswers(prev => ({ ...prev, [id]: index }));
+    if (index === correct[id]) {
+      const next = { ...progress, [id]: true }; setProgress(next);
+      try { localStorage.setItem('neuroforge_learning_progress', JSON.stringify(next)); } catch { /* Progress remains in this session. */ }
+    }
+  };
+  const openLesson = id => {
+    if (id === 'lesson-overfitting') return;
+    const xor = id === 'lesson-xor';
+    loadRun({ workspace: xor ? 'studio' : 'playground', algorithm: xor ? 'Dense MLP (2-4-1)' : 'Linear Regression',
+      dataset: { name: xor ? 'XOR Problem' : 'Linear Trend', points: xor ? generateXOR(180,.12,42) : generateLinearTrend(120,.25,42), noise: xor ? .12 : .25, trainRatio:.8, seed:42 },
+      hyperparameters: xor ? {layers:[{id:'in',type:'Input',units:2,activation:'Linear'},{id:'hidden',type:'Dense',units:4,activation:'ReLU'},{id:'out',type:'Output',units:1,activation:'Sigmoid'}],learningRate:.04,epochs:60} : {method:'gd',learningRate:.08} });
+    setExperimentName(xor ? 'Hidden layer challenge' : 'Learning rate investigation');
+  };
 
   const toggleReveal = (id) => {
     setRevealed(prev => ({ ...prev, [id]: !prev[id] }));
@@ -50,7 +84,8 @@ export default function AcademyPage() {
       </div>
 
       <div className="space-y-6">
-        {lessons.map((lesson) => {
+        <p className="text-sm text-[#3CD5AA]">Checkpoints completed: {Object.values(progress).filter(Boolean).length} / {lessons.length}</p>
+        {lessons.filter(lesson => !slug || lesson.id === slug).map((lesson) => {
           const isRevealed = revealed[lesson.id];
           return (
             <div key={lesson.id} className="p-6 rounded-2xl bg-[#151E30] border border-white/10 shadow-md space-y-4">
@@ -71,6 +106,10 @@ export default function AcademyPage() {
               </div>
 
               {/* Reveal toggle button */}
+              <fieldset className="space-y-2 text-sm"><legend className="text-xs text-[#9EACC4]">Choose your prediction</legend>
+                {choices[lesson.id].map((choice, index) => <button key={choice} aria-pressed={answers[lesson.id] === index} onClick={() => answer(lesson.id, index)} className="block w-full text-left p-3 rounded border border-white/10 hover:border-cyan-300">{choice}</button>)}
+                {answers[lesson.id] !== undefined && <p role="status">{answers[lesson.id] === correct[lesson.id] ? 'Correct. Checkpoint completed.' : 'Try again, then inspect the explanation.'}</p>}
+              </fieldset>
               <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
                 <button
                   onClick={() => toggleReveal(lesson.id)}
@@ -82,6 +121,7 @@ export default function AcademyPage() {
 
                 <Link
                   to={lesson.labLink}
+                  onClick={() => openLesson(lesson.id)}
                   className="flex items-center gap-1.5 text-xs font-medium text-[#46D7F2] hover:underline"
                 >
                   <span>{lesson.labLabel}</span>
@@ -103,6 +143,6 @@ export default function AcademyPage() {
           );
         })}
       </div>
-    </div>
+    {isFeatureEnabled('investigation_academy') && <ChallengeHub activeRun={activeRun}/>}</div>
   );
 }

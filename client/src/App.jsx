@@ -1,27 +1,30 @@
-import React from 'react';
+import { isFeatureEnabled } from './services/productionConfig.js';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppShell from './components/AppShell';
 import LandingPage from './pages/LandingPage';
-import MissionControl from './pages/MissionControl';
-import PlaygroundShell from './pages/PlaygroundShell';
-import StudioShell from './pages/StudioShell';
-import ArenaShell from './pages/ArenaShell';
-import ShowcasePage from './pages/ShowcasePage';
-import DatasetsPage from './pages/DatasetsPage';
-import ExperimentsPage from './pages/ExperimentsPage';
-import AcademyPage from './pages/AcademyPage';
-import ReportPage from './pages/ReportPage';
+const AccountPage = lazy(() => import('./pages/AccountPage'));
+const MissionControl = lazy(() => import('./pages/MissionControl'));
+const PlaygroundShell = lazy(() => import('./pages/PlaygroundShell'));
+const StudioShell = lazy(() => import('./pages/StudioShell'));
+const ArenaShell = lazy(() => import('./pages/ArenaShell'));
+const ShowcasePage = lazy(() => import('./pages/ShowcasePage'));
+const DatasetsPage = lazy(() => import('./pages/DatasetsPage'));
+const ExperimentsPage = lazy(() => import('./pages/ExperimentsPage'));
+const AcademyPage = lazy(() => import('./pages/AcademyPage'));
+const ReportPage = lazy(() => import('./pages/ReportPage'));
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <Suspense fallback={<p role="status" className="p-8 text-slate-300">Loading workspace...</p>}><Routes>
         {/* Standalone Landing Page */}
         <Route path="/" element={<LandingPage />} />
 
         {/* Application Workspace Routes (wrapped in AppShell) */}
         <Route path="/app" element={<AppShell />}>
           <Route index element={<MissionControl />} />
+          <Route path="account" element={isFeatureEnabled('accounts_and_sync') ? <AccountPage /> : <p role="status" className="p-6">Account features are disabled for this rollout.</p>} />
           <Route path="playground" element={<PlaygroundShell />} />
           <Route path="studio" element={<StudioShell />} />
           <Route path="arena" element={<ArenaShell />} />
@@ -29,6 +32,7 @@ export default function App() {
           <Route path="experiments" element={<ExperimentsPage />} />
           <Route path="experiments/:id" element={<ReportPage />} />
           <Route path="learn" element={<AcademyPage />} />
+          <Route path="learn/:slug" element={<AcademyPage />} />
         </Route>
 
         {/* Public Read-Only Shareable Report Route */}
@@ -43,7 +47,7 @@ export default function App() {
 
         {/* Fallback route */}
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      </Routes></Suspense>
     </BrowserRouter>
   );
 }

@@ -1,91 +1,71 @@
-// API Client for NeuroForge Experiments with local offline fallback
-
-const API_BASE_URL = 'http://localhost:5000/api';
-
-const LOCAL_STORAGE_KEY = 'neuroforge_saved_experiments';
-
-function getLocalExperiments() {
-  try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    return [];
-  }
+import { toDomain, adaptRecord } from '../../../shared/domain.mjs';
+const API_BASE_URL = import.meta.env?.VITE_API_URL || '/api';
+const KEY = 'neuroforge_saved_experiments';
+const cacheKey = () => localStorage.getItem('neuroforge_account_id') ? KEY + '_' + localStorage.getItem('neuroforge_account_id') : KEY;
+function read() {
+  try { const list = JSON.parse(localStorage.getItem(cacheKey()) || '[]'); return Array.isArray(list) ? list : []; }
+  catch { return []; }
 }
-
-function saveLocalExperiments(list) {
-  try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
-  } catch (e) {
-    console.warn('LocalStorage save failed:', e);
-  }
+function write(list) { localStorage.setItem(cacheKey(), JSON.stringify(list)); }
+function headers() {
+  let token = localStorage.getItem('neuroforge_owner_token');
+  if (!token) { token = crypto.randomUUID(); localStorage.setItem('neuroforge_owner_token', token); }
+  const session = localStorage.getItem('neuroforge_session_token');
+  return { 'Content-Type': 'application/json', 'X-Owner-Token': token, ...(session ? { Authorization: 'Bearer ' + session } : {}) };
 }
-
+export async function request(path, options = {}) {
+  const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers: headers(), signal: AbortSignal.timeout(path.startsWith('/v2/auth/') ? 15000 : 5000) });
+  if (!response.ok) {
+    let body = {};
+    try { body = await response.json(); } catch { /* Some proxies return non-JSON errors. */ }
+    const error = new Error(`${body.error || 'Request failed'} (${response.status})`);
+    error.status = response.status; error.code = body.code;
+    throw error;
+  }
+  return response.json();
+}
 export async function fetchExperiments() {
   try {
-    const res = await fetch(`${API_BASE_URL}/experiments`, { signal: AbortSignal.timeout(3000) });
-    if (!res.ok) throw new Error('API server returned error');
-    const json = await res.json();
-    return json.data || [];
-  } catch (err) {
-    console.info('Backend unreachable, using client local storage fallback.');
-    return getLocalExperiments();
-  }
+    const server = (await request('/experiments')).data || [];
+    const merged = [...server, ...read().filter(local => !server.some(run => run.shareId === local.shareId))];
+    try { write(merged); } catch { /* Server data remains available. */ }
+    return Promise.all(merged.map(adaptRecord));
+  } catch { return Promise.all(read().map(adaptRecord)); }
 }
-
 export async function fetchExperimentById(id) {
-  try {
-    const res = await fetch(`${API_BASE_URL}/experiments/${id}`, { signal: AbortSignal.timeout(3000) });
-    if (!res.ok) throw new Error('Experiment not found on server');
-    const json = await res.json();
-    return json.data;
-  } catch (err) {
-    const local = getLocalExperiments();
-    return local.find((e) => e._id === id || e.shareId === id) || null;
-  }
+  const local=read().find(run=>run.storage==='local'&&(run._id===id||run.shareId===id));
+  if(local)return adaptRecord(local);
+  try { return adaptRecord((await request(id.startsWith('share-') ? '/v2/shares/' + encodeURIComponent(id) : '/experiments/' + encodeURIComponent(id))).data); }
+  catch (error) { if (error.status || id.startsWith('share-')) return null; return adaptRecord(read().find(run => run._id === id || run.shareId === id) || null); }
 }
-
 export async function createExperiment(payload) {
-  // Always update local cache
-  const localList = getLocalExperiments();
-  const shareId = `rep-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
-  const localRecord = {
-    _id: `exp-${Date.now()}`,
-    shareId,
-    createdAt: new Date().toISOString(),
-    ...payload,
-  };
-  saveLocalExperiments([localRecord, ...localList]);
-
-  // Attempt server sync
-  try {
-    const res = await fetch(`${API_BASE_URL}/experiments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(3000),
-    });
-    if (res.ok) {
-      const json = await res.json();
-      return json.data;
-    }
-  } catch (err) {
-    console.info('Saved experiment to local browser storage.');
+  const record = { ...payload, _id: `local-${crypto.randomUUID()}`, shareId: `rep-${crypto.randomUUID()}`, createdAt: new Date().toISOString(), storage: 'local' };
+  record.runId = payload.runId || crypto.randomUUID();
+  record.schemaVersion = 2;
+  record.domain = await toDomain(record, { legacy: false, membership: payload.evaluation?.membership ?? null, splitSeed: payload.evaluation?.splitSeed ?? null, parentRunId: payload.parentRunId ?? null });
+  let saved;
+  try { saved = (await request('/experiments', { method: 'POST', body: JSON.stringify(record) })).data; }
+  catch (error) { if (error.status) throw error; }
+  if (saved) {
+    try { write([saved, ...read().filter(run => run.shareId !== saved.shareId)]); } catch { /* Server save succeeded. */ }
+    return saved;
   }
-
-  return localRecord;
+  write([record, ...read()]);
+  return record;
 }
-
 export async function removeExperiment(id) {
-  const localList = getLocalExperiments();
-  saveLocalExperiments(localList.filter((e) => e._id !== id && e.shareId !== id));
-
-  try {
-    await fetch(`${API_BASE_URL}/experiments/${id}`, {
-      method: 'DELETE',
-      signal: AbortSignal.timeout(3000),
-    });
-  } catch (e) {
-    // Local deletion is already performed
-  }
+  const list = read();
+  const record = list.find(run => run._id === id || run.shareId === id);
+  if (record?.storage !== 'local') await request(`/experiments/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  write(list.filter(run => run._id !== id && run.shareId !== id));
 }
+
+export async function authenticate(mode, credentials) {
+  const result = await request('/v2/auth/'+mode,{method:'POST',body:JSON.stringify(credentials)});
+  if(result.verificationRequired)return null;
+  localStorage.setItem('neuroforge_session_token',result.token); localStorage.setItem('neuroforge_account_id',result.user.id);
+  return result.user;
+}
+export async function logout() { await request('/v2/auth/logout',{method:'POST'}); localStorage.removeItem('neuroforge_session_token'); localStorage.removeItem('neuroforge_account_id'); }
+export const createShare = (resourceId, resourceType='run', expiresInHours=168) => request('/v2/shares',{method:'POST',body:JSON.stringify({resourceId,resourceType,expiresInHours})});
+export const revokeShare = shareId => request('/v2/shares/'+encodeURIComponent(shareId),{method:'DELETE'});

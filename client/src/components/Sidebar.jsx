@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Sliders, 
@@ -11,14 +11,11 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
-  ShieldCheck,
-  Zap
 } from 'lucide-react';
 import { useLabStore } from '../store/useLabStore';
 
 export default function Sidebar() {
   const { sidebarExpanded, toggleSidebar } = useLabStore();
-  const navigate = useNavigate();
 
   const navItems = [
     { name: 'Mission Control', path: '/app', icon: LayoutDashboard },
@@ -33,7 +30,7 @@ export default function Sidebar() {
   return (
     <aside 
       className={`fixed top-0 left-0 bottom-0 z-40 bg-[#0D1422] border-r border-white/10 flex flex-col transition-all duration-300 ease-in-out ${
-        sidebarExpanded ? 'w-[232px]' : 'w-[72px]'
+        sidebarExpanded ? 'lg:w-[232px] w-[72px]' : 'w-[72px]'
       }`}
     >
       {/* Brand Header */}
@@ -43,7 +40,7 @@ export default function Sidebar() {
             N
           </div>
           {sidebarExpanded && (
-            <div className="flex flex-col">
+            <div className="hidden lg:flex flex-col">
               <span className="font-display font-bold tracking-tight text-base text-white flex items-center gap-1.5">
                 NeuroForge
                 <span className="text-[10px] uppercase font-mono px-1 py-0.2 rounded bg-[#46D7F2]/20 text-[#46D7F2] border border-[#46D7F2]/30">
@@ -58,7 +55,7 @@ export default function Sidebar() {
           <button 
             onClick={toggleSidebar}
             title="Collapse sidebar"
-            className="p-1.5 rounded-lg text-[#9EACC4] hover:text-white hover:bg-white/5 transition-colors"
+            className="hidden lg:block p-1.5 rounded-lg text-[#9EACC4] hover:text-white hover:bg-white/5 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -73,6 +70,7 @@ export default function Sidebar() {
             <NavLink
               key={item.path}
               to={item.path}
+              aria-label={item.name}
               end={item.path === '/app'}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group relative ${
@@ -85,7 +83,7 @@ export default function Sidebar() {
             >
               <Icon className="w-5 h-5 flex-shrink-0" />
               {sidebarExpanded && (
-                <div className="flex items-center justify-between flex-1 overflow-hidden">
+                <div className="hidden lg:flex items-center justify-between flex-1 overflow-hidden">
                   <span className="truncate">{item.name}</span>
                   {item.badge && (
                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-[#A78BFA] border border-[#A78BFA]/20 uppercase font-mono">
@@ -116,7 +114,7 @@ export default function Sidebar() {
             <Sparkles className="w-4 h-4 flex-shrink-0 animate-pulse" />
           </div>
           {sidebarExpanded && (
-            <div className="overflow-hidden">
+            <div className="hidden lg:block overflow-hidden">
               <div className="font-semibold text-white flex items-center gap-1">
                 Interview Showcase
               </div>
@@ -128,7 +126,7 @@ export default function Sidebar() {
         {/* Guest Status & Collapse Button for Mini-bar */}
         <div className="flex items-center justify-between pt-1">
           {sidebarExpanded ? (
-            <div className="flex items-center gap-2 px-1 text-[11px] text-[#9EACC4] font-mono">
+            <div className="hidden lg:flex items-center gap-2 px-1 text-[11px] text-[#9EACC4] font-mono">
               <span className="w-2 h-2 rounded-full bg-[#3CD5AA] shadow-sm animate-pulse" />
               <span>Guest Mode (Local)</span>
             </div>

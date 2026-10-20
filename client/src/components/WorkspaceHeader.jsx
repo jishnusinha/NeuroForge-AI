@@ -1,24 +1,57 @@
+import { isFeatureEnabled } from '../services/productionConfig.js';
 import React, { useState } from 'react';
-import { useLocation, Link } from 'react-router-dom';
-import { 
-  Search, 
-  Save, 
-  Share2, 
-  Play, 
-  CheckCircle2, 
-  AlertTriangle, 
-  RefreshCw, 
+import { useLocation, useNavigate, Link } from 'react-router-dom';
+import {
+  Search,
+  Save,
+  Share2,
+  CheckCircle2,
+  AlertTriangle,
+  RefreshCw,
   Sparkles,
   Check,
-  Copy
+  Maximize2,
+  Minimize2,
+  Bell
 } from 'lucide-react';
 import { useLabStore } from '../store/useLabStore';
-import { createExperiment } from '../services/api';
+import { draftManager } from '../services/draftManager.js';
+import { createExperiment, createShare } from '../services/api';
+import ViewModeToggle from './workspace/ViewModeToggle';
+import DraftRecoveryModal from './workspace/DraftRecoveryModal';
 
 export default function WorkspaceHeader() {
+  const cloudSyncState=useLabStore(state=>state.cloudSyncState);
   const location = useLocation();
-  const { currentExperiment, setCommandPaletteOpen, showToast } = useLabStore();
+  const navigate = useNavigate();
+  const loadRun = useLabStore(state => state.loadRun);
+  const resolveConflict = async action => {
+    try { const draft = await draftManager.resolveConflict(action); loadRun({ ...draft.configuration, workspace: draft.workspace, _draftId: draft.id, _draftRevision: draft.revision }); setConflictModalOpen(false); setDraftConflict(null); setDraftStorageState('saved_local'); navigate('/app/'+draft.workspace); }
+    catch(error) { showToast(error.message,'error'); }
+  };
+  const {
+    currentExperiment,
+    activeRun,
+    savedRun,
+    setSavedRun,
+    setExperimentName,
+    setCommandPaletteOpen,
+    showToast,
+    focusMode,
+    toggleFocusMode,
+    notifications,
+    toggleNotificationDrawer,
+    draftStorageState,
+    setDraftStorageState,
+    draftConflict,
+    setDraftConflict
+  } = useLabStore();
   const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [conflictModalOpen, setConflictModalOpen] = useState(false);
+  const editable = ['/app/playground','/app/studio'].includes(location.pathname);
+  const unreadCount = notifications.filter(n => !n.read).length;
+
 
   // Derive route title
   const getRouteInfo = (pathname) => {
@@ -73,7 +106,7 @@ export default function WorkspaceHeader() {
         return (
           <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-[#3CD5AA]/15 text-[#3CD5AA] border border-[#3CD5AA]/30">
             <Check className="w-3.5 h-3.5" />
-            Converged
+            Completed
           </span>
         );
       default:
@@ -85,40 +118,37 @@ export default function WorkspaceHeader() {
     }
   };
 
-  const handleShare = () => {
-    navigator.clipboard?.writeText(window.location.href);
-    setCopied(true);
-    showToast('Experiment share link copied to clipboard!', 'success');
-    setTimeout(() => setCopied(false), 2000);
+  const handleShare = async () => {
+    try {
+      if (!savedRun) throw new Error('Save the current run before sharing.');
+      if (savedRun.storage === 'local') throw new Error('This run is stored on this browser only. Export its report to share it.');
+      const result = await createShare(savedRun._id);
+      await navigator.clipboard.writeText(window.location.origin + '/report/' + result.data.shareId);
+      setCopied(true);
+      showToast('Report link copied.', 'success');
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) { showToast(error.message, 'error'); }
   };
 
   const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
     try {
-      const payload = {
-        name: currentExperiment.name || 'Saved Lab Experiment',
-        algorithm: 'Dense MLP (2-4-1)',
-        dataset: { name: 'XOR Problem', sampleCount: 180, noise: 0.12, trainRatio: 0.8, seed: 42 },
-        hyperparameters: { learningRate: 0.04, epochs: 60 },
-        metrics: { trainLoss: 0.012, valLoss: 0.018, trainAccuracy: 1.0, valAccuracy: 1.0 },
-        metricHistory: [
-          { epoch: 10, loss: 0.54 },
-          { epoch: 30, loss: 0.18 },
-          { epoch: 60, loss: 0.012 },
-        ],
-        status: 'Completed',
-      };
+      if (!activeRun || currentExperiment.status !== 'Completed') throw new Error('Complete a run with the current inputs before saving.');
+      const payload = { ...activeRun, name: currentExperiment.name === 'Untitled Experiment' ? activeRun.name : currentExperiment.name || activeRun.name };
       const result = await createExperiment(payload);
-      showToast(`Run saved permanently (ID: ${result.shareId || result._id})`, 'success');
+      setSavedRun(result);
+      showToast(`Run saved ${result.storage === 'local' ? 'in this browser' : result.storage === 'memory' ? 'in server memory (temporary)' : 'to database'}.`, 'success');
     } catch (e) {
-      showToast('Experiment snapshot saved to local session.', 'success');
-    }
+      showToast(e.message, 'error');
+    } finally { setSaving(false); }
   };
 
   return (
-    <header className="h-16 px-6 bg-[#080D18]/90 backdrop-blur-md border-b border-white/10 flex items-center justify-between sticky top-0 z-30">
+    <header className="min-h-16 py-2 px-3 sm:px-6 bg-[#080D18]/90 backdrop-blur-md border-b border-white/10 flex flex-wrap gap-2  items-center justify-between sticky top-0 z-30">
       {/* Breadcrumbs and Context */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 text-xs font-mono text-[#9EACC4]">
+      <div className="flex min-w-0 flex-wrap items-center gap-3">
+        <div className="hidden xl:flex items-center gap-2 text-xs font-mono text-[#9EACC4]">
           <span>NeuroForge</span>
           <span>/</span>
           <span className="text-[#46D7F2] font-medium">{section}</span>
@@ -128,14 +158,38 @@ export default function WorkspaceHeader() {
           {title}
         </h1>
         {location.pathname.startsWith('/app/') && (
-          <div className="hidden lg:flex items-center gap-2 pl-3 border-l border-white/10">
-            <span className="text-xs text-[#9EACC4] truncate max-w-[200px]">
-              {currentExperiment.name}
-            </span>
+          <div className="flex flex-wrap items-center gap-2 pl-3 border-l border-white/10">
+            {editable && <input aria-label="Experiment name" value={currentExperiment.name} onChange={e => setExperimentName(e.target.value)} className="text-xs bg-transparent text-[#9EACC4] max-w-[180px]" />}
             {getStatusBadge(currentExperiment.status)}
+            {draftStorageState === 'saved_local' && (
+              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-[#3CD5AA]/10 text-[#3CD5AA] border border-[#3CD5AA]/20" title="Saved to IndexedDB on this device">
+                <Check className="w-3 h-3" />
+                Saved on device
+              </span>
+            )}
+            {cloudSyncState==='conflict'&&<span role="alert" className="text-amber-300 text-xs">Cloud conflict: local work preserved. <button onClick={()=>resolveConflict('duplicate')}>Save a copy for sync</button></span>}
+            {draftStorageState === 'failed' && <span role="alert" className="text-red-300 text-xs">Draft not saved <button onClick={() => draftManager.saveNow().catch(error => showToast(error.message,'error'))}>Retry save</button></span>}
+            {draftStorageState === 'saving' && (
+              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-[#46D7F2]/10 text-[#46D7F2] border border-[#46D7F2]/20">
+                <RefreshCw className="w-3 h-3 animate-spin" />
+                Saving...
+              </span>
+            )}
+            {draftStorageState === 'conflict' && (
+              <button
+                type="button"
+                onClick={() => setConflictModalOpen(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-[#FF5C8A]/15 text-[#FF5C8A] border border-[#FF5C8A]/30 animate-pulse hover:bg-[#FF5C8A]/25"
+                title="Cross-tab conflict detected. Click to resolve."
+              >
+                <AlertTriangle className="w-3.5 h-3.5" />
+                Conflict
+              </button>
+            )}
           </div>
         )}
       </div>
+
 
       {/* Center Search / Command Palette Bar */}
       <div className="flex-1 max-w-md mx-6 hidden md:block">
@@ -153,8 +207,42 @@ export default function WorkspaceHeader() {
         </button>
       </div>
 
-      {/* Right Actions */}
-      <div className="flex items-center gap-2.5">
+      {/* Right Actions: View Mode, Focus Mode, Notifications, Share, Save */}
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Guided vs Expert toggle for laboratory workspaces */}
+        {editable && isFeatureEnabled('workspace_system') && <ViewModeToggle />}
+
+        {/* Focus Mode toggle */}
+        <button
+          type="button"
+          onClick={toggleFocusMode}
+          className={`p-2 rounded-xl border transition-all text-xs flex items-center justify-center ${
+            focusMode
+              ? 'bg-[#46D7F2]/20 border-[#46D7F2]/50 text-[#46D7F2]'
+              : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/10 text-[#9EACC4] hover:text-white'
+          }`}
+          title={focusMode ? 'Exit Focus Mode (Alt+F)' : 'Enter Focus Mode (Alt+F)'}
+          aria-label={focusMode ? 'Exit Focus Mode' : 'Enter Focus Mode'}
+        >
+          {focusMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+        </button>
+
+        {/* Notification Bell with unread badge */}
+        <button
+          type="button"
+          onClick={toggleNotificationDrawer}
+          className="relative p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-[#9EACC4] hover:text-white transition-colors"
+          title="Notification History (Alt+N)"
+          aria-label="Notification History"
+        >
+          <Bell className="w-4 h-4" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#46D7F2] text-[#080D18] text-[9px] font-bold flex items-center justify-center shadow-sm">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+
         <Link
           to="/showcase"
           className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#A78BFA]/10 hover:bg-[#A78BFA]/20 border border-[#A78BFA]/30 text-xs font-medium text-[#A78BFA] transition-all"
@@ -167,19 +255,34 @@ export default function WorkspaceHeader() {
           onClick={handleShare}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-medium text-[#F2F5FC] transition-colors"
           title="Share reproducible link"
+          aria-label={copied ? 'Copied' : 'Share'}
         >
           {copied ? <Check className="w-3.5 h-3.5 text-[#3CD5AA]" /> : <Share2 className="w-3.5 h-3.5 text-[#46D7F2]" />}
-          <span>{copied ? 'Copied' : 'Share'}</span>
+          <span className="hidden sm:inline">{copied ? 'Copied' : 'Share'}</span>
         </button>
 
-        <button
+        {isFeatureEnabled('accounts_and_sync') && <Link to="/app/account" className="text-xs p-2">Account & Projects</Link>}
+        {editable && <button
           onClick={handleSave}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#46D7F2] to-[#3CD5AA] hover:opacity-90 text-[#080D18] text-xs font-semibold shadow-glow-cyan transition-all"
+          disabled={saving || !activeRun || currentExperiment.status !== 'Completed'}
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#46D7F2] to-[#3CD5AA] hover:opacity-90 text-[#080D18] text-xs font-semibold shadow-glow-cyan transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Save className="w-3.5 h-3.5" />
-          <span>Save Run</span>
-        </button>
+          <span>{saving ? 'Saving...' : 'Save Run'}</span>
+        </button>}
       </div>
+
+      {/* Draft Conflict Modal */}
+      <DraftRecoveryModal
+        isOpen={conflictModalOpen || draftStorageState === 'conflict'}
+        type="conflict"
+        message={draftConflict?.message || 'Another browser tab has saved changes to this draft. Choose an action to keep your work safe.'}
+        onReload={() => resolveConflict('reload')}
+        onDuplicate={() => resolveConflict('duplicate')}
+        onDismiss={() => {
+          setConflictModalOpen(false);
+        }}
+      />
     </header>
   );
 }

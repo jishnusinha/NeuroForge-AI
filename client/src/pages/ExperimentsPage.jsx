@@ -1,62 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
-  FolderGit2, 
-  Activity, 
-  Scale, 
-  ArrowRight, 
-  CheckCircle2, 
-  Clock, 
   Trash2, 
   Plus, 
   ExternalLink,
-  Sparkles
 } from 'lucide-react';
-import { fetchExperiments, removeExperiment, createExperiment } from '../services/api';
+import { fetchExperiments, removeExperiment } from '../services/api';
 import { useLabStore } from '../store/useLabStore';
 
 export default function ExperimentsPage() {
   const [experiments, setExperiments] = useState([]);
   const [loading, setLoading] = useState(true);
   const { showToast } = useLabStore();
-
-  const loadData = async () => {
-    setLoading(true);
-    const data = await fetchExperiments();
-    setExperiments(data);
-    setLoading(false);
-  };
+  const navigate = useNavigate();
 
   useEffect(() => {
-    loadData();
+    let active = true;
+    fetchExperiments().then(data => {
+      if (active) { setExperiments(data); setLoading(false); }
+    });
+    return () => { active = false; };
   }, []);
 
   const handleDelete = async (id, name) => {
+    try {
     await removeExperiment(id);
     setExperiments((prev) => prev.filter((e) => e._id !== id && e.shareId !== id));
     showToast(`Deleted experiment "${name}"`, 'info');
+    } catch (error) { showToast(error.message, 'error'); }
   };
 
-  const handleCreateMockRun = async () => {
-    const newRun = {
-      name: `Trained Experiment #${experiments.length + 1}`,
-      algorithm: 'Dense MLP (2-8-4-1)',
-      dataset: { name: 'Two Moons', sampleCount: 220, noise: 0.25, trainRatio: 0.8, seed: 42 },
-      hyperparameters: { learningRate: 0.03, epochs: 50 },
-      metrics: { trainLoss: 0.042, valLoss: 0.089, valAccuracy: 0.98 },
-      metricHistory: [
-        { epoch: 10, loss: 0.65 },
-        { epoch: 20, loss: 0.32 },
-        { epoch: 30, loss: 0.14 },
-        { epoch: 40, loss: 0.06 },
-        { epoch: 50, loss: 0.042 },
-      ],
-      status: 'Completed',
-    };
-    const saved = await createExperiment(newRun);
-    setExperiments([saved, ...experiments]);
-    showToast(`Saved new experiment "${saved.name}" to persistent database!`, 'success');
-  };
+  const handleCreateMockRun = () => navigate('/app/playground');
 
   return (
     <div className="p-6 sm:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-200">
@@ -74,7 +48,7 @@ export default function ExperimentsPage() {
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#46D7F2] to-[#3CD5AA] text-[#080D18] text-xs font-bold shadow-glow-cyan hover:opacity-95 transition-all"
         >
           <Plus className="w-4 h-4" />
-          <span>Save Active Run Snapshot</span>
+          <span>New Experiment</span>
         </button>
       </div>
 

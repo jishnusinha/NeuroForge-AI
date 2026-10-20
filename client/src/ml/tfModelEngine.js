@@ -1,7 +1,11 @@
 import * as tf from '@tensorflow/tfjs';
 
 // Compile a sequential model from user-defined layer specifications
-export function buildTFModel(layerSpecs, learningRate = 0.03) {
+export function buildTFModel(layerSpecs, learningRate = 0.03, seed = 42, optimizer = 'adam') {
+  if (!Array.isArray(layerSpecs) || layerSpecs.some(l=>!['Linear','ReLU','Tanh','Sigmoid'].includes(l.activation)) || !Number.isFinite(learningRate) || learningRate <= 0 || !Number.isInteger(seed)) throw new Error('Invalid model configuration.');
+  if (layerSpecs.length < 2 || layerSpecs.length > 6 || layerSpecs[0].type !== 'Input' || layerSpecs[0].units !== 2 ||
+    layerSpecs.at(-1).type !== 'Output' || layerSpecs.at(-1).units !== 1 || layerSpecs.at(-1).activation !== 'Sigmoid' ||
+    layerSpecs.some(l => !Number.isInteger(l.units) || l.units < 1 || l.units > 16)) throw new Error('Use 2 inputs, up to four dense layers, and one sigmoid output.');
   const model = tf.sequential();
 
   const hiddenAndOutputLayers = layerSpecs.filter((l) => l.type !== 'Input');
@@ -11,7 +15,7 @@ export function buildTFModel(layerSpecs, learningRate = 0.03) {
     const config = {
       units: layer.units,
       activation: layer.activation.toLowerCase(),
-      kernelInitializer: 'glorotNormal',
+      kernelInitializer: tf.initializers.glorotNormal({ seed: seed + idx }),
       biasInitializer: 'zeros',
     };
 
@@ -23,7 +27,7 @@ export function buildTFModel(layerSpecs, learningRate = 0.03) {
   });
 
   model.compile({
-    optimizer: tf.train.adam(learningRate),
+    optimizer: optimizer === 'sgd' ? tf.train.sgd(learningRate) : optimizer === 'momentum' ? tf.train.momentum(learningRate, 0.9) : tf.train.adam(learningRate),
     loss: 'binaryCrossentropy',
     metrics: ['accuracy'],
   });
@@ -41,7 +45,12 @@ export async function trainTFModel(
   onEpochEndCallback = null,
   shouldStopRef = { current: false }
 ) {
-  if (!trainPoints || trainPoints.length === 0) return null;
+  if (!trainPoints || trainPoints.length < 2 || trainPoints.length + valPoints.length > 2000 ||
+    new Set(trainPoints.map(p => p.label)).size !== 2 ||
+    [...trainPoints,...valPoints].some(p => !Number.isFinite(p.x) || !Number.isFinite(p.y) || ![0,1].includes(p.label)) ||
+    !Number.isInteger(epochs) || epochs < 1 || epochs > 500 || !Number.isInteger(batchSize) || batchSize < 1 || batchSize > 128) {
+    throw new Error('Use 2–2000 finite binary samples with both training classes, 1–500 epochs, and batch size 1–128.');
+  }
 
   // Prepare input tensors
   const trainXArr = trainPoints.map((p) => [p.x, p.y]);
@@ -58,15 +67,17 @@ export async function trainTFModel(
   }
 
   const checkpoints = [];
+  model.stopTraining = false;
 
   try {
     await model.fit(trainX, trainY, {
       epochs,
       batchSize: Math.min(batchSize, trainPoints.length),
       validationData: valX && valY ? [valX, valY] : undefined,
-      shuffle: true,
+      shuffle: false,
       callbacks: {
         onEpochEnd: async (epoch, logs) => {
+          if (!Number.isFinite(logs.loss)) { model.stopTraining = true; throw new Error('Training diverged. Reduce the learning rate.'); }
           if (shouldStopRef.current) {
             model.stopTraining = true;
           }
@@ -78,8 +89,8 @@ export async function trainTFModel(
               epoch: epoch + 1,
               loss: Number((logs.loss || 0).toFixed(4)),
               accuracy: Number((logs.acc || logs.accuracy || 0).toFixed(4)),
-              valLoss: logs.val_loss ? Number(logs.val_loss.toFixed(4)) : null,
-              valAccuracy: logs.val_acc ? Number(logs.val_acc.toFixed(4)) : null,
+              valLoss: logs.val_loss != null ? Number(logs.val_loss.toFixed(4)) : null,
+              valAccuracy: logs.val_acc != null ? Number(logs.val_acc.toFixed(4)) : null,
               weights: weightsSnapshot,
             });
           }
@@ -88,8 +99,8 @@ export async function trainTFModel(
             onEpochEndCallback(epoch + 1, {
               loss: Number((logs.loss || 0).toFixed(4)),
               accuracy: Number((logs.acc || logs.accuracy || 0).toFixed(4)),
-              valLoss: logs.val_loss ? Number(logs.val_loss.toFixed(4)) : null,
-              valAccuracy: logs.val_acc ? Number(logs.val_acc.toFixed(4)) : null,
+              valLoss: logs.val_loss != null ? Number(logs.val_loss.toFixed(4)) : null,
+              valAccuracy: logs.val_acc != null ? Number(logs.val_acc.toFixed(4)) : null,
             });
           }
 
@@ -156,9 +167,9 @@ export function predictGridSurface(model, resolution = 20, min = -2.5, max = 2.5
     const gridPoints = [];
 
     for (let gy = 0; gy < resolution; gy++) {
-      const y = max - gy * step; // Inverted for image coordinate space
+      const y = max - (gy + 0.5) * step; // Predict at the center of each rendered cell.
       for (let gx = 0; gx < resolution; gx++) {
-        const x = min + gx * step;
+        const x = min + (gx + 0.5) * step;
         gridPoints.push([x, y]);
       }
     }

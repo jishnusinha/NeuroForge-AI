@@ -3,17 +3,9 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   FileText, 
   ArrowLeft, 
-  Share2, 
   Copy, 
   Check, 
-  CheckCircle2, 
-  Sliders, 
-  Cpu, 
-  Layers, 
   Download,
-  ExternalLink,
-  BrainCircuit,
-  Sparkles
 } from 'lucide-react';
 import { fetchExperimentById } from '../services/api';
 import { useLabStore } from '../store/useLabStore';
@@ -21,7 +13,7 @@ import { useLabStore } from '../store/useLabStore';
 export default function ReportPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { showToast } = useLabStore();
+  const { showToast, loadRun, setExperimentName } = useLabStore();
   const [experiment, setExperiment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -127,6 +119,10 @@ export default function ReportPage() {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2.5">
+          {experiment.workspace && experiment.dataset?.points?.length > 0 && <button className="px-3 py-2 rounded bg-violet-400/20 text-violet-200 text-xs" onClick={() => {
+            loadRun(structuredClone(experiment)); setExperimentName(`Fork of ${experiment.name}`);
+            navigate(`/app/${experiment.workspace === 'studio' ? 'studio' : 'playground'}`);
+          }}>Open & Improve</button>}
           <button
             onClick={handleCopyConfig}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-medium text-white transition-colors"
@@ -151,7 +147,7 @@ export default function ReportPage() {
           <span className="text-[10px] font-mono uppercase tracking-wider text-[#46D7F2] font-semibold">Algorithm</span>
           <div className="mt-1 text-base font-semibold text-white">{experiment.algorithm}</div>
           <p className="text-xs text-[#9EACC4] font-mono mt-1">
-            Engine: TensorFlow.js (WebGL)
+            Engine: {experiment.runtime?.tensorflow ? `TensorFlow.js ${experiment.runtime.tensorflow} (${experiment.runtime.backend})` : 'Browser JavaScript'}
           </p>
         </div>
 
@@ -159,14 +155,14 @@ export default function ReportPage() {
           <span className="text-[10px] font-mono uppercase tracking-wider text-[#A78BFA] font-semibold">Dataset Provenance</span>
           <div className="mt-1 text-base font-semibold text-white">{dataset?.name || 'Synthetic'}</div>
           <p className="text-xs text-[#9EACC4] font-mono mt-1">
-            N={dataset?.sampleCount || 200} • Split: {((dataset?.trainRatio || 0.8) * 100).toFixed(0)}/20 • Seed: #{dataset?.seed || 42}
+            N={dataset?.sampleCount ?? 'Unknown'} · Split: {((dataset?.trainRatio ?? 0.8) * 100).toFixed(0)}/{((1-(dataset?.trainRatio ?? .8))*100).toFixed(0)} · Seed: #{dataset?.seed ?? 'Unknown'}
           </p>
         </div>
 
         <div className="p-5 rounded-2xl bg-[#151E30] border border-white/10">
           <span className="text-[10px] font-mono uppercase tracking-wider text-[#3CD5AA] font-semibold">Evaluation Status</span>
           <div className="mt-1 text-base font-semibold text-white">
-            {metrics?.valAccuracy !== undefined ? `${(metrics.valAccuracy * 100).toFixed(1)}% Accuracy` :
+            {Number.isFinite(metrics?.valAccuracy) ? `${(metrics.valAccuracy * 100).toFixed(1)}% Accuracy` :
              metrics?.r2 !== undefined ? `R² = ${metrics.r2}` :
              metrics?.inertia !== undefined ? `Inertia: ${metrics.inertia}` : 'Validated'}
           </div>
@@ -193,7 +189,7 @@ export default function ReportPage() {
 
           <div className="h-36 w-full flex items-end gap-2 pt-4 px-2 border-b border-l border-white/10">
             {metricHistory.map((m, idx) => (
-              <div key={idx} className="flex-1 flex flex-col items-center gap-1">
+              <div key={idx} className="flex-1 h-full flex flex-col items-center justify-end gap-1">
                 <div
                   className="w-full bg-[#46D7F2]/80 hover:bg-[#46D7F2] rounded-t transition-all"
                   style={{ height: `${Math.min(100, Math.max(12, m.loss * 120))}%` }}

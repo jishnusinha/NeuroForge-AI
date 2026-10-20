@@ -87,11 +87,12 @@ export default function InteractiveCanvas({
             const { mx, my } = screenToMath(gx + gridSize / 2, gy + gridSize / 2, width, height);
             const prob = modelResult.predictProbability(mx, my);
             // Interpolate color: Class 0 (Cyan #46D7F2) vs Class 1 (Violet #A78BFA)
-            if (prob > 0.5) {
-              const alpha = Math.min(0.25, (prob - 0.5) * 0.5);
+            const threshold = modelResult.threshold ?? 0.5;
+            if (prob > threshold) {
+              const alpha = Math.min(0.25, (prob - threshold) * 0.5);
               ctx.fillStyle = `rgba(167, 139, 250, ${alpha})`;
             } else {
-              const alpha = Math.min(0.25, (0.5 - prob) * 0.5);
+              const alpha = Math.min(0.25, (threshold - prob) * 0.5);
               ctx.fillStyle = `rgba(70, 215, 242, ${alpha})`;
             }
             ctx.fillRect(gx, gy, gridSize, gridSize);
@@ -431,6 +432,7 @@ export default function InteractiveCanvas({
   return (
     <div ref={containerRef} className="w-full h-full relative overflow-hidden select-none">
       <canvas
+        role="img" aria-label="Interactive dataset canvas"
         ref={canvasRef}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}

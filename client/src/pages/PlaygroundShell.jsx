@@ -1,49 +1,72 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { 
-  Sliders, 
-  Play, 
-  RotateCcw, 
-  Pencil, 
-  Eraser, 
-  MousePointer, 
-  Search, 
-  Move, 
-  ChevronDown, 
+import ErrorExplorer from '../components/workspace/ErrorExplorer.jsx';
+import { isFeatureEnabled, validateExecutionBudget } from '../services/productionConfig.js';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import {
+  Play,
+  RotateCcw,
+  Pencil,
+  Eraser,
+  MousePointer,
+  Search,
+  Move,
+  ChevronDown,
   ChevronUp,
   AlertTriangle,
-  Sparkles,
   Info,
-  Layers,
-  Activity,
-  CheckCircle2,
-  TrendingDown,
   StepForward,
   FastForward
 } from 'lucide-react';
 import InteractiveCanvas from '../components/InteractiveCanvas';
-import { 
-  generateTwoMoons, 
-  generateXOR, 
-  generateConcentricCircles, 
-  generateGaussianBlobs, 
-  generateLinearTrend, 
-  trainTestSplit 
+import {
+  generateTwoMoons,
+  generateXOR,
+  generateConcentricCircles,
+  generateGaussianBlobs,
+  generateLinearTrend,
+  generateSpiral,
+  trainTestSplit
 } from '../ml/datasets';
 import { solveOLS, trainLinearRegressionGD } from '../ml/linearRegression';
 import { trainLogisticRegression } from '../ml/logisticRegression';
 import { createKNN } from '../ml/knn';
 import { runKMeans, stepKMeans, initializeCentroids } from '../ml/kmeans';
 import { useLabStore } from '../store/useLabStore';
+import { fingerprint } from '../ml/experiments';
+import { useHistory } from '../store/useHistory';
+import { useNavigate } from 'react-router-dom';
+import ContextInspector from '../components/workspace/ContextInspector';
+import { draftManager } from '../services/draftManager';
+
 
 export default function PlaygroundShell() {
-  const { setExperimentStatus, showToast } = useLabStore();
+  const currentRunId = useLabStore(state=>state.activeRun?.runId || 'unsaved-inspection');
+  const {
+    setExperimentStatus,
+    setActiveRun,
+    pendingRun,
+    clearPendingRun,
+    loadRun,
+    showToast,
+    viewMode: workspaceViewMode,
+    setSelectedContext
+  } = useLabStore();
+  const navigate = useNavigate();
+  const initialRun = pendingRun?.workspace === 'playground' ? pendingRun : null;
+  const hp = initialRun?.hyperparameters || {};
+  const draftIdentity = useRef({ id: initialRun?._draftId || crypto.randomUUID(), baseRevision: initialRun?._draftRevision ?? 0 });
+
 
   // Dataset State
-  const [selectedPreset, setSelectedPreset] = useState('Two Moons');
-  const [noiseLevel, setNoiseLevel] = useState(20);
-  const [trainRatio, setTrainRatio] = useState(0.8);
-  const [rawPoints, setRawPoints] = useState([]);
-  const [isStale, setIsStale] = useState(false);
+  const [selectedPreset, setSelectedPreset] = useState(initialRun?.dataset.name || 'Two Moons');
+  const [noiseLevel, setNoiseLevel] = useState((initialRun?.dataset.noise ?? .2) * 100);
+  const [trainRatio, setTrainRatio] = useState(initialRun?.dataset.trainRatio ?? 0.8);
+  const [rawPoints, setRawPoints, undoPoints, redoPoints, canUndo, canRedo] = useHistory(() => initialRun?.dataset.points || generateTwoMoons(220,.2,42));
+  const [preparedSource] = useState(() => initialRun?.dataset.preparation ? { points:JSON.stringify(initialRun.dataset.points), preparation:initialRun.dataset.preparation, preprocessing:initialRun.dataset.preprocessing } : null);
+  const preparation = useMemo(() => preparedSource?.points === JSON.stringify(rawPoints) ? preparedSource.preparation : null,[preparedSource,rawPoints]);
+  const [testResult,setTestResult] = useState(null);
+  const [testAccessHistory,setTestAccessHistory] = useState([]);
+  const [explicitStale, setIsStale] = useState(false);
+  const [resultKey, setResultKey] = useState(null);
 
   // Tools & Canvas State
   const [activeTool, setActiveTool] = useState('select'); // 'select' | 'draw' | 'erase' | 'inspect' | 'pan'
@@ -51,21 +74,53 @@ export default function PlaygroundShell() {
   const [probePoint, setProbePoint] = useState(null);
 
   // Model & Hyperparameters State
-  const [selectedAlgorithm, setSelectedAlgorithm] = useState('Logistic Regression');
-  const [learningRate, setLearningRate] = useState(0.08);
-  const [regularization, setRegularization] = useState(0.001);
-  const [threshold, setThreshold] = useState(0.5);
-  const [knnK, setKnnK] = useState(5);
-  const [knnMetric, setKnnMetric] = useState('euclidean');
-  const [knnWeighted, setKnnWeighted] = useState(false);
-  const [kMeansClusters, setKMeansClusters] = useState(3);
-  const [kCentroids, setKCentroids] = useState([]);
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState(initialRun?.algorithm || 'Logistic Regression');
+  const [regressionMethod, setRegressionMethod] = useState(hp.method ?? 'ols');
+  const [learningRate, setLearningRate] = useState(hp.learningRate ?? 0.08);
+  const [regularization, setRegularization] = useState(hp.regularization ?? 0.001);
+  const [threshold, setThreshold] = useState(hp.threshold ?? 0.5);
+  const [knnK, setKnnK] = useState(hp.k ?? 5);
+  const [knnMetric, setKnnMetric] = useState(hp.metric ?? 'euclidean');
+  const [knnWeighted, setKnnWeighted] = useState(hp.weighted ?? false);
+  const [kMeansClusters, setKMeansClusters] = useState(hp.k ?? 3);
+  const [kCentroids, setKCentroids] = useState(hp.initialCentroids || []);
   const [kMeansIteration, setKMeansIteration] = useState(0);
 
   // Solved Model Results
   const [modelResult, setModelResult] = useState(null);
   const [bottomDockCollapsed, setBottomDockCollapsed] = useState(false);
-  const [metricTab, setMetricTab] = useState('loss'); // 'loss' | 'accuracy' | 'confusion'
+  // Results belong to the exact input snapshot, including edits restored by undo.
+  const configKey = useMemo(() => JSON.stringify({ rawPoints, trainRatio, selectedPreset, selectedAlgorithm,
+    regressionMethod, learningRate, regularization, threshold, knnK, knnMetric, knnWeighted, kMeansClusters }),
+  [rawPoints, trainRatio, selectedPreset, selectedAlgorithm, regressionMethod, learningRate, regularization, threshold, knnK, knnMetric, knnWeighted, kMeansClusters]);
+  const isStale = explicitStale || resultKey !== configKey;
+
+  // Sync probe selection to ContextInspector
+  useEffect(() => {
+    if (probePoint) {
+      setSelectedContext({
+        type: 'sample',
+        data: {
+          id: probePoint.id ?? 'Probe Point',
+          x1: probePoint.x,
+          x2: probePoint.y,
+          prediction: probePoint.predictedClass,
+          label: probePoint.trueClass ?? probePoint.label,
+          split: probePoint.split,
+          residual: probePoint.residual
+        }
+      });
+    }
+  }, [probePoint, setSelectedContext]);
+
+  useEffect(() => {
+    if (!isFeatureEnabled('durable_drafts')) return;
+    draftManager.queueAutosave({ ...draftIdentity.current, workspace: 'playground', configuration: {
+      workspace: 'playground', algorithm: selectedAlgorithm,
+      dataset: { name: selectedPreset, points: rawPoints, noise: noiseLevel / 100, trainRatio, seed: preparation ? null : 42, preparation, preprocessing: preparation ? preparedSource.preprocessing : 'none' },
+      hyperparameters: { method: regressionMethod, learningRate, regularization, threshold, k: selectedAlgorithm === 'K-Means Clustering' ? kMeansClusters : knnK, metric: knnMetric, weighted: knnWeighted, initialCentroids: kCentroids },
+    } });
+  }, [selectedAlgorithm, selectedPreset, rawPoints, noiseLevel, trainRatio, regressionMethod, learningRate, regularization, threshold, knnK, knnMetric, knnWeighted, kMeansClusters, kCentroids, preparation, preparedSource]);
 
   // Generate initial dataset
   const generateDataset = useCallback((preset, noise) => {
@@ -89,28 +144,41 @@ export default function PlaygroundShell() {
       case 'Linear Trend':
         pts = generateLinearTrend(120, noiseNorm);
         break;
+      case 'Spiral':
+        pts = generateSpiral(n, noiseNorm);
+        break;
       default:
         pts = generateTwoMoons(n, noiseNorm);
     }
     setRawPoints(pts);
-    setIsStale(false);
-  }, []);
+    setKCentroids([]); setKMeansIteration(0);
+    setIsStale(true);
+  }, [setRawPoints]);
 
-  useEffect(() => {
-    generateDataset(selectedPreset, noiseLevel);
-  }, [selectedPreset, generateDataset]);
+  useEffect(() => { clearPendingRun(); }, [clearPendingRun]);
 
   // Split into train/test
-  const { train: trainPoints, test: testPoints, all: allPoints } = useMemo(() => {
-    return trainTestSplit(rawPoints, trainRatio, 42);
-  }, [rawPoints, trainRatio]);
+  const { train: trainPoints, test: testPoints, heldOut: heldOutPoints = [], all: allPoints } = useMemo(() => {
+    return trainTestSplit(rawPoints, trainRatio, preparation?.seed ?? 42, preparation?.membership);
+  }, [rawPoints, trainRatio, preparation]);
 
   // Solver execution
   const executeSolver = useCallback(() => {
-    if (!trainPoints || trainPoints.length === 0) return;
+    if (!trainPoints || trainPoints.length < 2 || trainPoints.some(p => !Number.isFinite(p.x) || !Number.isFinite(p.y))) {
+      showToast('Add at least two finite data points before running.', 'error'); return;
+    }
+    if (['Logistic Regression', 'K-Nearest Neighbors (KNN)'].includes(selectedAlgorithm) &&
+      (allPoints.some(p => ![0, 1].includes(p.label)) || new Set(trainPoints.map(p => p.label)).size < 2 || selectedPreset === 'Linear Trend')) {
+      showToast('Choose a binary classification dataset with both classes.', 'error'); return;
+    }
 
+    validateExecutionBudget(rawPoints.length,2);
+    setTestResult(null);
+    setResultKey(configKey);
+    setExperimentStatus('Running');
+    try {
     if (selectedAlgorithm === 'Linear Regression') {
-      const res = solveOLS(trainPoints, testPoints);
+      const res = regressionMethod === 'gd' ? trainLinearRegressionGD(trainPoints, testPoints, learningRate, 90) : solveOLS(trainPoints, testPoints);
       setModelResult(res);
       setIsStale(false);
       setExperimentStatus('Completed');
@@ -132,22 +200,26 @@ export default function PlaygroundShell() {
       setExperimentStatus('Completed');
       showToast(`KNN (k=${knnK}): Test Accuracy = ${(testAcc * 100).toFixed(1)}%`, 'success');
     } else if (selectedAlgorithm === 'K-Means Clustering') {
-      const initC = initializeCentroids(allPoints, kMeansClusters, 42);
+      const initC = kCentroids.length === kMeansClusters ? kCentroids : initializeCentroids(allPoints, kMeansClusters, 42);
       setKCentroids(initC);
       const res = runKMeans(allPoints, kMeansClusters, initC, 15);
       setKCentroids(res.finalCentroids);
-      setRawPoints(res.labeledPoints);
       setKMeansIteration(res.iterations);
-      setModelResult(res);
+      setModelResult({ ...res, initialCentroids: initC });
       setIsStale(false);
       setExperimentStatus('Completed');
-      showToast(`K-Means converged in ${res.iterations} iterations (Inertia: ${res.finalInertia})`, 'success');
+      if (!res.converged) setExperimentStatus('Ready');
+      showToast(`K-Means: ${res.iterations} iterations (Inertia: ${res.finalInertia})`, 'success');
     }
+    } catch (error) { setActiveRun(null); setIsStale(true); setExperimentStatus('Failed'); showToast(error.message,'error'); }
   }, [
+    rawPoints,
     trainPoints,
     testPoints,
     allPoints,
     selectedAlgorithm,
+    selectedPreset,
+    regressionMethod,
     learningRate,
     regularization,
     threshold,
@@ -155,17 +227,35 @@ export default function PlaygroundShell() {
     knnMetric,
     knnWeighted,
     kMeansClusters,
+    kCentroids,
+    configKey,
     setExperimentStatus,
+    setActiveRun,
     showToast,
   ]);
 
-  // Auto-run solver on initial load or algorithm change
   useEffect(() => {
-    executeSolver();
-  }, [selectedAlgorithm, executeSolver]);
+    if (isStale) { setExperimentStatus('Inputs changed'); setActiveRun(null); }
+  }, [isStale, setExperimentStatus, setActiveRun]);
+
+  useEffect(() => {
+    if (!modelResult || isStale) return;
+    setActiveRun({ workspace: 'playground', task: selectedAlgorithm === 'Linear Regression' ? 'regression' : selectedAlgorithm === 'K-Means Clustering' ? 'clustering' : 'classification',
+      name: `${selectedPreset} — ${selectedAlgorithm}`, algorithm: selectedAlgorithm,
+      evaluation: { splitSeed: preparation?.seed ?? 42, testAccessHistory, membership: selectedAlgorithm === 'K-Means Clustering' ? {train:rawPoints.map(p=>String(p.id)),validation:[],test:[]} : preparation?.membership || { train: rawPoints.filter(p=>!testPoints.some(t=>t.id===p.id)).map(p=>String(p.id)),validation:testPoints.map(p=>String(p.id)),test:[] } },
+      dataset: { name: selectedPreset, points: rawPoints, sampleCount: rawPoints.length, noise: noiseLevel / 100, trainRatio, seed: preparation ? null : 42, preparation,
+        fingerprint: fingerprint(rawPoints), splitFingerprint: fingerprint(testPoints), preprocessing: preparation ? preparedSource.preprocessing : 'none' },
+      hyperparameters: { learningRate, method: regressionMethod, regularization, threshold, k: selectedAlgorithm === 'K-Means Clustering' ? kMeansClusters : knnK, metric: knnMetric, weighted: knnWeighted, initialCentroids: modelResult.initialCentroids },
+      metrics: { mse: modelResult.mse, r2: modelResult.r2, testMse: modelResult.testMse, valAccuracy: modelResult.testAccuracy,
+        trainAccuracy: modelResult.accuracy, trainLoss: modelResult.history?.at(-1)?.trainLoss, valLoss: modelResult.history?.at(-1)?.valLoss,
+        inertia: modelResult.finalInertia ?? modelResult.inertia, iterations: kMeansIteration, confusion: modelResult.confusion },
+      metricHistory: (modelResult.history || []).map(h => ({ ...h, epoch: h.epoch ?? h.iteration, loss: h.trainLoss ?? h.inertia })), status: 'Completed' });
+    setExperimentStatus(modelResult.converged === false ? 'Ready' : 'Completed');
+  }, [modelResult, isStale, rawPoints, trainRatio, selectedAlgorithm, regressionMethod, selectedPreset, noiseLevel, learningRate, regularization, threshold, knnK, knnMetric, knnWeighted, kMeansClusters, kMeansIteration, testPoints, preparation, preparedSource, testAccessHistory, setActiveRun, setExperimentStatus]);
 
   // Point modifications
   const handleAddPoint = (newPt) => {
+    if (rawPoints.length >= 2000) { showToast('This lab supports up to 2,000 points. Remove points before adding more.','error'); return; }
     setRawPoints((prev) => [...prev, newPt]);
     setIsStale(true);
     setExperimentStatus('Inputs changed');
@@ -199,12 +289,14 @@ export default function PlaygroundShell() {
   // K-Means Step-by-Step
   const handleStepKMeans = () => {
     if (selectedAlgorithm !== 'K-Means Clustering') return;
+    if (allPoints.length < 2) { showToast('Add at least two points.', 'error'); return; }
     const currentC = kCentroids.length > 0 ? kCentroids : initializeCentroids(allPoints, kMeansClusters);
     const stepRes = stepKMeans(allPoints, currentC);
+    setResultKey(configKey);
     setKCentroids(stepRes.centroids);
-    setRawPoints(stepRes.points);
     setKMeansIteration((prev) => prev + 1);
-    setModelResult(stepRes);
+    setModelResult({ ...stepRes, initialCentroids: currentC });
+    setIsStale(false);
     showToast(`Step ${kMeansIteration + 1}: Inertia = ${stepRes.inertia} ${stepRes.converged ? '(Converged!)' : ''}`, 'info');
   };
 
@@ -219,13 +311,13 @@ export default function PlaygroundShell() {
     setIsStale(true);
   };
 
-  const presets = ['Two Moons', 'XOR Problem', 'Concentric Circles', 'Gaussian Blobs', 'Linear Trend'];
+  const presets = ['Two Moons', 'XOR Problem', 'Concentric Circles', 'Gaussian Blobs', 'Linear Trend', 'Spiral'];
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-64px)] overflow-hidden">
+    <div className="lab-workspace min-w-0 flex-1 flex flex-col min-h-[calc(100vh-64px)]">
       {/* Upper 3-Panel Grid */}
-      <div className="flex-1 flex overflow-hidden">
-        
+      <div className="flex min-w-0 min-h-[620px] overflow-hidden">
+
         {/* Left: Dataset Setup Panel */}
         <aside className="w-[260px] bg-[#151E30] border-r border-white/10 flex flex-col p-4 overflow-y-auto space-y-4 flex-shrink-0">
           <div>
@@ -243,6 +335,7 @@ export default function PlaygroundShell() {
                 key={preset}
                 onClick={() => {
                   setSelectedPreset(preset);
+                  generateDataset(preset, noiseLevel);
                   if (preset === 'Linear Trend') setSelectedAlgorithm('Linear Regression');
                   else if (preset === 'Gaussian Blobs') setSelectedAlgorithm('K-Means Clustering');
                   else if (selectedAlgorithm === 'Linear Regression') setSelectedAlgorithm('Logistic Regression');
@@ -259,6 +352,11 @@ export default function PlaygroundShell() {
           </div>
 
           {/* Sliders */}
+          <div className="flex gap-2 text-xs"><button disabled={!canUndo} onClick={undoPoints} className="p-2 bg-white/10 rounded disabled:opacity-30">Undo data edit</button><button disabled={!canRedo} onClick={redoPoints} className="p-2 bg-white/10 rounded disabled:opacity-30">Redo</button></div>
+          {selectedPreset !== 'Linear Trend' && rawPoints.length > 0 && rawPoints.every(p => [0,1].includes(p.label)) && <button className="text-xs p-2 bg-violet-400/20 rounded" onClick={() => {
+            loadRun({workspace:'studio', dataset:{name:selectedPreset, points:rawPoints, noise:noiseLevel/100, trainRatio, seed:42}, hyperparameters:{layers:[{id:'in',type:'Input',units:2,activation:'Linear'},{id:'hidden',type:'Dense',units:4,activation:'ReLU'},{id:'out',type:'Output',units:1,activation:'Sigmoid'}]}});
+            navigate('/app/studio');
+          }}>Open this dataset in Studio</button>}
           <div className="pt-2 border-t border-white/5 space-y-3.5">
             <div>
               <div className="flex justify-between text-xs mb-1">
@@ -286,6 +384,7 @@ export default function PlaygroundShell() {
                   <span className="font-mono text-white text-xs">{(trainRatio * 100).toFixed(0)}% / {((1 - trainRatio) * 100).toFixed(0)}%</span>
                 </div>
                 <input
+                  aria-label="Train ratio"
                   type="range"
                   min="50"
                   max="90"
@@ -357,8 +456,8 @@ export default function PlaygroundShell() {
         </aside>
 
         {/* Center: Interactive Canvas */}
-        <section className="flex-1 flex flex-col bg-[#080D18] relative overflow-hidden">
-          
+        <section className="flex-1 min-w-0 flex flex-col bg-[#080D18] relative overflow-hidden">
+
           {/* Floating Canvas Toolbar */}
           <div className="absolute top-4 left-4 z-20 flex items-center gap-1 p-1 rounded-xl bg-[#151E30]/90 backdrop-blur-md border border-white/10 shadow-lg">
             {[
@@ -403,7 +502,7 @@ export default function PlaygroundShell() {
           {/* Canvas Engine */}
           <div className="flex-1 w-full h-full">
             <InteractiveCanvas
-              points={allPoints}
+              points={selectedAlgorithm === 'K-Means Clustering' ? (modelResult?.labeledPoints || modelResult?.points || allPoints) : allPoints}
               testPoints={testPoints}
               algorithm={selectedAlgorithm}
               modelResult={modelResult}
@@ -513,17 +612,19 @@ export default function PlaygroundShell() {
 
             {selectedAlgorithm === 'Linear Regression' && (
               <div className="p-3 rounded-xl bg-[#080D18] border border-white/5 space-y-1.5 text-xs font-mono">
+                <label>Solver<select aria-label="Regression solver" className="block w-full bg-[#151E30] p-2" value={regressionMethod} onChange={e => setRegressionMethod(e.target.value)}><option value="ols">Ordinary least squares</option><option value="gd">Gradient descent</option></select></label>
+                {regressionMethod === 'gd' && <label>Learning rate<input aria-label="Regression learning rate" type="range" min="0.001" max="0.5" step="0.001" value={learningRate} onChange={e => setLearningRate(Number(e.target.value))} />{learningRate}</label>}
                 <div className="flex justify-between text-[#9EACC4]">
                   <span>Fitted Slope (w):</span>
-                  <span className="text-[#46D7F2] font-bold">{modelResult?.slope || 0}</span>
+                  <span className="text-[#46D7F2] font-bold">{modelResult?.slope ?? 'Not fitted'}</span>
                 </div>
                 <div className="flex justify-between text-[#9EACC4]">
                   <span>Intercept (b):</span>
-                  <span className="text-white font-bold">{modelResult?.intercept || 0}</span>
+                  <span className="text-white font-bold">{modelResult?.intercept ?? 'Not fitted'}</span>
                 </div>
                 <div className="flex justify-between text-[#9EACC4]">
                   <span>Formula:</span>
-                  <span className="text-[#3CD5AA]">y = {modelResult?.slope}x + {modelResult?.intercept}</span>
+                  <span className="text-[#3CD5AA]">{modelResult?.slope != null ? `y = ${modelResult.slope}x + ${modelResult.intercept}` : 'Run the model to fit a line'}</span>
                 </div>
               </div>
             )}
@@ -658,16 +759,33 @@ export default function PlaygroundShell() {
               </p>
             )}
           </div>
+
+          {/* Guided View Insights */}
+          {workspaceViewMode === 'guided' && (
+            <div className="p-3 rounded-xl bg-[#46D7F2]/10 border border-[#46D7F2]/20 text-xs text-[#9EACC4] space-y-1 font-mono">
+              <span className="font-semibold text-[#46D7F2] block">Guided Algorithm Insight</span>
+              <p className="text-[11px] leading-relaxed">
+                {selectedAlgorithm === 'Logistic Regression' && 'Draw points or adjust noise to see how the linear boundary separates the classes.'}
+                {selectedAlgorithm === 'Linear Regression' && 'Add or move points to observe how the best-fitting slope and intercept adapt.'}
+                {selectedAlgorithm === 'K-Nearest Neighbors (KNN)' && 'Use the Inspect tool to query any point on the canvas and view its K closest neighbors.'}
+                {selectedAlgorithm === 'K-Means Clustering' && 'Click Step Iteration to watch cluster centroids move towards the center of each group.'}
+              </p>
+            </div>
+          )}
+
+          {/* Context Inspector */}
+          <ContextInspector className="mt-1" />
         </aside>
       </div>
 
+
       {/* Bottom: Analysis & Metrics Dock */}
-      <footer 
+      <footer
         className={`bg-[#0D1422] border-t border-white/10 transition-all duration-300 flex flex-col flex-shrink-0 ${
           bottomDockCollapsed ? 'h-9' : 'h-52'
         }`}
       >
-        <div 
+        <div
           onClick={() => setBottomDockCollapsed(!bottomDockCollapsed)}
           className="h-9 px-4 bg-[#151E30]/70 flex items-center justify-between cursor-pointer border-b border-white/5 hover:bg-[#151E30]"
         >
@@ -676,31 +794,15 @@ export default function PlaygroundShell() {
               <span className="w-2 h-2 rounded-full bg-[#3CD5AA]" />
               Empirical Metrics Timeline & Error Analysis
             </span>
-            <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-white/10">
-              {['loss', 'accuracy', 'confusion'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setMetricTab(tab);
-                  }}
-                  className={`px-2 py-0.5 rounded text-[11px] font-mono capitalize ${
-                    metricTab === tab ? 'bg-white/10 text-white font-medium' : 'text-[#9EACC4] hover:text-white'
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
           </div>
           <button className="text-[#9EACC4] hover:text-white">
             {bottomDockCollapsed ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
         </div>
 
-        {!bottomDockCollapsed && (
+        {!bottomDockCollapsed && (isStale ? <p role="status" className="p-4 text-sm text-[#9EACC4]">No current measurements. Run the model to evaluate these inputs.</p> : (
           <div className="flex-1 p-4 grid grid-cols-1 md:grid-cols-3 gap-4 overflow-hidden">
-            
+
             {/* Metric 1: Loss or Residuals */}
             <div className="p-3 rounded-xl bg-[#151E30] border border-white/5 flex flex-col justify-between">
               <div className="flex justify-between items-center text-xs">
@@ -711,23 +813,23 @@ export default function PlaygroundShell() {
                 <span className="font-mono text-[#46D7F2] font-semibold">
                   {selectedAlgorithm === 'Linear Regression' ? modelResult?.mse :
                    selectedAlgorithm === 'K-Means Clustering' ? (modelResult?.finalInertia || modelResult?.inertia || 0) :
-                   modelResult?.history?.[modelResult.history.length - 1]?.trainLoss || 0.18}
+                   modelResult?.history?.[modelResult.history.length - 1]?.trainLoss ?? 'Not available'}
                 </span>
               </div>
               <div className="h-24 flex items-end gap-1.5 pt-2">
                 {modelResult?.history && modelResult.history.length > 0 ? (
                   modelResult.history.slice(-10).map((h, idx) => (
-                    <div key={idx} className="flex-1 flex flex-col items-center gap-1">
-                      <div 
+                    <div key={idx} className="flex-1 h-full flex flex-col items-center justify-end gap-1">
+                      <div
                         className="w-full bg-[#46D7F2]/60 hover:bg-[#46D7F2] rounded-t transition-all"
-                        style={{ height: `${Math.min(100, (h.trainLoss || h.inertia || 0.5) * 80)}%` }}
+                        style={{ height: `${(h.trainLoss ?? h.inertia ?? 0) / Math.max(1e-9,...modelResult.history.map(row => row.trainLoss ?? row.inertia ?? 0)) * 80}%` }}
                       />
                       <span className="text-[9px] font-mono text-[#9EACC4]">{h.epoch || h.iteration || idx}</span>
                     </div>
                   ))
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-xs font-mono text-[#9EACC4]">
-                    Static Closed-Form Solution Computed
+                    {selectedAlgorithm === 'Linear Regression' ? 'Closed-form solution computed' : 'No iterative history for this result'}
                   </div>
                 )}
               </div>
@@ -775,7 +877,7 @@ export default function PlaygroundShell() {
                   </div>
                   <div className="flex justify-between text-[#9EACC4]">
                     <span>Evaluation Protocol:</span>
-                    <span className="text-[#3CD5AA]">Train/Test Isolated</span>
+                    <span className="text-[#3CD5AA]">{selectedAlgorithm === 'K-Means Clustering' ? 'Full dataset clustering' : 'Train/Test Isolated'}</span>
                   </div>
                 </div>
               )}
@@ -790,17 +892,19 @@ export default function PlaygroundShell() {
                     ? 'Expected Failure: The single linear hyperplane fails to separate the diagonal XOR classes, proving the necessity of multi-layer architectures.'
                     : selectedAlgorithm === 'Linear Regression'
                     ? `Ordinary Least Squares accounts for ${((modelResult?.r2 || 0) * 100).toFixed(1)}% of total target variance.`
-                    : 'The model has separated the classes with no degenerate infinite loss.'}
+                    : isStale ? 'Inputs changed. Run the model to evaluate the current configuration.' : 'Inspect the measured result; training performance alone does not establish generalization.'}
                 </p>
               </div>
               <div className="flex justify-between items-center pt-2 border-t border-white/5 text-[11px] font-mono text-[#3CD5AA]">
-                <span>Status: Numerically Verified</span>
+                <span>Status: {isStale ? 'Awaiting calculation' : 'Computed locally'}</span>
                 <span>Deterministic Seed: #42</span>
               </div>
             </div>
           </div>
-        )}
+        ))}
       </footer>
+      {!isStale && modelResult?.predictProbability && isFeatureEnabled('error_explorer') && <section className="p-4"><ErrorExplorer baselineRunId={currentRunId} samples={testPoints.map(p=>({id:p.id,split:'validation',actual:p.label,predictedProb:modelResult.predictProbability(p.x,p.y),features:{x:p.x,y:p.y}}))} onSelectSample={sample=>setSelectedContext({type:'sample',data:sample})} /></section>}
+      {!isStale && heldOutPoints.length>0 && modelResult?.predictProbability && <section className="p-4"><p>{heldOutPoints.length} test samples remain held out. Viewing them is recorded.</p><button className="p-3 bg-cyan-800 rounded" onClick={()=>{const accuracy=heldOutPoints.filter(p=>(modelResult.predictProbability(p.x,p.y)>=threshold?1:0)===p.label).length/heldOutPoints.length;setTestResult(accuracy);setTestAccessHistory(history=>[...history,{accessedAt:new Date().toISOString(),configuration:configKey}]);}}>Evaluate held-out test</button>{testResult!==null&&<p>Test accuracy: {testResult.toFixed(4)}</p>}</section>}
     </div>
   );
 }

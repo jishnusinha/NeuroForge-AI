@@ -1,195 +1,96 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import { randomUUID } from 'node:crypto';
+import { ownerId as owner } from '../identity.js';
 import { Experiment } from '../models/Experiment.js';
-
+import { toDomain, validateDomain, canonical, adaptRecord } from '../../shared/domain.mjs';
+const connected = () => mongoose.connection.readyState === 1;
+const queryId = id => mongoose.Types.ObjectId.isValid(id) ? { $or: [{ _id: id }, { shareId: id }] } : { shareId: id };
+const publicRecord = (doc, storage) => {
+  const result = doc.toObject ? doc.toObject() : { ...doc };
+  delete result.ownerId;
+  return { ...result, storage };
+};
+export function createExperimentRouter({ allowMemoryFallback = process.env.NODE_ENV !== 'production' } = {}) {
 const router = express.Router();
-
-// Fallback in-memory database store
-let inMemoryStore = [
-  {
-    _id: 'exp-01',
-    shareId: 'rep-xor-benchmark',
-    name: 'XOR Non-Linearity Benchmark',
-    description: 'Empirical verification of why multi-layer networks solve non-linearly separable patterns.',
-    ownerId: 'guest-session',
-    algorithm: 'Dense MLP (2-4-1)',
-    dataset: {
-      name: 'XOR Problem',
-      sampleCount: 180,
-      noise: 0.12,
-      trainRatio: 0.8,
-      seed: 42,
-    },
-    hyperparameters: {
-      learningRate: 0.04,
-      epochs: 60,
-      batchSize: 16,
-      layers: [
-        { type: 'Input', units: 2, activation: 'Linear' },
-        { type: 'Dense', units: 4, activation: 'ReLU' },
-        { type: 'Output', units: 1, activation: 'Sigmoid' },
-      ],
-    },
-    metrics: {
-      trainLoss: 0.012,
-      valLoss: 0.018,
-      trainAccuracy: 1.0,
-      valAccuracy: 1.0,
-    },
-    metricHistory: [
-      { epoch: 10, loss: 0.54, accuracy: 0.65 },
-      { epoch: 20, loss: 0.38, accuracy: 0.85 },
-      { epoch: 30, loss: 0.18, accuracy: 0.95 },
-      { epoch: 40, loss: 0.08, accuracy: 1.0 },
-      { epoch: 50, loss: 0.03, accuracy: 1.0 },
-      { epoch: 60, loss: 0.012, accuracy: 1.0 },
-    ],
-    status: 'Completed',
-    createdAt: new Date(Date.now() - 3600000).toISOString(),
-  },
-  {
-    _id: 'exp-02',
-    shareId: 'rep-kmeans-voronoi',
-    name: 'K-Means Voronoi Clustering',
-    description: 'Centroid movement dynamics on three multi-modal Gaussian blobs.',
-    ownerId: 'guest-session',
-    algorithm: 'K-Means Clustering',
-    dataset: {
-      name: 'Gaussian Blobs',
-      sampleCount: 210,
-      noise: 0.15,
-      trainRatio: 1.0,
-      seed: 42,
-    },
-    hyperparameters: {
-      k: 3,
-      metric: 'Euclidean',
-      maxIterations: 15,
-    },
-    metrics: {
-      inertia: 42.8,
-      iterations: 6,
-    },
-    status: 'Completed',
-    createdAt: new Date(Date.now() - 7200000).toISOString(),
-  },
-  {
-    _id: 'exp-03',
-    shareId: 'rep-moons-capacity',
-    name: 'Two Moons Capacity vs Overfitting',
-    description: 'Deep neural network memorization vs regularized model tradeoff.',
-    ownerId: 'guest-session',
-    algorithm: 'Deep MLP (2-16-16-1)',
-    dataset: {
-      name: 'Two Moons',
-      sampleCount: 220,
-      noise: 0.3,
-      trainRatio: 0.8,
-      seed: 42,
-    },
-    hyperparameters: {
-      learningRate: 0.05,
-      epochs: 80,
-    },
-    metrics: {
-      trainLoss: 0.08,
-      valLoss: 0.39,
-      trainAccuracy: 0.99,
-      valAccuracy: 0.946,
-    },
-    status: 'Completed',
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-  },
-];
-
-function isMongoConnected() {
-  return mongoose.connection.readyState === 1;
-}
-
-// 1. List all experiments
+const memory = new Map();
+router.migrateOwner = (from, to) => { let count=0; for (const record of memory.values()) if (record.ownerId === from) { record.ownerId=to; count++; } return count; };
+router.findResource = async id => connected() ? Experiment.findOne({ $or: [...(mongoose.Types.ObjectId.isValid(id) ? [{ _id: id }] : []), { runId: id }, { shareId: id }] }).lean() : [...memory.values()].find(run => [run._id, run.runId, run.shareId].includes(id));
+router.use((_req, res, next) => {
+  if (!connected() && !allowMemoryFallback) return res.status(503).json({ error: 'Database unavailable. No changes were saved.' });
+  next();
+});
 router.get('/', async (req, res) => {
+  const ownerId = owner(req);
+  if (!ownerId) return res.status(401).json({ error: 'Browser identity required.' });
   try {
-    if (isMongoConnected()) {
-      let dbExperiments = await Experiment.find().sort({ createdAt: -1 }).limit(50);
-      if (dbExperiments.length === 0) {
-        // Seed default benchmarks
-        const cleanSeed = inMemoryStore.map(({ _id, ...rest }) => rest);
-        dbExperiments = await Experiment.insertMany(cleanSeed);
-      }
-      return res.json({ success: true, count: dbExperiments.length, data: dbExperiments });
-    }
-    res.json({ success: true, count: inMemoryStore.length, data: inMemoryStore });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message, data: inMemoryStore });
-  }
+    const docs = connected() ? await Experiment.find({ ownerId }).sort({ createdAt: -1 }).limit(100).lean() : [];
+    const data = [...docs.map(run => publicRecord(run, 'database')), ...[...memory.values()].filter(run => run.ownerId === ownerId).map(run => publicRecord(run,'memory'))];
+    res.json({ success: true, data: await Promise.all(data.map(adaptRecord)) });
+  } catch { res.status(500).json({ error: 'Unable to list experiments.' }); }
 });
-
-// 2. Get single experiment by ID or ShareID
 router.get('/:id', async (req, res) => {
-  const { id } = req.params;
   try {
-    if (isMongoConnected() && mongoose.Types.ObjectId.isValid(id)) {
-      const exp = await Experiment.findById(id);
-      if (exp) return res.json({ success: true, data: exp });
-    }
-    const memExp = inMemoryStore.find((e) => e._id === id || e.shareId === id);
-    if (memExp) return res.json({ success: true, data: memExp });
-
-    res.status(404).json({ success: false, message: 'Experiment not found' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
+    const dbDoc = connected() ? await Experiment.findOne(queryId(req.params.id)).lean() : null;
+    const doc = dbDoc || [...memory.values()].find(run => run.shareId === req.params.id || run._id === req.params.id);
+    if (!doc) return res.status(404).json({ error: 'Experiment not found.' });
+    if (doc.ownerId !== owner(req)) return res.status(404).json({ code: 'NOT_FOUND', error: 'Experiment not found.' });
+    const result = publicRecord(doc, dbDoc ? 'database' : 'memory');
+    // Adapt in memory; never rewrite a legacy database record on read.
+    res.json({ success: true, data: await adaptRecord(result) });
+  } catch { res.status(500).json({ error: 'Unable to retrieve experiment.' }); }
 });
-
-// 3. Save new experiment run
 router.post('/', async (req, res) => {
+  const ownerId = owner(req);
+  if (!ownerId) return res.status(401).json({ error: 'Browser identity required.' });
   try {
-    const { name, description, algorithm, dataset, hyperparameters, metrics, metricHistory } = req.body;
-    const shareId = `rep-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
-
-    const newExperimentData = {
-      shareId,
-      name: name || 'Untitled Experiment Run',
-      description: description || '',
-      ownerId: req.body.ownerId || 'guest-session',
-      algorithm: algorithm || 'Generic Model',
-      dataset: dataset || { name: 'Synthetic', sampleCount: 200, noise: 0.15, trainRatio: 0.8, seed: 42 },
-      hyperparameters: hyperparameters || {},
-      metrics: metrics || {},
-      metricHistory: Array.isArray(metricHistory) ? metricHistory.slice(0, 100) : [],
-      status: 'Completed',
-    };
-
-    if (isMongoConnected()) {
-      const savedDoc = await Experiment.create(newExperimentData);
-      return res.status(201).json({ success: true, data: savedDoc });
+    const { name, description, algorithm, dataset, hyperparameters, metrics, metricHistory, workspace, task, runtime } = req.body;
+    if (req.body.schemaVersion !== undefined && req.body.schemaVersion !== 2) return res.status(400).json({ error: 'Unsupported schema version.', code: 'UNSUPPORTED_VERSION' });
+    if (typeof name !== 'string' || !name.trim() || name.length > 200 || typeof algorithm !== 'string' || algorithm.length > 200 ||
+      typeof dataset?.name !== 'string' || !dataset.name || !Array.isArray(dataset?.points) || dataset.points.length < 2 || dataset.points.length > 2000 ||
+      dataset.points.some(p => !Number.isFinite(p.x) || !Number.isFinite(p.y) || !Number.isFinite(p.label)) ||
+      !['playground', 'studio'].includes(workspace) || !['classification', 'regression', 'clustering'].includes(task) ||
+      !metrics || Object.values(metrics).some(v => typeof v === 'number' && !Number.isFinite(v))) {
+      return res.status(400).json({ error: 'Invalid run configuration or dataset.' });
     }
-
-    // Fallback store in memory
-    const memoryItem = {
-      _id: `exp-${Date.now()}`,
-      ...newExperimentData,
-      createdAt: new Date().toISOString(),
-    };
-    inMemoryStore.unshift(memoryItem);
-    res.status(201).json({ success: true, data: memoryItem });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
+    const data = { name, description, algorithm, dataset, hyperparameters, metrics, workspace, task, runtime, modelArtifact: req.body.modelArtifact,
+      metricHistory: Array.isArray(metricHistory) ? metricHistory.slice(-1000) : [],
+      ownerId, shareId: /^rep-[a-f0-9-]{36}$/.test(req.body.shareId || '') ? req.body.shareId : `rep-${randomUUID()}`, status: 'Completed' };
+    if (req.body.domain) {
+      if (req.body.runId !== req.body.domain.run?.id) return res.status(400).json({ code: 'INVALID_RUN_ID', error: 'Run identity does not match its snapshot.' });
+      await validateDomain(req.body.domain, req.body);
+    }
+    Object.assign(data, { schemaVersion: 2, runId: req.body.runId || randomUUID(), parentRunId: req.body.parentRunId ?? null, evaluation: req.body.evaluation ?? null });
+    data.domain = req.body.domain || await toDomain({ ...data, createdAt: null });
+    const existing = connected() ? await Experiment.findOne({ runId: data.runId }).lean() : [...memory.values()].find(run => run.runId === data.runId);
+    if (existing) {
+      const evidence = domain => canonical({ configuration: domain.run.configuration, dataset: domain.datasetVersion.contentDigest, protocol: domain.evaluationProtocol.contentDigest, metrics: domain.summaryMetrics, series: domain.metricSeries, seeds: domain.run.seeds, runtime: domain.run.runtime, parent: domain.run.parentRunId });
+      if (existing.ownerId === ownerId && evidence(existing.domain) === evidence(data.domain)) return res.status(200).json({ success: true, data: publicRecord(existing, connected() ? 'database' : 'memory') });
+      return res.status(409).json({ code: 'IMMUTABLE_RUN', error: 'Run identity already exists. Fork a new run to change its evidence.' });
+    }
+    if (connected()) {
+      const saved = await Experiment.create(data);
+      return res.status(201).json({ success: true, data: publicRecord(saved, 'database') });
+    }
+    const record = { ...data, _id: `exp-${randomUUID()}`, createdAt: new Date().toISOString() };
+    memory.set(record._id, record);
+    res.status(201).json({ success: true, data: publicRecord(record, 'memory') });
+  } catch (error) { res.status(error.code === 11000 ? 409 : 400).json({ error: 'Unable to save run. Check its configuration.', code: error.code || 'INVALID_RUN' }); }
 });
-
-// 4. Delete experiment
 router.delete('/:id', async (req, res) => {
-  const { id } = req.params;
+  const ownerId = owner(req);
+  if (!ownerId) return res.status(401).json({ error: 'Browser identity required.' });
   try {
-    if (isMongoConnected() && mongoose.Types.ObjectId.isValid(id)) {
-      await Experiment.findByIdAndDelete(id);
+    let deleted;
+    if (connected()) deleted = await Experiment.findOneAndDelete({ ...queryId(req.params.id), ownerId });
+    if (!deleted) {
+      deleted = [...memory.values()].find(run => (run._id === req.params.id || run.shareId === req.params.id) && run.ownerId === ownerId);
+      if (deleted) memory.delete(deleted._id);
     }
-    inMemoryStore = inMemoryStore.filter((e) => e._id !== id && e.shareId !== id);
-    res.json({ success: true, message: 'Experiment deleted' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
+    if (!deleted) return res.status(404).json({ error: 'Experiment not found or not owned by this browser.' });
+    res.json({ success: true });
+  } catch { res.status(500).json({ error: 'Unable to delete experiment.' }); }
 });
-
-export default router;
+return router;
+}
+export default createExperimentRouter();

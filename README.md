@@ -1,5 +1,7 @@
 # NeuroForge AI 🔬
 
+Review fixes, persistence behavior, verification commands, and current limitations are documented in [Implementation notes](docs/IMPLEMENTATION_NOTES.md).
+
 > **Don't just study intelligence. Build it. Train it. Understand it.**
 
 An interactive Machine Learning & Deep Learning laboratory built with **React JSX**, **TensorFlow.js**, **HTML5 Canvas**, **Node.js/Express**, and **MongoDB**. Designed to bridge mathematical theory, empirical model experimentation, and full-stack software engineering into an interview-grade portfolio product.
@@ -61,6 +63,7 @@ A curated 3-minute walkthrough demonstrating engineering depth and theoretical m
 ### 1. Install Dependencies
 ```bash
 # Install root, client, and server dependencies
+npm install
 npm --prefix client install
 npm --prefix server install
 ```
@@ -76,3 +79,13 @@ npm run dev:client
 
 ### 3. Open the Application
 Navigate to `http://localhost:5173` in your browser.
+
+## Verification
+
+Run `npm run check` for numerical/storage tests, strict client lint, real MongoDB integration, and desktop/mobile Chromium smoke tests against the production build. Run `npm run test:e2e:memory` to verify the same browser journeys in temporary-memory mode, followed by `npm run baseline:summary` to collect the measured results.
+
+Browser tests require `npx playwright install chromium`. Database tests use an installed `mongod`, `NEUROFORGE_MONGOD_BINARY`, or `NEUROFORGE_TEST_MONGODB_URI`. Every run uses isolated test data. See [Phase 0 contracts](docs/PHASE_0_CONTRACTS.md) for limits, recovery expectations, commands, and artifact locations.
+
+Schema version 2 separates dataset versions, evaluation protocols, immutable runs and metric series while preserving existing reports. See [Phase 1 domain foundation](docs/PHASE_1_DOMAIN.md) for the draft API, compatibility behavior, and explicit backed-up migration commands. Migration does not run at startup.
+
+The [post-review remediation notes](docs/REVIEW_REMEDIATION.md) supersede earlier roadmap-completion claims. They describe private run access, scoped sharing, account email configuration, durable recovery, synchronized drafts, model artifacts, prepared CSV datasets, diagnostics and executed sweeps. Production registration requires an authenticated email-delivery service; external delivery and deployment rollout are separate verification gates.
