@@ -1,8 +1,12 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { createFeatureMatrix } from '../../../ml/modelWorkbench/featureMatrix.js';
 import { MODEL_DEFINITIONS, fitWorkbenchModel, predictWorkbenchModel } from '../../../ml/modelWorkbench/models.js';
 import { evaluateWorkbenchPredictions } from '../../../ml/modelWorkbench/metrics.js';
 import ExplainabilityStudio from './ExplainabilityStudio.jsx';
+import { createRunReceipt } from '../../../ml/modelRegistry/runContracts.js';
+import { attachExplanationToRun } from '../../../ml/modelRegistry/runLifecycle.js';
+import { saveF14Run } from '../../../services/modelRegistryRepository.js';
 import { digest } from '../../../../../shared/domain.mjs';
 
 const buttonClass='min-h-10 rounded-lg border border-white/20 bg-obsidian px-3 py-2 text-sm text-text-primary disabled:opacity-40';
@@ -69,6 +73,10 @@ export default function ModelWorkbench({ plan }) {
   const [candidates,setCandidates]=useState([]);
   const [selectedId,setSelectedId]=useState(null);
   const [testResult,setTestResult]=useState(null);
+  const [savedByCandidate,setSavedByCandidate]=useState({});
+  const [saveTitle,setSaveTitle]=useState('');
+  const [saveArtifact,setSaveArtifact]=useState(false);
+  const [saving,setSaving]=useState(false);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState('');
   const [message,setMessage]=useState('');
@@ -76,6 +84,7 @@ export default function ModelWorkbench({ plan }) {
   const selected=candidates.find(run=>run.id===selectedId)??candidates.at(-1);
   const scoreKey=primaryMetric(matrix.task.type);
   const options={lambda,k,epochs};
+  const savedRun=selected?savedByCandidate[selected.id]??null:null;
 
   const train=async()=>{
     if(busy||testResult)return;
@@ -96,16 +105,61 @@ export default function ModelWorkbench({ plan }) {
     finally{setBusy(false);}
   };
 
-  const finalEvaluate=()=>{
+  const finalEvaluate=async()=>{
     if(!selected||testResult||busy)return;
     setError('');
     try {
       const rows=matrix.rows.filter(row=>row.split==='test');
       const predictions=predictWorkbenchModel(selected.model,rows.map(row=>row.values));
       const report=evaluateWorkbenchPredictions(matrix,predictions,'test');
-      setTestResult({candidateId:selected.id,report,accessedAt:new Date().toISOString()});
-      setMessage('Final test unlocked once. Further training and model switching are frozen in this investigation.');
+      const final={candidateId:selected.id,report,accessedAt:new Date().toISOString()};
+      setTestResult(final);
+      if(savedRun){
+        try{
+          const previous=savedRun.receipt;
+          const refreshed=await createRunReceipt({
+            matrix,plan,candidate:selected,finalTest:final,
+            title:previous.title,tags:previous.tags,notes:previous.notes,
+            includeArtifact:previous.model.storageMode==='opt_in_artifact',existing:previous,
+          });
+          const stored=await saveF14Run(refreshed,previous.revision);
+          setSavedByCandidate(current=>({...current,[selected.id]:{receipt:stored}}));
+          setMessage('Final test accessed once and its audit receipt updated in the local F14 archive. Further candidate tuning is frozen.');
+        }catch(reason){
+          setError('Final test was accessed, but its archive audit could not be saved: '+reason.message+
+            '. Save the run again to preserve the access event.');
+        }
+      }else{
+        setMessage('Final test accessed once. Save an F14 research receipt to preserve this audit after refresh. Candidate tuning is frozen.');
+      }
     }catch(reason){setError(reason.message);}
+  };
+
+  const archiveRun=async()=>{
+    if(!selected||saving)return;
+    setSaving(true);setError('');setMessage('');
+    try{
+      const previous=savedRun?.receipt??null;
+      const next=await createRunReceipt({
+        matrix,plan,candidate:selected,finalTest:testResult,
+        title:saveTitle.trim()||previous?.title||selected.algorithm+' F12 investigation',
+        tags:previous?.tags??[],notes:previous?.notes??'',
+        includeArtifact:selected.algorithm==='knn'?false:saveArtifact,
+        existing:previous,
+      });
+      const stored=await saveF14Run(next,previous?.revision??0);
+      setSavedByCandidate(current=>({...current,[selected.id]:{receipt:stored}}));
+      setMessage('Saved F14 run revision '+stored.revision+' locally. Open My Experiments to reopen and compare it.');
+    }catch(reason){setError('F14 save failed: '+reason.message);}
+    finally{setSaving(false);}
+  };
+  const attachF13=async(receipt)=>{
+    const saved=savedByCandidate[selected?.id]?.receipt;
+    if(!saved)throw new Error('Save this run in F14 before attaching F13 evidence.');
+    const next=attachExplanationToRun(saved,receipt);
+    const stored=await saveF14Run(next,saved.revision);
+    setSavedByCandidate(current=>({...current,[selected.id]:{receipt:stored}}));
+    setMessage('F13 explanation summary attached to the local F14 research run.');
   };
 
   const exportEvidence=async()=>{
@@ -189,7 +243,32 @@ export default function ModelWorkbench({ plan }) {
         <ScorePanel report={selected.validation}/>
         <PredictionTable report={selected.validation}/>
       </section>}
-      {selected&&<ExplainabilityStudio key={selected.id} matrix={matrix} candidate={selected} plan={plan}/>}
+      {selected&&<section aria-label="F14 save research run" className="space-y-3 rounded-xl border border-plasma-cyan/30 bg-surface-dark p-3">
+        <h5 className="font-semibold">F14 — Preserve this research run</h5>
+        <p className="text-xs text-text-muted">Save validation metrics, fingerprints and any recorded final-test access locally. Raw rows and per-row prediction records are never stored. This is a research receipt, not automatic model deployment.</p>
+        <label className="block max-w-lg text-xs font-semibold">Experiment title
+          <input aria-label="F14 experiment title" maxLength={100} value={saveTitle}
+            placeholder={savedRun?.receipt.title??selected.algorithm+' F12 investigation'}
+            onChange={event=>setSaveTitle(event.target.value)}
+            className="mt-1 min-h-10 w-full rounded-lg border border-white/20 bg-obsidian p-2 text-sm text-text-primary"/>
+        </label>
+        <label className="flex items-start gap-2 text-xs text-text-muted">
+          <input type="checkbox" aria-label="F14 opt-in fitted artifact" checked={saveArtifact}
+            disabled={selected.algorithm==='knn'} onChange={event=>setSaveArtifact(event.target.checked)}/>
+          <span>Opt in to saving fitted model parameters for prepared-vector inference replay. This may disclose training statistics. Never available for kNN; F11 preprocessing and source data are not stored.</span>
+        </label>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" disabled={saving} onClick={archiveRun} className={buttonClass}>
+            {saving?'Saving locally…':savedRun?'Update saved F14 run':'Save F14 research run'}
+          </button>
+          <Link to="/app/experiments" className="min-h-10 rounded-lg border border-plasma-cyan/25 px-3 py-2 text-sm text-plasma-cyan">Open My Experiments archive</Link>
+        </div>
+        {savedRun&&<p role="status" className="text-xs text-quantum-mint">
+          Local F14 receipt saved · revision {savedRun.receipt.revision} · {savedRun.receipt.model.storageMode==='opt_in_artifact'?'opt-in replay artifact':'receipt only'}.
+        </p>}
+      </section>}
+      {selected&&<ExplainabilityStudio key={selected.id} matrix={matrix} candidate={selected} plan={plan}
+        onArchive={savedRun?attachF13:null}/>
       {selected&&!testResult&&<div className="rounded-xl border border-signal-amber/30 bg-surface-dark p-3 space-y-2">
         <h5 className="font-semibold">Protected final test</h5>
         <p className="text-xs text-text-muted">Finalize candidate selection before evaluating the {matrix.membership.test.length} held-out test records. This action reveals test metrics and freezes further model tuning in this session.</p>

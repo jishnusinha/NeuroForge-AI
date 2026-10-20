@@ -40,6 +40,10 @@ F12 introduces a browser-local task-aware model workbench consuming every numeri
 
 F13 adds candidate-specific validation-only permutation importance, exact logistic/ridge local contributions, kNN neighbor-vote evidence, partial dependence and ICE, frozen-F11 source-space what-if analysis, numerical subgroup diagnostics and privacy-conscious summary export. For methods and limits see [DS-F13 documentation](DS_F13_EXPLAINABILITY_STUDIO.md).
 
+## DS-F14 Reproducible Experiment Registry
+
+F14 preserves F12 research receipts and F13 aggregate explanations in the owner-scoped local archive, with source/split/model/pipeline fingerprints, validation-comparable run comparisons, local final-test access audit, and opt-in verified replay of baseline/logistic/ridge fitted models. kNN remains receipt-only. See [DS-F14 documentation](DS_F14_RUN_REGISTRY.md). Full source-data restoration and cloud sync are not included.
+
 ## Important limits
 - Current visual labs intentionally require two numerical feature columns; only supported binary targets and their valid stratified partitions are accepted.
 - Standalone PCA and optimizer landscape tools are educational computations, not automatically applied fitted transforms or real neural model telemetry.
