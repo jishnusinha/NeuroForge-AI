@@ -1,4 +1,5 @@
 import React from 'react';
+import ThemePicker from './ThemePicker.jsx';
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -103,6 +104,7 @@ export default function Sidebar() {
         })}
       </nav>
 
+      <ThemePicker />
       {/* Showcase Feature Highlight */}
       <div className="hidden lg:block p-3 border-t border-white/10 space-y-2">
         <NavLink

@@ -114,3 +114,22 @@
   }
   .lab-workspace > footer > div:first-child { min-height: 44px; height: auto; }
 }
+
+/* Workspace themes: preserve the original midnight palette by default. */
+:root,[data-theme="midnight"]{--nf-bg:#080D18;--nf-surface:#151E30;--nf-elevated:#202B43;--nf-panel:#0D1422;--nf-text:#F2F5FC;--nf-muted:#9EACC4;--nf-accent:#46D7F2;--nf-secondary:#A78BFA;color-scheme:dark}
+[data-theme="slate"]{--nf-bg:#141B26;--nf-surface:#202B38;--nf-elevated:#2B3949;--nf-panel:#1A2532;--nf-text:#F1F5F9;--nf-muted:#B2C0CF;--nf-accent:#8CC9E8;--nf-secondary:#B6A6E5;color-scheme:dark}
+[data-theme="forest"]{--nf-bg:#101C1B;--nf-surface:#1A302D;--nf-elevated:#29443E;--nf-panel:#142723;--nf-text:#EDF7F2;--nf-muted:#B1CBC1;--nf-accent:#8BD9BE;--nf-secondary:#B8CDA6;color-scheme:dark}
+[data-theme="paper"]{--nf-bg:#F3F5F4;--nf-surface:#FFFFFF;--nf-elevated:#E5ECEA;--nf-panel:#F9FBFA;--nf-text:#1D3036;--nf-muted:#4C6269;--nf-accent:#176B7B;--nf-secondary:#655AA0;color-scheme:light}
+[data-theme]{background-color:var(--nf-bg);color:var(--nf-text)}
+[data-theme] .bg-deep-space{background-color:var(--nf-bg)}
+[data-theme] .bg-obsidian{background-color:var(--nf-surface)}
+[data-theme] .bg-surface-dark{background-color:var(--nf-panel)}
+[data-theme] .bg-surface-elevated{background-color:var(--nf-elevated)}
+[data-theme] .text-text-primary{color:var(--nf-text)}
+[data-theme] .text-text-muted{color:var(--nf-muted)}
+[data-theme] .text-plasma-cyan{color:var(--nf-accent)}
+[data-theme] .text-neural-violet{color:var(--nf-secondary)}
+[data-theme] .glass-panel{background:color-mix(in srgb,var(--nf-surface) 85%,transparent);border-color:color-mix(in srgb,var(--nf-muted) 20%,transparent)}
+[data-theme] .glass-elevated{background:color-mix(in srgb,var(--nf-elevated) 90%,transparent);border-color:color-mix(in srgb,var(--nf-accent) 25%,transparent)}
+[data-theme="paper"] .bg-grid-pattern{background-image:linear-gradient(to right,rgba(29,48,54,.045) 1px,transparent 1px),linear-gradient(to bottom,rgba(29,48,54,.045) 1px,transparent 1px)}
+[data-theme] a:focus-visible,[data-theme] button:focus-visible,[data-theme] select:focus-visible{outline-color:var(--nf-accent)}
