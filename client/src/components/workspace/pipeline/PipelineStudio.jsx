@@ -142,7 +142,8 @@ export default function PipelineStudio({ dataset, onLaunch }) {
     if(item.sourceDigest!==await fingerprint())
       throw new Error('Saved recipe belongs to a different dataset; no changes were applied.');
     const valid=validateStudioRecipe(dataset,item.recipe);
-    setRecipe(valid);setSelectedId(valid.nodes[0]?.id??'');
+    setRecipe(valid);
+    setSelectedId(previous => valid.nodes.some(node => node.id === previous) ? previous : (valid.nodes[0]?.id ?? ''));
     setMessage('Pipeline recipe restored for the matching dataset.');
   });
   const importFile=async(event)=>{
