@@ -2,6 +2,7 @@ import { isFeatureEnabled } from './services/productionConfig.js';
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppShell from './components/AppShell';
+import { ThemeProvider } from './theme/ThemeProvider.jsx';
 import LandingPage from './pages/LandingPage';
 const AccountPage = lazy(() => import('./pages/AccountPage'));
 const MissionControl = lazy(() => import('./pages/MissionControl'));
@@ -19,7 +20,7 @@ const Router = import.meta.env?.VITE_STATIC_DEMO === 'true' ? HashRouter : Brows
 
 export default function App() {
   return (
-    <Router>
+    <ThemeProvider><Router>
       <Suspense fallback={<p role="status" className="p-8 text-slate-300">Loading workspace...</p>}><Routes>
         {/* Standalone Landing Page */}
         <Route path="/" element={<LandingPage />} />
@@ -51,6 +52,6 @@ export default function App() {
         {/* Fallback route */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes></Suspense>
-    </Router>
+    </Router></ThemeProvider>
   );
 }
