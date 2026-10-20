@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { parseAndValidateCSV } from '../../ml/datasetImport.js';
 import { PreprocessingPipeline } from '../../ml/preprocessingPipeline.js';
@@ -7,19 +7,18 @@ import { validateExecutionBudget } from '../../services/productionConfig.js';
 import { digest } from '../../../../shared/domain.mjs';
 import { useLabStore } from '../../store/useLabStore.js';
 
+function columnsFor(data) {
+  if (!data) return { x:'', y:'', target:'' };
+  const numeric = data.summary.filter(column => column.type === 'numeric').map(column => column.name);
+  const target = data.headers.find(header => /^(label|target|class|outcome)$/i.test(header))
+    ?? data.headers.find(header => !numeric.slice(0, 2).includes(header))
+    ?? data.headers.at(-1);
+  return { x:numeric[0] ?? '', y:numeric[1] ?? '', target:target ?? '' };
+}
+
 export default function DatasetPreparation({ initialData = null, onParsed }) {
-  const [data,setData]=useState(null), [columns,setColumns]=useState({x:'',y:'',target:''}), [scaling,setScaling]=useState('standardize'), [seed,setSeed]=useState(42), [error,setError]=useState('');
+  const [data,setData]=useState(initialData), [columns,setColumns]=useState(() => columnsFor(initialData)), [scaling,setScaling]=useState('standardize'), [seed,setSeed]=useState(42), [error,setError]=useState('');
   const navigate=useNavigate(); const loadRun=useLabStore(state=>state.loadRun);
-  useEffect(() => {
-    if (!initialData) return;
-    setData(initialData);
-    const numeric = initialData.summary.filter(column => column.type === 'numeric').map(column => column.name);
-    const target = initialData.headers.find(header => /^(label|target|class|outcome)$/i.test(header))
-      ?? initialData.headers.find(header => !numeric.slice(0, 2).includes(header))
-      ?? initialData.headers.at(-1);
-    setColumns({ x: numeric[0] ?? '', y: numeric[1] ?? '', target: target ?? '' });
-    setError('');
-  }, [initialData]);
   const launch=async workspace=>{
     try {
       if (!data) throw new Error('Import or select a dataset before preparation.');
@@ -40,7 +39,7 @@ export default function DatasetPreparation({ initialData = null, onParsed }) {
     }catch(reason){setError(reason.message);}
   };
   return <section aria-label="CSV preparation" className="p-4 border border-white/10 rounded space-y-3"><h3 className="font-bold">Import and prepare CSV</h3><p>Upload up to 2 MB of CSV data for local exploration. To train, choose two numeric inputs and a binary 0/1 target; imputation and scaling fit training rows only, while test data remains held out.</p>
-    <input aria-label="CSV file" type="file" accept=".csv,text/csv" onChange={async event=>{try{const file=event.target.files[0];if(!file)return;if(file.size>2*1024*1024)throw new Error('CSV must be at most 2 MB.');const parsed=parseAndValidateCSV(await file.text(),{requiredNumericCols:0});setData(parsed);const numeric=parsed.summary.filter(column=>column.type==='numeric').map(column=>column.name);const target=parsed.headers.find(h=>/^(label|target|class|outcome)$/i.test(h))??parsed.headers.find(h=>!numeric.slice(0,2).includes(h))??parsed.headers.at(-1);setColumns({x:numeric[0]??'',y:numeric[1]??'',target:target??''});onParsed?.(parsed,file.name);setError('');}catch(reason){setError(reason.message);}}}/>
+    <input aria-label="CSV file" type="file" accept=".csv,text/csv" onChange={async event=>{try{const file=event.target.files[0];if(!file)return;if(file.size>2*1024*1024)throw new Error('CSV must be at most 2 MB.');const parsed=parseAndValidateCSV(await file.text(),{requiredNumericCols:0});setData(parsed);setColumns(columnsFor(parsed));onParsed?.(parsed,file.name);setError('');}catch(reason){setError(reason.message);}}}/>
     {data&&<><p>{data.rowCount} rows · {data.headers.length} columns</p>{['x','y','target'].map(key=><label className="p-2" key={key}>{key}<select aria-label={'CSV '+key} value={columns[key]} onChange={event=>setColumns({...columns,[key]:event.target.value})}>{data.headers.map(header=><option key={header}>{header}</option>)}</select></label>)}
       <label>Scaling<select aria-label="CSV scaling" value={scaling} onChange={event=>setScaling(event.target.value)}><option value="standardize">Standardize</option><option value="minmax">Min-max</option><option value="none">None</option></select></label><label>Split seed<input aria-label="CSV split seed" type="number" value={seed} onChange={event=>setSeed(Number(event.target.value))}/></label>
       <div className="overflow-x-auto"><table><thead><tr>{data.headers.map(h=><th className="p-2" key={h}>{h}</th>)}</tr></thead><tbody>{data.rows.slice(0,5).map(row=><tr key={row.id}>{data.headers.map(h=><td className="p-2" key={h}>{String(row[h]??'Missing')}</td>)}</tr>)}</tbody></table></div>

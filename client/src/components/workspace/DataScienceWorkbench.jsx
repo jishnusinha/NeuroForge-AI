@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { profileDataset } from '../../ml/datasetProfiling.js';
 
 const format = value => Number.isFinite(value)
@@ -51,13 +51,8 @@ function Distribution({ column }) {
 
 export default function DataScienceWorkbench({ dataset, name }) {
   const [tab, setTab] = useState('overview');
-  const [selectedColumn, setSelectedColumn] = useState('');
+  const [selectedColumn, setSelectedColumn] = useState(dataset?.headers?.[0] ?? '');
   const report = useMemo(() => dataset ? profileDataset(dataset) : null, [dataset]);
-  useEffect(() => {
-    setTab('overview');
-    setSelectedColumn(dataset?.headers?.[0] ?? '');
-  }, [dataset]);
-
   if (!report) return <div className="rounded-xl border border-dashed border-white/20 p-5 text-sm text-[#9EACC4]" role="status">
     Import a CSV using the form above, or select <strong className="text-white">Try sample dataset</strong> to explore statistical evidence. Processing stays entirely in this browser.
   </div>;

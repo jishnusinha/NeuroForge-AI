@@ -10,6 +10,7 @@ const presets = { 'Two Moons': generateTwoMoons, 'XOR Problem': generateXOR, 'Ga
 export default function DatasetsPage() {
   const [name, setName] = useState('Two Moons');
   const [exploredFile, setExploredFile] = useState(null);
+  const [datasetRevision, setDatasetRevision] = useState(0);
   const [query, setQuery] = useState('');
   const [noise, setNoise] = useState(.15);
   const [count, setCount] = useState(200);
@@ -26,6 +27,7 @@ export default function DatasetsPage() {
       ...sample.map(point => [point.x, point.y, point.label].join(','))].join('\n');
     const data = parseAndValidateCSV(csv, { requiredNumericCols: 0 });
     setExploredFile({ data, name: 'Two Moons sample (seed 42)' });
+    setDatasetRevision(previous => previous + 1);
   };
   const launch = () => {
     const algorithm = name === 'Linear Trend' ? 'Linear Regression' : name === 'Gaussian Blobs' ? 'K-Means Clustering' : 'Logistic Regression';
@@ -46,9 +48,12 @@ export default function DatasetsPage() {
             Try sample dataset
           </button>
         </div>
-        <DatasetPreparation initialData={exploredFile?.data}
-          onParsed={(data, fileName) => setExploredFile(data ? { data, name: fileName } : null)} />
-        <DataScienceWorkbench dataset={exploredFile?.data} name={exploredFile?.name} />
+        <DatasetPreparation key={datasetRevision} initialData={exploredFile?.data}
+          onParsed={(data, fileName) => {
+            setExploredFile(data ? { data, name: fileName } : null);
+            setDatasetRevision(previous => previous + 1);
+          }} />
+        <DataScienceWorkbench key={datasetRevision} dataset={exploredFile?.data} name={exploredFile?.name} />
       </section>
     )}
     <label className="block text-sm">Search datasets<input aria-label="Search datasets" className="block p-2 bg-[#151E30] rounded w-full" value={query} onChange={e=>setQuery(e.target.value)} /></label>
