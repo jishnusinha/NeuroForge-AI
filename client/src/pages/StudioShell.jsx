@@ -490,13 +490,13 @@ export default function StudioShell() {
         <section className="flex-1 min-w-0 flex flex-col bg-[#080D18] relative overflow-hidden">
 
           {/* Visual Mode Toolbar */}
-          <div className="h-12 border-b border-white/10 px-6 bg-[#0D1422] flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="min-h-12 border-b border-white/10 px-3 sm:px-6 py-2 bg-[#0D1422] flex flex-wrap gap-2 items-center justify-between">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <span className="text-xs font-mono text-[#9EACC4]">Visual Mode:</span>
               <div className="flex rounded-lg bg-[#151E30] p-0.5 border border-white/10">
                 <button
                   onClick={() => setViewMode('architecture')}
-                  className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
+                  className={`px-2 sm:px-3 py-2 sm:py-1 rounded-md text-[11px] sm:text-xs font-medium transition-all ${
                     viewMode === 'architecture'
                       ? 'bg-[#A78BFA] text-[#080D18] font-bold shadow-sm'
                       : 'text-[#9EACC4] hover:text-white'
@@ -506,7 +506,7 @@ export default function StudioShell() {
                 </button>
                 <button
                   onClick={() => setViewMode('neurons')}
-                  className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
+                  className={`px-2 sm:px-3 py-2 sm:py-1 rounded-md text-[11px] sm:text-xs font-medium transition-all ${
                     viewMode === 'neurons'
                       ? 'bg-[#46D7F2] text-[#080D18] font-bold shadow-sm'
                       : 'text-[#9EACC4] hover:text-white'
