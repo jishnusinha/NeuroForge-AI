@@ -47,8 +47,11 @@ test('F1: mobile analysis dock grows to display its metrics cards', async ({ pag
   const dock = page.locator('.lab-workspace > footer');
   await expect(dock).toBeVisible();
   if (info.project.name === 'mobile') {
-    const heights = await dock.locator(':scope > div').evaluateAll(nodes => nodes.map(el => el.getBoundingClientRect().height));
-    expect(heights.length).toBeGreaterThanOrEqual(2);
-    expect(heights[1]).toBeGreaterThan(200);
+    // F1 uses a semantic button for the header, followed by the metrics content div.
+    await expect(dock.getByRole('button', { name: 'Collapse Playground analysis' })).toHaveAttribute('aria-expanded', 'true');
+    const content = dock.locator(':scope > div').first();
+    await expect(content).toBeVisible();
+    const height = await content.evaluate(element => element.getBoundingClientRect().height);
+    expect(height).toBeGreaterThan(200);
   }
 });
