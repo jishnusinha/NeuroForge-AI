@@ -6,6 +6,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { fetchExperiments, removeExperiment } from '../services/api';
+import ResearchNotebook from '../components/workspace/ResearchNotebook.jsx';
 import { useLabStore } from '../store/useLabStore';
 
 export default function ExperimentsPage() {
@@ -36,10 +37,10 @@ export default function ExperimentsPage() {
     <div className="p-6 sm:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-200">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
         <div>
-          <span className="text-xs font-mono uppercase tracking-wider text-[#A78BFA]">Persistent Full-Stack Records</span>
+          <span className="text-xs font-mono uppercase tracking-wider text-[#A78BFA]">Local-first research archive</span>
           <h2 className="text-2xl font-display font-bold text-white mt-1">My Experiments & Run Archive</h2>
           <p className="text-xs text-[#9EACC4] mt-0.5">
-            Immutable database records of model parameters, seeds, and empirical loss trajectories.
+            Recorded model parameters, seeds and empirical loss trajectories; persistence depends on your active storage mode.
           </p>
         </div>
 
@@ -51,6 +52,8 @@ export default function ExperimentsPage() {
           <span>New Experiment</span>
         </button>
       </div>
+
+      {!loading && <ResearchNotebook experiments={experiments} />}
 
       {loading ? (
         <div className="py-12 flex justify-center text-xs font-mono text-[#46D7F2]">
