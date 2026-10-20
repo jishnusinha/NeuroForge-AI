@@ -271,7 +271,7 @@ export default function PipelineStudio({ dataset, onLaunch }) {
           className="min-h-11 rounded-lg border border-plasma-cyan/40 bg-plasma-cyan/10 px-4 text-sm font-semibold text-plasma-cyan disabled:opacity-40">Launch F11 pipeline in Studio</button>
       </div>
       {result.plan && <ModelWorkbench key={JSON.stringify(recipe)} plan={result.plan}/>}
-      {message&&<p role="status" className="text-sm text-quantum-mint">{message}</p>
+      {message&&<p role="status" className="text-sm text-quantum-mint">{message}</p>}
       {error&&<p role="alert" className="text-sm text-signal-amber">{error}</p>}
       <p className="text-xs text-text-muted">This editor uses a bounded ordered pipeline, not an arbitrary graph executor. Recipes contain no raw rows. Fitted parameters and split identities accompany a launched run.</p>
     </div>
