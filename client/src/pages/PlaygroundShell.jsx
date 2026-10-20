@@ -89,6 +89,7 @@ export default function PlaygroundShell() {
   // Solved Model Results
   const [modelResult, setModelResult] = useState(null);
   const [bottomDockCollapsed, setBottomDockCollapsed] = useState(false);
+  const [showMetricHistoryTable, setShowMetricHistoryTable] = useState(false);
   // Results belong to the exact input snapshot, including edits restored by undo.
   const configKey = useMemo(() => JSON.stringify({ rawPoints, trainRatio, selectedPreset, selectedAlgorithm,
     regressionMethod, learningRate, regularization, threshold, knnK, knnMetric, knnWeighted, kMeansClusters }),
@@ -787,9 +788,11 @@ export default function PlaygroundShell() {
           bottomDockCollapsed ? 'h-9' : 'h-52'
         }`}
       >
-        <div
-          onClick={() => setBottomDockCollapsed(!bottomDockCollapsed)}
-          className="h-9 px-4 bg-[#151E30]/70 flex items-center justify-between cursor-pointer border-b border-white/5 hover:bg-[#151E30]"
+        <button type="button"
+          onClick={() => setBottomDockCollapsed(value => !value)}
+          aria-expanded={!bottomDockCollapsed}
+          aria-label={bottomDockCollapsed ? 'Expand Playground analysis' : 'Collapse Playground analysis'}
+          className="w-full min-h-9 px-4 bg-[#151E30]/70 flex items-center justify-between text-left cursor-pointer border-b border-white/5 hover:bg-[#151E30]"
         >
           <div className="flex items-center gap-3">
             <span className="text-xs font-mono font-semibold text-white flex items-center gap-2">
@@ -797,10 +800,10 @@ export default function PlaygroundShell() {
               Empirical Metrics Timeline & Error Analysis
             </span>
           </div>
-          <button className="text-[#9EACC4] hover:text-white">
+          <span aria-hidden="true" className="text-[#9EACC4]">
             {bottomDockCollapsed ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
-        </div>
+          </span>
+        </button>
 
         {!bottomDockCollapsed && (isStale ? <p role="status" className="p-4 text-sm text-[#9EACC4]">No current measurements. Run the model to evaluate these inputs.</p> : (
           <div className="flex-1 p-4 grid grid-cols-1 md:grid-cols-3 gap-4 overflow-hidden">
@@ -818,7 +821,29 @@ export default function PlaygroundShell() {
                    modelResult?.history?.[modelResult.history.length - 1]?.trainLoss ?? 'Not available'}
                 </span>
               </div>
-              <div className="h-24 flex items-end gap-1.5 pt-2">
+              <button type="button" aria-pressed={showMetricHistoryTable}
+                onClick={() => setShowMetricHistoryTable(value => !value)}
+                className="self-start mt-2 rounded border border-cyan-400/30 px-2 py-1 text-[11px] text-cyan-200 hover:bg-white/10">
+                {showMetricHistoryTable ? 'Show history chart' : 'Show history data table'}
+              </button>
+              {showMetricHistoryTable ? (
+                <div role="region" aria-label="Recorded Playground metric history" tabIndex={0} className="max-h-32 overflow-auto mt-2">
+                  <table className="w-full text-left text-[11px]">
+                    <caption className="sr-only">Exact recorded training history, without inferred values</caption>
+                    <thead><tr><th scope="col" className="p-1">Epoch/step</th><th scope="col" className="p-1">Recorded loss/inertia</th></tr></thead>
+                    <tbody>{modelResult?.history?.length
+                      ? modelResult.history.map((h, idx) => {
+                        const value = h.trainLoss ?? h.inertia;
+                        return <tr key={idx} className="border-t border-white/10">
+                          <th scope="row" className="p-1">{h.epoch ?? h.iteration ?? idx}</th>
+                          <td className="p-1 tabular-nums">{Number.isFinite(value) ? value.toFixed(4) : 'Not recorded'}</td>
+                        </tr>;
+                      })
+                      : <tr><td colSpan={2} className="p-1">No iterative history recorded</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
+              ) : <div className="h-24 flex items-end gap-1.5 pt-2">
                 {modelResult?.history && modelResult.history.length > 0 ? (
                   modelResult.history.slice(-10).map((h, idx) => (
                     <div key={idx} className="flex-1 h-full flex flex-col items-center justify-end gap-1">
@@ -834,7 +859,7 @@ export default function PlaygroundShell() {
                     {selectedAlgorithm === 'Linear Regression' ? 'Closed-form solution computed' : 'No iterative history for this result'}
                   </div>
                 )}
-              </div>
+              </div>}
             </div>
 
             {/* Metric 2: Accuracy / R2 / Iterations */}
