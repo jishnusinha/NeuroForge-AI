@@ -9,7 +9,7 @@ export default function ViewModeToggle() {
     <div 
       role="radiogroup" 
       aria-label="Workspace View Mode"
-      className="inline-flex items-center p-0.5 rounded-lg bg-[#151E30] border border-white/10 text-xs font-mono"
+      className="inline-flex items-center p-0.5 rounded-lg bg-obsidian border border-white/10 text-xs font-mono"
     >
       <button
         type="button"
@@ -18,8 +18,8 @@ export default function ViewModeToggle() {
         onClick={() => setViewMode('guided')}
         className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all font-medium ${
           viewMode === 'guided'
-            ? 'bg-[#46D7F2] text-[#080D18] shadow-sm font-semibold'
-            : 'text-[#9EACC4] hover:text-white hover:bg-white/5'
+            ? 'bg-plasma-cyan text-ink-on-accent shadow-sm font-semibold'
+            : 'text-text-muted hover:text-white hover:bg-white/5'
         }`}
         title="Guided View: curated controls, plain-English hints, and step-by-step guidance"
       >
@@ -34,8 +34,8 @@ export default function ViewModeToggle() {
         onClick={() => setViewMode('expert')}
         className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all font-medium ${
           viewMode === 'expert'
-            ? 'bg-[#A78BFA] text-[#080D18] shadow-sm font-semibold'
-            : 'text-[#9EACC4] hover:text-white hover:bg-white/5'
+            ? 'bg-neural-violet text-ink-on-accent shadow-sm font-semibold'
+            : 'text-text-muted hover:text-white hover:bg-white/5'
         }`}
         title="Expert View: complete architecture, optimizer equations, raw metric series, and diagnostics"
       >

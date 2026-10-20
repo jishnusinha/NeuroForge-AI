@@ -136,23 +136,23 @@ export default function UnifiedChart({
 
   return (
     <div 
-      className="p-3.5 rounded-xl bg-[#151E30] border border-white/5 flex flex-col justify-between font-mono text-xs select-none relative"
+      className="p-3.5 rounded-xl bg-obsidian border border-white/5 flex flex-col justify-between font-mono text-xs select-none relative"
       role="region"
       aria-label={`${title} chart`}
     >
       {/* Header and Controls */}
       <div className="flex items-center justify-between pb-2 border-b border-white/5">
         <div className="flex items-center gap-2">
-          <LineChartIcon className="w-3.5 h-3.5 text-[#46D7F2]" />
+          <LineChartIcon className="w-3.5 h-3.5 text-plasma-cyan" />
           <span className="font-semibold text-white">{title}</span>
-          {unit && <span className="text-[10px] text-[#9EACC4]">({unit})</span>}
+          {unit && <span className="text-[10px] text-text-muted">({unit})</span>}
         </div>
 
         <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => setZoomLevel((z) => Math.min(4, z + 0.5))}
-            className="p-1 rounded text-[#9EACC4] hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1 rounded text-text-muted hover:text-white hover:bg-white/10 transition-colors"
             title="Zoom In"
             aria-label="Zoom In"
           >
@@ -161,7 +161,7 @@ export default function UnifiedChart({
           <button
             type="button"
             onClick={() => setZoomLevel((z) => Math.max(1, z - 0.5))}
-            className="p-1 rounded text-[#9EACC4] hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1 rounded text-text-muted hover:text-white hover:bg-white/10 transition-colors"
             title="Zoom Out"
             aria-label="Zoom Out"
           >
@@ -171,7 +171,7 @@ export default function UnifiedChart({
             <button
               type="button"
               onClick={() => setZoomLevel(1)}
-              className="p-1 rounded text-[#9EACC4] hover:text-white hover:bg-white/10 transition-colors"
+              className="p-1 rounded text-text-muted hover:text-white hover:bg-white/10 transition-colors"
               title="Reset Zoom"
               aria-label="Reset Zoom"
             >
@@ -182,7 +182,7 @@ export default function UnifiedChart({
             type="button"
             onClick={() => setShowTableView(!showTableView)}
             className={`p-1 rounded transition-colors ${
-              showTableView ? 'bg-[#46D7F2]/20 text-[#46D7F2]' : 'text-[#9EACC4] hover:text-white hover:bg-white/10'
+              showTableView ? 'bg-plasma-cyan/20 text-plasma-cyan' : 'text-text-muted hover:text-white hover:bg-white/10'
             }`}
             title="Toggle accessible table view"
             aria-label="Toggle accessible table view"
@@ -194,7 +194,7 @@ export default function UnifiedChart({
       </div>
 
       {/* Legend & Current Values */}
-      <div className="flex items-center justify-between py-1.5 text-[11px] text-[#9EACC4]">
+      <div className="flex items-center justify-between py-1.5 text-[11px] text-text-muted">
         <div className="flex items-center gap-3">
           {/* Training Legend (Solid circle marker) */}
           <div className="flex items-center gap-1.5">
@@ -202,7 +202,7 @@ export default function UnifiedChart({
               <line x1="0" y1="5" x2="14" y2="5" stroke={colorTrain} strokeWidth="2" />
               <circle cx="7" cy="5" r="2.5" fill={colorTrain} />
             </svg>
-            <span className="text-[#9EACC4]">Train (●):</span>
+            <span className="text-text-muted">Train (●):</span>
             <span className="font-semibold text-white">
               {latestTrain !== null && latestTrain !== undefined ? Number(latestTrain).toFixed(3) : '—'}
             </span>
@@ -214,15 +214,15 @@ export default function UnifiedChart({
               <line x1="0" y1="5" x2="14" y2="5" stroke={colorVal} strokeWidth="2" strokeDasharray="3 2" />
               <polygon points="7,2 10,8 4,8" fill={colorVal} />
             </svg>
-            <span className="text-[#9EACC4]">Val (▲):</span>
-            <span className="font-semibold text-[#3CD5AA]">
+            <span className="text-text-muted">Val (▲):</span>
+            <span className="font-semibold text-quantum-mint">
               {latestVal !== null && latestVal !== undefined ? Number(latestVal).toFixed(3) : 'Not measured'}
             </span>
           </div>
         </div>
 
         {zoomLevel > 1 && (
-          <span className="text-[10px] text-[#F3B65E]">Zoom: {zoomLevel}x</span>
+          <span className="text-[10px] text-signal-amber">Zoom: {zoomLevel}x</span>
         )}
       </div>
 
@@ -231,7 +231,7 @@ export default function UnifiedChart({
         <div className="mt-2 max-h-36 overflow-y-auto border border-white/5 rounded-lg">
           <table className="w-full text-left text-[11px] font-mono">
             <caption className="sr-only">{title}: recorded training and validation values by epoch</caption>
-            <thead className="bg-[#080D18] text-[#9EACC4] sticky top-0 border-b border-white/10">
+            <thead className="bg-deep-space text-text-muted sticky top-0 border-b border-white/10">
               <tr>
                 <th scope="col" className="p-1.5">Epoch</th>
                 <th scope="col" className="p-1.5">Train</th>
@@ -241,7 +241,7 @@ export default function UnifiedChart({
             <tbody>
               {displayedEpochs.length === 0 ? (
                 <tr>
-                  <td colSpan="3" className="p-2 text-center text-[#9EACC4]">No measurements recorded</td>
+                  <td colSpan="3" className="p-2 text-center text-text-muted">No measurements recorded</td>
                 </tr>
               ) : (
                 displayedEpochs.map((ep) => {
@@ -250,10 +250,10 @@ export default function UnifiedChart({
                   return (
                     <tr key={ep} className="border-b border-white/5 hover:bg-white/5">
                       <td className="p-1.5 text-white">{ep}</td>
-                      <td className="p-1.5 text-[#46D7F2]">
+                      <td className="p-1.5 text-plasma-cyan">
                         {tv !== undefined && tv !== null ? Number(tv).toFixed(4) : '—'}
                       </td>
-                      <td className="p-1.5 text-[#3CD5AA]">
+                      <td className="p-1.5 text-quantum-mint">
                         {vv !== undefined && vv !== null ? Number(vv).toFixed(4) : 'Not measured'}
                       </td>
                     </tr>
@@ -264,7 +264,7 @@ export default function UnifiedChart({
           </table>
         </div>
       ) : displayedEpochs.length === 0 ? (
-        <div className="h-28 flex flex-col items-center justify-center text-center text-[#9EACC4]/60 gap-1">
+        <div className="h-28 flex flex-col items-center justify-center text-center text-text-muted/60 gap-1">
           <AlertCircle className="w-5 h-5 text-white/20" />
           <span className="text-[11px]">No measurements recorded</span>
           <span className="text-[10px]">Start training to capture real-time metric trajectory</span>

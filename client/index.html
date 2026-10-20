@@ -1,16 +1,26 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en" class="dark" data-theme="midnight">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NeuroForge AI — Interactive Machine Learning & Deep Learning Laboratory</title>
+    <script>
+      // Restore the saved palette before CSS is painted, avoiding a dark-theme flash.
+      try {
+        const saved = localStorage.getItem('neuroforge-theme-v1');
+        if (['midnight', 'slate', 'forest', 'paper'].includes(saved)) {
+          document.documentElement.dataset.theme = saved;
+          document.documentElement.classList.toggle('dark', saved !== 'paper');
+        }
+      } catch { /* Storage may be unavailable. */ }
+    </script>
     <!-- Google Fonts: Space Grotesk, Inter, JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   </head>
-  <body class="bg-[#080D18] text-[#F2F5FC] font-sans antialiased selection:bg-[#46D7F2]/30 selection:text-white min-h-screen overflow-x-hidden">
+  <body class="bg-deep-space text-text-primary font-sans antialiased selection:bg-plasma-cyan/30 selection:text-white min-h-screen overflow-x-hidden">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

@@ -37,16 +37,16 @@ export default function ExperimentsPage() {
     <div className="p-6 sm:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-200">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
         <div>
-          <span className="text-xs font-mono uppercase tracking-wider text-[#A78BFA]">Local-first research archive</span>
+          <span className="text-xs font-mono uppercase tracking-wider text-neural-violet">Local-first research archive</span>
           <h2 className="text-2xl font-display font-bold text-white mt-1">My Experiments & Run Archive</h2>
-          <p className="text-xs text-[#9EACC4] mt-0.5">
+          <p className="text-xs text-text-muted mt-0.5">
             Recorded model parameters, seeds and empirical loss trajectories; persistence depends on your active storage mode.
           </p>
         </div>
 
         <button
           onClick={handleCreateMockRun}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#46D7F2] to-[#3CD5AA] text-[#080D18] text-xs font-bold shadow-glow-cyan hover:opacity-95 transition-all"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-plasma-cyan to-quantum-mint text-ink-on-accent text-xs font-bold shadow-glow-cyan hover:opacity-95 transition-all"
         >
           <Plus className="w-4 h-4" />
           <span>New Experiment</span>
@@ -56,21 +56,21 @@ export default function ExperimentsPage() {
       {!loading && <ResearchNotebook experiments={experiments} />}
 
       {loading ? (
-        <div className="py-12 flex justify-center text-xs font-mono text-[#46D7F2]">
+        <div className="py-12 flex justify-center text-xs font-mono text-plasma-cyan">
           Loading persistent runs from database...
         </div>
       ) : experiments.length === 0 ? (
-        <div className="p-12 text-center rounded-2xl bg-[#151E30] border border-white/10 space-y-3">
-          <p className="text-sm text-[#9EACC4]">No saved experiments yet.</p>
+        <div className="p-12 text-center rounded-2xl bg-obsidian border border-white/10 space-y-3">
+          <p className="text-sm text-text-muted">No saved experiments yet.</p>
           <button
             onClick={handleCreateMockRun}
-            className="px-4 py-2 rounded-xl bg-[#46D7F2]/20 text-[#46D7F2] text-xs font-semibold"
+            className="px-4 py-2 rounded-xl bg-plasma-cyan/20 text-plasma-cyan text-xs font-semibold"
           >
             Create Your First Experiment Run
           </button>
         </div>
       ) : (
-        <div className="rounded-2xl border border-white/10 bg-[#151E30] overflow-hidden divide-y divide-white/5 shadow-md">
+        <div className="rounded-2xl border border-white/10 bg-obsidian overflow-hidden divide-y divide-white/5 shadow-md">
           {experiments.map((exp) => {
             const expId = exp._id || exp.shareId;
             return (
@@ -81,16 +81,16 @@ export default function ExperimentsPage() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2.5">
                     <h3 className="text-base font-semibold text-white">{exp.name}</h3>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#3CD5AA]/15 text-[#3CD5AA] border border-[#3CD5AA]/30">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-quantum-mint/15 text-quantum-mint border border-quantum-mint/30">
                       {exp.status || 'Completed'}
                     </span>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 text-xs font-mono text-[#9EACC4]">
+                  <div className="flex flex-wrap items-center gap-3 text-xs font-mono text-text-muted">
                     <span>{exp.algorithm}</span>
                     <span>•</span>
-                    <span className="text-[#A78BFA]">{exp.dataset?.name || 'Synthetic'}</span>
+                    <span className="text-neural-violet">{exp.dataset?.name || 'Synthetic'}</span>
                     <span>•</span>
-                    <span className="text-[#3CD5AA]">
+                    <span className="text-quantum-mint">
                       {exp.metrics?.valAccuracy !== undefined 
                         ? `Acc: ${(exp.metrics.valAccuracy * 100).toFixed(1)}%` 
                         : exp.metrics?.accuracy !== undefined
@@ -105,7 +105,7 @@ export default function ExperimentsPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono text-[#9EACC4] hidden sm:block">
+                  <span className="text-xs font-mono text-text-muted hidden sm:block">
                     {new Date(exp.createdAt).toLocaleDateString()}
                   </span>
 
@@ -119,7 +119,7 @@ export default function ExperimentsPage() {
 
                   <button
                     onClick={() => handleDelete(expId, exp.name)}
-                    className="p-2 rounded-xl text-[#9EACC4] hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                    className="p-2 rounded-xl text-text-muted hover:text-red-400 hover:bg-red-400/10 transition-colors"
                     title="Delete record"
                   >
                     <Trash2 className="w-4 h-4" />

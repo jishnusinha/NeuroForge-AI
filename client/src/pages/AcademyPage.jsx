@@ -102,37 +102,37 @@ export default function AcademyPage() {
   return (
     <div className="p-6 sm:p-8 max-w-5xl mx-auto space-y-6 animate-in fade-in duration-200">
       <div className="border-b border-white/10 pb-5">
-        <span className="text-xs font-mono uppercase tracking-wider text-[#3CD5AA]">Predict-Before-Reveal Pedagogy</span>
+        <span className="text-xs font-mono uppercase tracking-wider text-quantum-mint">Predict-Before-Reveal Pedagogy</span>
         <h2 className="text-2xl font-display font-bold text-white mt-1">NeuroForge Academy</h2>
-        <p className="text-xs text-[#9EACC4] mt-0.5">
+        <p className="text-xs text-text-muted mt-0.5">
           Formulate a hypothesis before revealing the underlying mathematical proof, then jump directly into working lab experiments.
         </p>
       </div>
 
       <div className="space-y-6">
-        <p className="text-sm text-[#3CD5AA]">Checkpoints completed: {lessons.filter(lesson => progress[lesson.id]===true).length} / {lessons.length}</p>
+        <p className="text-sm text-quantum-mint">Checkpoints completed: {lessons.filter(lesson => progress[lesson.id]===true).length} / {lessons.length}</p>
         <div role="region" aria-label="Learning paths" className="grid gap-3 sm:grid-cols-3">
-          {tracks.map(track=><div key={track.id} className="rounded-xl border border-white/10 bg-[#151E30] p-4">
+          {tracks.map(track=><div key={track.id} className="rounded-xl border border-white/10 bg-obsidian p-4">
             <h3 className="text-sm font-semibold text-white">{track.title}</h3>
-            <p className="mt-2 text-xs text-[#9EACC4]">{track.completed} of {track.total} correctly answered checkpoints</p>
+            <p className="mt-2 text-xs text-text-muted">{track.completed} of {track.total} correctly answered checkpoints</p>
             <progress aria-label={track.title + ' progress'} value={track.completed} max={track.total} className="mt-2 w-full accent-emerald-400" />
-            <p className="mt-2 text-xs text-[#3CD5AA]">{track.finished?'Track checkpoints completed':'In progress'}</p>
+            <p className="mt-2 text-xs text-quantum-mint">{track.finished?'Track checkpoints completed':'In progress'}</p>
           </div>)}
         </div>
         {lessons.filter(lesson => !slug || lesson.id === slug).map((lesson) => {
           const isRevealed = revealed[lesson.id];
           return (
-            <div key={lesson.id} className="p-6 rounded-2xl bg-[#151E30] border border-white/10 shadow-md space-y-4">
+            <div key={lesson.id} className="p-6 rounded-2xl bg-obsidian border border-white/10 shadow-md space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-xs font-mono text-[#A78BFA]">{lesson.track}</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-[#9EACC4]">Interactive Checkpoint</span>
+                <span className="text-xs font-mono text-neural-violet">{lesson.track}</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-text-muted">Interactive Checkpoint</span>
               </div>
 
               <h3 className="text-lg font-display font-semibold text-white">{lesson.title}</h3>
 
               {/* Predict question */}
-              <div className="p-4 rounded-xl bg-[#080D18] border border-white/5 text-xs text-[#F2F5FC] space-y-2">
-                <div className="flex items-center gap-2 text-[#46D7F2] font-semibold">
+              <div className="p-4 rounded-xl bg-deep-space border border-white/5 text-xs text-text-primary space-y-2">
+                <div className="flex items-center gap-2 text-plasma-cyan font-semibold">
                   <HelpCircle className="w-4 h-4" />
                   <span>Think & Predict:</span>
                 </div>
@@ -140,7 +140,7 @@ export default function AcademyPage() {
               </div>
 
               {/* Reveal toggle button */}
-              <fieldset className="space-y-2 text-sm"><legend className="text-xs text-[#9EACC4]">Choose your prediction</legend>
+              <fieldset className="space-y-2 text-sm"><legend className="text-xs text-text-muted">Choose your prediction</legend>
                 {choices[lesson.id].map((choice, index) => <button key={choice} aria-pressed={answers[lesson.id] === index} onClick={() => answer(lesson.id, index)} className="block w-full text-left p-3 rounded border border-white/10 hover:border-cyan-300">{choice}</button>)}
                 {answers[lesson.id] !== undefined && <p role="status">{answers[lesson.id] === correct[lesson.id] ? 'Correct. Checkpoint completed.' : 'Try again, then inspect the explanation.'}</p>}
               </fieldset>
@@ -149,14 +149,14 @@ export default function AcademyPage() {
                   onClick={() => toggleReveal(lesson.id)}
                   className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-medium text-white transition-colors"
                 >
-                  <Eye className="w-3.5 h-3.5 text-[#3CD5AA]" />
+                  <Eye className="w-3.5 h-3.5 text-quantum-mint" />
                   <span>{isRevealed ? 'Hide Explanation' : 'Reveal Theory & Mathematical Proof'}</span>
                 </button>
 
                 <Link
                   to={lesson.labLink}
                   onClick={() => openLesson(lesson.id)}
-                  className="flex items-center gap-1.5 text-xs font-medium text-[#46D7F2] hover:underline"
+                  className="flex items-center gap-1.5 text-xs font-medium text-plasma-cyan hover:underline"
                 >
                   <span>{lesson.labLabel}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -165,8 +165,8 @@ export default function AcademyPage() {
 
               {/* Revealed Explanation */}
               {isRevealed && (
-                <div className="p-4 rounded-xl bg-[#0D1422] border border-[#3CD5AA]/30 text-xs text-[#9EACC4] leading-relaxed animate-in fade-in space-y-2">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-[#3CD5AA]">
+                <div className="p-4 rounded-xl bg-surface-dark border border-quantum-mint/30 text-xs text-text-muted leading-relaxed animate-in fade-in space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-quantum-mint">
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Scientific Proof & Explanation:</span>
                   </div>

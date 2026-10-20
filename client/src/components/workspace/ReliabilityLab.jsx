@@ -28,10 +28,10 @@ export default function ReliabilityLab({ predictProbability, samples = [], train
     } catch(reason) {return {error:reason.message};}
   },[samples,predictProbability,groupAxis,boundary,threshold,deltaX,deltaY]);
   return <section role="region" aria-label="Reliability and shift lab"
-    className="space-y-4 rounded-xl border border-cyan-400/20 bg-[#151E30] p-3 sm:p-5">
+    className="space-y-4 rounded-xl border border-cyan-400/20 bg-obsidian p-3 sm:p-5">
     <div>
       <h3 className="text-lg font-semibold text-white">Reliability & Shift Laboratory</h3>
-      <p className="mt-1 text-xs leading-relaxed text-[#9EACC4]">
+      <p className="mt-1 text-xs leading-relaxed text-text-muted">
         Measured calibration and error rates use the current validation partition only.
         The feature shift is a controlled hypothetical simulation using your fitted classifier,
         not evidence of real production drift or a causal intervention.
@@ -47,12 +47,12 @@ export default function ReliabilityLab({ predictProbability, samples = [], train
             ['Brier score',format(evidence.calibration.brier)],
             ['Calibration gap (ECE)',format(evidence.calibration.expectedCalibrationError)],
             ['Decision threshold',format(threshold)],
-          ].map(([label,value]) => <div key={label} className="rounded-lg border border-white/10 bg-[#0D1422] p-3">
-            <div className="text-[11px] text-[#9EACC4]">{label}</div>
+          ].map(([label,value]) => <div key={label} className="rounded-lg border border-white/10 bg-surface-dark p-3">
+            <div className="text-[11px] text-text-muted">{label}</div>
             <div className="mt-1 text-lg font-semibold text-white tabular-nums">{value}</div>
           </div>)}
         </div>
-        <p className="text-xs text-[#9EACC4]">
+        <p className="text-xs text-text-muted">
           Lower Brier scores indicate smaller squared probability errors.
           ECE is an approximate five-bin calibration diagnostic and depends on binning and sample size.
           Empty bins remain unavailable, never zero.
@@ -60,8 +60,8 @@ export default function ReliabilityLab({ predictProbability, samples = [], train
         <div role="region" aria-label="Validation calibration table" tabIndex={0}
           className="max-h-72 overflow-auto rounded-lg border border-white/10">
           <table className="w-full min-w-[520px] text-left text-xs">
-            <caption className="p-3 text-left text-[#9EACC4]">Real validation outcomes grouped by predicted probability</caption>
-            <thead className="bg-[#202B43]">
+            <caption className="p-3 text-left text-text-muted">Real validation outcomes grouped by predicted probability</caption>
+            <thead className="bg-surface-elevated">
               <tr>{['Probability range','Observations','Mean prediction','Observed positive share','Absolute gap'].map(label=>
                 <th scope="col" key={label} className="p-2">{label}</th>)}</tr>
             </thead>
@@ -77,17 +77,17 @@ export default function ReliabilityLab({ predictProbability, samples = [], train
       </>}
       <div className="space-y-2">
         <h4 className="font-semibold text-white">Feature-defined subgroup error</h4>
-        <p className="text-xs text-[#9EACC4]">Groups are split at a median computed from training inputs, without inspecting validation labels for the boundary. These groups are mathematical feature bins, not demographic attributes or fairness certification.</p>
-        <label className="block max-w-sm text-xs text-[#9EACC4]">Grouping feature
+        <p className="text-xs text-text-muted">Groups are split at a median computed from training inputs, without inspecting validation labels for the boundary. These groups are mathematical feature bins, not demographic attributes or fairness certification.</p>
+        <label className="block max-w-sm text-xs text-text-muted">Grouping feature
           <select aria-label="Reliability grouping feature" value={groupAxis} onChange={event=>setGroupAxis(event.target.value)}
-            className="mt-1 block min-h-11 w-full rounded-lg border border-white/20 bg-[#0D1422] px-3 text-white">
+            className="mt-1 block min-h-11 w-full rounded-lg border border-white/20 bg-surface-dark px-3 text-white">
             <option value="x">Feature X</option><option value="y">Feature Y</option>
           </select>
         </label>
         <div role="region" aria-label="Subgroup error table" tabIndex={0} className="overflow-auto rounded-lg border border-white/10">
           <table className="w-full min-w-[450px] text-left text-xs">
-            <caption className="p-3 text-left text-[#9EACC4]">Measured subgroup validation errors · training-derived split boundary {format(boundary)}</caption>
-            <thead className="bg-[#202B43]"><tr>{['Feature bin','Observations','Positive labels','Accuracy','Error rate'].map(label=>
+            <caption className="p-3 text-left text-text-muted">Measured subgroup validation errors · training-derived split boundary {format(boundary)}</caption>
+            <thead className="bg-surface-elevated"><tr>{['Feature bin','Observations','Positive labels','Accuracy','Error rate'].map(label=>
               <th key={label} scope="col" className="p-2">{label}</th>)}</tr></thead>
             <tbody>{evidence.groups.map(group=><tr key={group.label} className="border-t border-white/10">
               <th scope="row" className="p-2">{group.label}</th><td className="p-2">{group.count}</td>
@@ -97,20 +97,20 @@ export default function ReliabilityLab({ predictProbability, samples = [], train
           </table>
         </div>
       </div>
-      <div className="space-y-3 rounded-xl border border-white/10 bg-[#0D1422] p-3">
+      <div className="space-y-3 rounded-xl border border-white/10 bg-surface-dark p-3">
         <h4 className="font-semibold text-white">Synthetic input distribution shift</h4>
-        <p className="text-xs leading-relaxed text-[#9EACC4]">
+        <p className="text-xs leading-relaxed text-text-muted">
           Add fixed offsets to both input features and rerun actual model predictions on the same validation cases.
           Labels are held fixed *by assumption* for illustration; model accuracy under this hypothetical change is not real measured deployment performance.
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           {[
             ['X',deltaX,setDeltaX],['Y',deltaY,setDeltaY],
-          ].map(([axis,value,setter])=><label key={axis} className="block text-xs font-medium text-[#9EACC4]">
+          ].map(([axis,value,setter])=><label key={axis} className="block text-xs font-medium text-text-muted">
             Shift feature {axis} (−4 to +4)
             <input aria-label={`Shift feature ${axis}`} type="number" min="-4" max="4" step=".25"
               value={value} onChange={event=>setter(Number(event.target.value))}
-              className="mt-1 block min-h-11 w-full rounded-lg border border-white/20 bg-[#151E30] px-3 text-sm text-white"/>
+              className="mt-1 block min-h-11 w-full rounded-lg border border-white/20 bg-obsidian px-3 text-sm text-white"/>
           </label>)}
         </div>
         <div role="region" aria-label="Synthetic shift results" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -119,11 +119,11 @@ export default function ReliabilityLab({ predictProbability, samples = [], train
             ['Mean probability change',format(evidence.shifted.meanProbabilityDelta)],
             ['Original accuracy',format(evidence.shifted.originalAccuracy)],
             ['Hypothetical shifted accuracy',format(evidence.shifted.shiftedAccuracy)],
-          ].map(([label,value])=><div key={label} className="rounded-lg border border-white/10 bg-[#151E30] p-2">
-            <div className="text-[11px] text-[#9EACC4]">{label}</div><div className="mt-1 text-base font-semibold tabular-nums text-white">{value}</div>
+          ].map(([label,value])=><div key={label} className="rounded-lg border border-white/10 bg-obsidian p-2">
+            <div className="text-[11px] text-text-muted">{label}</div><div className="mt-1 text-base font-semibold tabular-nums text-white">{value}</div>
           </div>)}
         </div>
-        <p role="status" className="text-xs text-[#9EACC4]">
+        <p role="status" className="text-xs text-text-muted">
           Compared {evidence.shifted.count} model-backed predictions. No saved dataset or model weights were changed.
         </p>
       </div>
