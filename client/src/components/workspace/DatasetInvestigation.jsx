@@ -83,9 +83,10 @@ function Relationships({ dataset, report }) {
 }
 
 function Balance({ dataset, report }) {
-  const options=eligibleGroupColumns(report);
+  // Include observed single-class columns so the one-class warning remains reachable.
+  const options=report.columns.filter(item=>item.present>0 && item.unique>=1 && item.unique<=12).map(item=>item.name);
   const [column,setColumn]=useState(options.includes('label')?'label':options[0]??'');
-  if (!options.length) return <p role="status" className="rounded-xl bg-[#151E30] p-4 text-sm">No low-cardinality class columns are available (2–12 distinct observed values). Inspect distributions for other columns.</p>;
+  if (!options.length) return <p role="status" className="rounded-xl bg-[#151E30] p-4 text-sm">No low-cardinality class columns are available (1–12 distinct observed values). Inspect distributions for other columns.</p>;
   const evidence=classBalance(dataset.rows,column);
   return <div className="space-y-4">
     <p className="text-sm text-[#9EACC4]">Class frequencies describe the imported data, not model accuracy. A majority-to-minority ratio of at least 3:1 is flagged for review, not automatically corrected.</p>
