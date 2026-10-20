@@ -57,7 +57,7 @@ test('F2 quality flags missingness/duplicates and class selector excludes high c
     {x:2,label:'B',const:2},{x:null,label:null,const:2},
   ]};
   const report=profileDataset(parsed),signals=qualitySignals(report);
-  assert.deepEqual(signals.map(s=>s.id),['duplicates','missing','constant']);
+  assert.deepEqual(signals.map(s=>s.id),['duplicates','missing','constant','sparse']);
   assert.deepEqual(eligibleGroupColumns(report),['x','label']);
   assert.equal(report.duplicateRows,1);
   assert.equal(report.missingCells,2);
