@@ -39,9 +39,9 @@ export default function F14RunRegistry(){
   const [error,setError]=useState('');
 
   const load=async()=>{
-    setError('');
     try{
       const items=await listF14Runs();
+      setError('');
       setRuns(items);
       setActiveId(previous=>items.some(item=>item.runId===previous)?previous:(items[0]?.runId??''));
       setCompareIds(previous=>previous.filter(id=>items.some(item=>item.runId===id)));
@@ -55,11 +55,11 @@ export default function F14RunRegistry(){
     (run.title+' '+run.model.algorithm+' '+run.tags.join(' ')).toLowerCase()
       .includes(query.toLowerCase().trim())),[runs,taskFilter,query]);
   const selected=runs.filter(run=>compareIds.includes(run.runId));
-  const comparison=useMemo(()=>{
-    if(selected.length!==2)return null;
-    try{return compareRunReceipts(selected[0],selected[1],metric);}
-    catch(reason){return {status:'unavailable',reasons:[reason.message]};}
-  },[runs,compareIds,metric]);
+  let comparison=null;
+  if(selected.length===2){
+    try{comparison=compareRunReceipts(selected[0],selected[1],metric);}
+    catch(reason){comparison={status:'unavailable',reasons:[reason.message]};}
+  }
   const chooseRun=(run)=>{
     setActiveId(run.runId);setEditing(false);setConfirmDelete('');
     setTitle(run.title);setTags(run.tags.join(', '));setNotes(run.notes);
