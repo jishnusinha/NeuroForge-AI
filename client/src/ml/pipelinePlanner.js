@@ -36,13 +36,15 @@ export function buildDatasetPipeline(data, options = {}) {
   if (!['standardize', 'minmax', 'none'].includes(scaling)) throw new Error('Choose a supported scaling method.');
   if (!['mean', 'median', 'none'].includes(imputation)) throw new Error('Choose a supported missing-value strategy.');
   if (!Number.isInteger(seed) || seed < 0 || seed > 4294967295) throw new Error('Split seed must be an integer from 0 to 4294967295.');
-  if (!columns || !['x', 'y', 'target'].every(key => data.headers.includes(columns[key])) ||
+  const profiled = profileDataset(data);
+  const numericColumns = profiled.columns.filter(column => column.type === 'numeric').map(column => column.name);
+  if (numericColumns.length < 2 || !columns ||
+      ![columns.x, columns.y].every(name => numericColumns.includes(name))) {
+    throw new Error('The visual labs require two numeric input columns.');
+  }
+  if (!data.headers.includes(columns.target) ||
       new Set([columns.x, columns.y, columns.target]).size !== 3) {
     throw new Error('Choose two different numeric inputs and a separate target.');
-  }
-  const profiled = profileDataset(data);
-  if (![columns.x, columns.y].every(name => profiled.columns.find(column => column.name === name)?.type === 'numeric')) {
-    throw new Error('The visual labs require two numeric input columns.');
   }
   const raw = data.rows.map((row, index) => ({
     id: row.id ?? `sample-${index}`,
