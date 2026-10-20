@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { fetchExperiments } from '../services/api';
 import { useLabStore } from '../store/useLabStore';
 import { comparisonCompatible, detectsOverfitting, metricAt } from '../ml/experiments';
+import { recordedMetricRows, metricHistoryPath } from '../ml/metricSeries.js';
 
 const display = value => Number.isFinite(value) ? value.toFixed(4) : 'Not recorded';
 export default function ArenaShell() {
@@ -21,6 +22,7 @@ export default function ArenaShell() {
   const [baselineId, setBaselineId] = useState('');
   const [variantId, setVariantId] = useState('');
   const [metric, setMetric] = useState('loss');
+  const [showDataTable, setShowDataTable] = useState(false);
   const [epoch, setEpoch] = useState(1);
   useEffect(() => {
     let alive = true;
@@ -41,7 +43,8 @@ export default function ArenaShell() {
   const fields = metric === 'loss' ? ['loss', 'valLoss'] : ['accuracy', 'valAccuracy'];
   const values = histories.flatMap(h => h.flatMap(row => fields.map(field => row[field]).filter(Number.isFinite)));
   const maxValue = Math.max(0.01, ...values);
-  const path = (history, field) => history.filter(h => Number.isFinite(h[field])).map((h, i) => `${i ? 'L' : 'M'} ${20 + h.epoch / maxEpoch * 560} ${180 - h[field] / maxValue * 160}`).join(' ');
+  const comparisonRows = recordedMetricRows(histories, fields);
+  const path = (history, field) => metricHistoryPath(history, field, maxEpoch, maxValue);
   const fork = run => {
     if (!run?.workspace || !run.dataset?.points || (run.workspace === 'studio' && !run.hyperparameters?.layers)) {
       showToast('This legacy record does not contain a runnable configuration.', 'error'); return;
@@ -72,14 +75,42 @@ export default function ArenaShell() {
     {compatible && <>
       <label className="flex gap-4 items-center text-sm">Recorded timeline: epoch {selectedEpoch}<input aria-label="Comparison epoch" type="range" min="1" max={maxEpoch} value={selectedEpoch} onChange={e => setEpoch(Number(e.target.value))} /></label>
       <p className="text-xs text-slate-400">Values use the last recorded epoch at or before the selected time. Missing measurements remain unavailable.</p>
-      <div className="flex gap-3">{['loss', 'accuracy'].map(value => <button key={value} aria-pressed={metric === value} onClick={() => setMetric(value)} className="rounded bg-[#202B43] px-3 py-2 capitalize">{value}</button>)}</div>
-      <svg role="img" aria-label={`Recorded ${metric} curves: cyan baseline, violet variant; dashed validation`} viewBox="0 0 600 210" className="w-full max-h-80 bg-[#151E30] rounded-xl">
-        <text x="20" y="15" fill="#9EACC4" fontSize="10">{maxValue.toFixed(3)}</text>
-        {histories.map((history, i) => fields.map((field, j) => <path key={`${i}-${field}`} d={path(history, field)} fill="none" stroke={i ? '#A78BFA' : '#46D7F2'} strokeWidth="2" strokeDasharray={j ? '5 4' : undefined} />))}
-        <line x1={20 + selectedEpoch / maxEpoch * 560} x2={20 + selectedEpoch / maxEpoch * 560} y1="20" y2="180" stroke="#3CD5AA" strokeDasharray="3 3" />
-        <text x="20" y="200" fill="#9EACC4" fontSize="10">0</text><text x="530" y="200" fill="#9EACC4" fontSize="10">Epoch {maxEpoch}</text>
-      </svg>
-      <p className="text-xs text-slate-400">Cyan: baseline · Violet: variant · Solid: training · Dashed: validation</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex gap-3" role="group" aria-label="Comparison metric">
+          {['loss', 'accuracy'].map(value => <button type="button" key={value} aria-pressed={metric === value} onClick={() => setMetric(value)} className="rounded bg-[#202B43] px-3 py-2 capitalize">{value}</button>)}
+        </div>
+        <button type="button" aria-pressed={showDataTable} onClick={() => setShowDataTable(value => !value)} className="rounded border border-cyan-400/30 px-3 py-2 text-sm text-cyan-200 hover:bg-cyan-400/10">
+          {showDataTable ? 'Show comparison chart' : 'Show comparison data table'}
+        </button>
+      </div>
+      {showDataTable ? (
+        <div role="region" aria-label="Recorded comparison data" tabIndex={0} className="max-h-80 max-w-full overflow-auto rounded-xl border border-white/10 bg-[#151E30]">
+          <table className="w-full min-w-[540px] text-left text-xs">
+            <caption className="px-3 py-2 text-left text-slate-300">Recorded {metric} measurements — selected epoch {selectedEpoch}. Missing measurements are not inferred.</caption>
+            <thead className="sticky top-0 bg-[#202B43] text-slate-200"><tr>
+              <th scope="col" className="p-3">Epoch</th>
+              <th scope="col" className="p-3">Baseline train</th>
+              <th scope="col" className="p-3">Baseline validation</th>
+              <th scope="col" className="p-3">Variant train</th>
+              <th scope="col" className="p-3">Variant validation</th>
+            </tr></thead>
+            <tbody>
+              {comparisonRows.length ? comparisonRows.map(row => <tr key={row.epoch} aria-current={row.epoch === selectedEpoch ? 'true' : undefined} className={`border-t border-white/10 ${row.epoch === selectedEpoch ? 'bg-cyan-400/10' : ''}`}>
+                <th scope="row" className="p-3 font-semibold"><button type="button" aria-label={`Inspect epoch ${row.epoch}`} onClick={() => setEpoch(row.epoch)} className="rounded px-2 py-1 text-cyan-200 hover:bg-white/10">{row.epoch}</button></th>
+                {row.values.map((value, index) => <td key={index} className="p-3 tabular-nums">{display(value)}</td>)}
+              </tr>) : <tr><td colSpan={5} className="p-3 text-slate-300">No epoch-level measurements were recorded.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <svg role="img" aria-label={`Recorded ${metric} curves: cyan baseline, violet variant; dashed validation`} viewBox="0 0 600 210" className="w-full max-h-80 bg-[#151E30] rounded-xl">
+          <text x="20" y="15" fill="#9EACC4" fontSize="10">{maxValue.toFixed(3)}</text>
+          {histories.map((history, i) => fields.map((field, j) => <path key={`${i}-${field}`} d={path(history, field)} fill="none" stroke={i ? '#A78BFA' : '#46D7F2'} strokeWidth="2" strokeDasharray={j ? '5 4' : undefined} />))}
+          <line x1={20 + selectedEpoch / maxEpoch * 560} x2={20 + selectedEpoch / maxEpoch * 560} y1="20" y2="180" stroke="#3CD5AA" strokeDasharray="3 3" />
+          <text x="20" y="200" fill="#9EACC4" fontSize="10">0</text><text x="530" y="200" fill="#9EACC4" fontSize="10">Epoch {maxEpoch}</text>
+        </svg>
+      )}
+      <p className="text-xs text-slate-400">Cyan: baseline · Violet: variant · Solid: training · Dashed: validation. The table contains exact recorded epochs without filling gaps.</p>
     </>}
   {isFeatureEnabled('sweeps_and_arena') && <section className="p-4 space-y-3"><p>Sweeps use the selected baseline Studio run and its fixed validation set. Test samples are excluded.</p><SweepManager existingRuns={runs.filter(run=>run.workspace==='studio')} baseConfig={{learningRate:a?.hyperparameters.learningRate ?? .01,batchSize:a?.hyperparameters.batchSize ?? 16,epochs:Math.min(a?.hyperparameters.epochs ?? 20,100)}} running={sweeping} onRun={a?.workspace==='studio' ? manifest=>startSweep(manifest,a) : undefined}/>{sweeping&&<button onClick={stopSweep}>Stop sweep</button>}{lastSweep&&<div><p>Sweep: {lastSweep.manifest.status} - {lastSweep.manifest.jobs.filter(job=>job.status==='completed').length}/{lastSweep.manifest.totalJobs} completed</p><button disabled={sweeping} onClick={()=>startSweep(lastSweep.manifest,lastSweep.source)}>Resume unfinished / retry failed trials</button>{lastSweep.manifest.jobs.filter(job=>job.error).map(job=><p key={job.jobId} role="alert">{job.jobId}: {job.error}</p>)}</div>}</section>}</div>;
 }
