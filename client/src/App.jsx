@@ -1,6 +1,6 @@
 import { isFeatureEnabled } from './services/productionConfig.js';
 import React, { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppShell from './components/AppShell';
 import LandingPage from './pages/LandingPage';
 const AccountPage = lazy(() => import('./pages/AccountPage'));
@@ -14,9 +14,12 @@ const ExperimentsPage = lazy(() => import('./pages/ExperimentsPage'));
 const AcademyPage = lazy(() => import('./pages/AcademyPage'));
 const ReportPage = lazy(() => import('./pages/ReportPage'));
 
+// Hash routes avoid GitHub Pages 404s when deep-linking into an experiment.
+const Router = import.meta.env?.VITE_STATIC_DEMO === 'true' ? HashRouter : BrowserRouter;
+
 export default function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <Suspense fallback={<p role="status" className="p-8 text-slate-300">Loading workspace...</p>}><Routes>
         {/* Standalone Landing Page */}
         <Route path="/" element={<LandingPage />} />
@@ -48,6 +51,6 @@ export default function App() {
         {/* Fallback route */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes></Suspense>
-    </BrowserRouter>
+    </Router>
   );
 }

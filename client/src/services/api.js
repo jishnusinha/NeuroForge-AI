@@ -14,6 +14,9 @@ function headers() {
   return { 'Content-Type': 'application/json', 'X-Owner-Token': token, ...(session ? { Authorization: 'Bearer ' + session } : {}) };
 }
 export async function request(path, options = {}) {
+  if (import.meta.env?.VITE_STATIC_DEMO === 'true') {
+    throw new Error('This GitHub Pages edition works locally in your browser. Cloud accounts and server sharing require the separately hosted Express API.');
+  }
   const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers: headers(), signal: AbortSignal.timeout(path.startsWith('/v2/auth/') ? 15000 : 5000) });
   if (!response.ok) {
     let body = {};

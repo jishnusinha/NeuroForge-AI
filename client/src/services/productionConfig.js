@@ -11,7 +11,7 @@ export const PRODUCTION_CONFIG = {
   featureFlags: {
     workspace_system: true,        // Phase 2
     durable_drafts: true,          // Phase 3
-    accounts_and_sync: true,       // Phase 4
+    accounts_and_sync: import.meta.env?.VITE_STATIC_DEMO !== 'true',       // Phase 4
     persistent_artifacts: true,    // Phase 5
     anti_leakage_prep: true,       // Phase 6
     error_explorer: true,          // Phase 7
