@@ -24,6 +24,10 @@
 
 **These phases must not be marked deployed until their independent PRs have passed CI, merged, and their Pages workflow succeeded.** This table describes roadmap identities and implementation scopes, not a live-production certification.
 
+## DS-F10 advanced EDA expansion
+
+The DS-F10 implementation adds shared dataset filters, missingness inspection, Pearson/Spearman correlation evidence, advanced quality heuristics, original-row drilldown, reproducible export and deliberate filtered-subset preparation handoff. See [DS-F10 EDA spec](DS_F10_ADVANCED_EDA.md). This DS-F10 milestone is distinct from the older release-readiness F10 designation.
+
 ## Important limits
 - Current visual labs intentionally require two numerical feature columns; only supported binary targets and their valid stratified partitions are accepted.
 - Standalone PCA and optimizer landscape tools are educational computations, not automatically applied fitted transforms or real neural model telemetry.

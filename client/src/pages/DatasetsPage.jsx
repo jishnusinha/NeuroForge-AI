@@ -53,7 +53,17 @@ export default function DatasetsPage() {
             setExploredFile(data ? { data, name: fileName } : null);
             setDatasetRevision(previous => previous + 1);
           }} />
-        <DataScienceWorkbench key={datasetRevision} dataset={exploredFile?.data} name={exploredFile?.name} />
+        <DataScienceWorkbench key={datasetRevision} dataset={exploredFile?.data} name={exploredFile?.name}
+          onCreateSubset={rows => {
+            if (!exploredFile?.data || rows.length < 4) return;
+            const subset = {
+              ...exploredFile.data,
+              rows: rows.map(row => ({ ...row })),
+              rowCount: rows.length,
+            };
+            setExploredFile({ data: subset, name: exploredFile.name + ' · selected subset' });
+            setDatasetRevision(previous => previous + 1);
+          }} />
       </section>
     )}
     <label className="block text-sm">Search datasets<input aria-label="Search datasets" className="block p-2 bg-obsidian rounded w-full" value={query} onChange={e=>setQuery(e.target.value)} /></label>

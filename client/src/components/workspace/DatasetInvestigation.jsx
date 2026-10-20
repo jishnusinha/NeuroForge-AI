@@ -14,7 +14,7 @@ function Selector({ label, value, onChange, options, optional = false }) {
   </label>;
 }
 
-function Relationships({ dataset, report }) {
+function Relationships({ dataset, report, onSelectRow }) {
   const numeric = report.columns.filter(column=>column.type==='numeric').map(column=>column.name);
   const groupOptions = eligibleGroupColumns(report);
   const [x,setX] = useState(numeric[0] ?? '');
@@ -73,7 +73,7 @@ function Relationships({ dataset, report }) {
             <caption className="p-3 text-left text-text-muted">First {Math.min(30,evidence.points.length)} plotted rows, from actual observations. The chart is a bounded display sample.</caption>
             <thead className="sticky top-0 bg-surface-elevated"><tr><th scope="col" className="p-2">CSV row</th><th scope="col" className="p-2">{x}</th><th scope="col" className="p-2">{y}</th>{color && <th scope="col" className="p-2">{color}</th>}</tr></thead>
             <tbody>{evidence.points.slice(0,30).map(point=><tr key={point.id} className="border-t border-white/10">
-              <th scope="row" className="p-2">{point.rowNumber}</th><td className="p-2 tabular-nums">{format(point.x)}</td><td className="p-2 tabular-nums">{format(point.y)}</td>{color && <td className="p-2 break-words">{point.group}</td>}
+              <th scope="row" className="p-2"><button type="button" className="text-plasma-cyan underline" onClick={()=>onSelectRow?.(point.id)}>{point.rowNumber}</button></th><td className="p-2 tabular-nums">{format(point.x)}</td><td className="p-2 tabular-nums">{format(point.y)}</td>{color && <td className="p-2 break-words">{point.group}</td>}
             </tr>)}</tbody>
           </table>
         </div>
@@ -116,7 +116,7 @@ function Balance({ dataset, report }) {
   </div>;
 }
 
-function Outliers({ dataset, report }) {
+function Outliers({ dataset, report, onSelectRow }) {
   const numeric=report.columns.filter(column=>column.type==='numeric').map(column=>column.name);
   const [column,setColumn]=useState(numeric[0]??'');
   const signals=qualitySignals(report);
@@ -144,7 +144,7 @@ function Outliers({ dataset, report }) {
               <caption className="p-3 text-left text-text-muted">First {Math.min(evidence.count,30)} flagged original observations. No values have been removed.</caption>
               <thead className="bg-surface-elevated"><tr><th scope="col" className="p-2">CSV row</th><th scope="col" className="p-2">Source ID</th><th scope="col" className="p-2">{column}</th></tr></thead>
               <tbody>{evidence.examples.map(item=><tr key={item.id} className="border-t border-white/10">
-                <th scope="row" className="p-2">{item.rowNumber}</th><td className="p-2">{item.id}</td><td className="p-2 tabular-nums">{format(item.value)}</td>
+                <th scope="row" className="p-2"><button type="button" className="text-plasma-cyan underline" onClick={()=>onSelectRow?.(String(item.id))}>{item.rowNumber}</button></th><td className="p-2">{item.id}</td><td className="p-2 tabular-nums">{format(item.value)}</td>
               </tr>)}
               {!evidence.count && <tr><td colSpan={3} className="p-3">No values fall outside the calculated fences.</td></tr>}
               </tbody>
@@ -156,8 +156,8 @@ function Outliers({ dataset, report }) {
   </div>;
 }
 
-export default function DatasetInvestigation({ dataset, report, mode }) {
-  if (mode === 'relationships') return <Relationships dataset={dataset} report={report}/>;
+export default function DatasetInvestigation({ dataset, report, mode, onSelectRow }) {
+  if (mode === 'relationships') return <Relationships dataset={dataset} report={report} onSelectRow={onSelectRow}/>;
   if (mode === 'balance') return <Balance dataset={dataset} report={report}/>;
-  return <Outliers dataset={dataset} report={report}/>;
+  return <Outliers dataset={dataset} report={report} onSelectRow={onSelectRow}/>;
 }
