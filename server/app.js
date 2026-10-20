@@ -9,16 +9,37 @@ import { createSyncRouter } from './routes/syncRoutes.js';
 import { createShareRouter } from './routes/shareRoutes.js';
 
 import crypto from 'node:crypto';
+import { trustedCorsOrigins, requestIdOrNew, isTrustedRequestOrigin } from './securityPolicy.js';
 
-export function createApp({ allowMemoryFallback = process.env.NODE_ENV !== 'production', deliverAccountEmail } = {}) {
+export function createApp({
+  allowMemoryFallback = process.env.NODE_ENV !== 'production',
+  deliverAccountEmail,
+  enforceOriginPolicy = process.env.NODE_ENV === 'production',
+  allowedOrigins,
+} = {}) {
   const app = express();
   app.disable('x-powered-by');
-  app.use(cors());
+  // No wildcard cross-origin access for hosted user sessions.
+  const trustedOrigins = enforceOriginPolicy ? (allowedOrigins ??
+    trustedCorsOrigins({ originList: process.env.CORS_ORIGINS || '', publicAppUrl: process.env.PUBLIC_APP_URL || '' })) : [];
+  app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    res.setHeader('X-Frame-Options', 'DENY');
+    if (req.path.startsWith('/api/')) res.setHeader('Cache-Control', 'no-store');
+    if (enforceOriginPolicy && req.get('Origin') && !isTrustedRequestOrigin(req.get('Origin'), trustedOrigins)) {
+      return res.status(403).json({ code: 'ORIGIN_NOT_ALLOWED', error: 'Origin is not permitted.' });
+    }
+    next();
+  });
+  app.use(cors(enforceOriginPolicy ? {
+    origin: (origin, callback) => callback(null, isTrustedRequestOrigin(origin, trustedOrigins)),
+  } : {}));
   app.use(express.json({ limit: '2mb' }));
 
   // Phase 11: Request ID and structured diagnostics
   app.use((req, res, next) => {
-    const reqId = req.headers['x-request-id'] || crypto.randomUUID();
+    const reqId = requestIdOrNew(req.headers['x-request-id'], () => crypto.randomUUID());
     req.requestId = reqId;
     res.setHeader('x-request-id', reqId);
     next();
@@ -41,6 +62,7 @@ export function createApp({ allowMemoryFallback = process.env.NODE_ENV !== 'prod
   });
 
   app.get('/api/v2/diagnostics', (req, res) => {
+    if (enforceOriginPolicy) return res.status(404).json({ code: 'NOT_FOUND', error: 'Not found.' });
     const memory = process.memoryUsage();
     res.json({
       service: 'NeuroForge AI',
