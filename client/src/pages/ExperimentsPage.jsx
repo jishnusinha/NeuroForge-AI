@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { fetchExperiments, removeExperiment } from '../services/api';
 import ResearchNotebook from '../components/workspace/ResearchNotebook.jsx';
+import F14RunRegistry from '../components/workspace/registry/F14RunRegistry.jsx';
 import { useLabStore } from '../store/useLabStore';
 
 export default function ExperimentsPage() {
@@ -53,6 +54,7 @@ export default function ExperimentsPage() {
         </button>
       </div>
 
+      <F14RunRegistry />
       {!loading && <ResearchNotebook experiments={experiments} />}
 
       {loading ? (

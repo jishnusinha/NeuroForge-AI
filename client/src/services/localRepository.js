@@ -231,6 +231,76 @@ export async function getSnapshotLocal(id) {
   });
 }
 
+/**
+ * Versioned, owner-scoped snapshot primitives for DS-F14. All comparisons and
+ * writes happen inside one IndexedDB readwrite transaction (CAS semantics).
+ * Existing non-versioned F3/F6/F11 snapshots remain untouched.
+ */
+export async function listSnapshotsLocal(prefix = '') {
+  if(typeof prefix!=='string')throw new Error('SNAPSHOT_PREFIX_INVALID');
+  return executeTransaction('snapshots','readonly',store=>new Promise((resolve,reject)=>{
+    const req=store.getAll();
+    req.onerror=()=>reject(req.error);
+    req.onsuccess=()=>resolve((req.result??[])
+      .filter(item=>item.ownerScope===ownerScope() &&
+        item.id.startsWith(ownerScope()+':'+prefix)));
+  }));
+}
+
+export async function saveVersionedSnapshotLocal(record,expectedRevision=0,{maxItems=30,maxBytes=49152}={}) {
+  if(!record || typeof record.id!=='string' || !record.id.startsWith('f14-run:') ||
+     record.kind!=='neuroforge-f14-run' ||
+     !Number.isInteger(expectedRevision) || expectedRevision<0)
+    throw new Error('SNAPSHOT_VERSIONED_INVALID');
+  if(record.ownerScope && record.ownerScope!==ownerScope())
+    throw new Error('IDENTITY_CHANGED: Archive save cancelled.');
+  const owner=ownerScope();
+  const item={...record,id:owner+':'+record.id,ownerScope:owner,
+    revision:expectedRevision+1,updatedAt:new Date().toISOString()};
+  if(new TextEncoder().encode(JSON.stringify(item)).length>maxBytes)
+    throw new Error('F14_RECEIPT_TOO_LARGE');
+  await executeTransaction('snapshots','readwrite',store=>new Promise((resolve,reject)=>{
+    const req=store.getAll();
+    req.onerror=()=>reject(req.error);
+    req.onsuccess=()=>{
+      const current=(req.result??[]).find(r=>r.id===item.id);
+      if((current?.revision??0)!==expectedRevision) {
+        reject(new Error('REVISION_CONFLICT: Reload the archive; this run changed in another tab.'));return;
+      }
+      const count=(req.result??[]).filter(r=>r.ownerScope===owner && r.kind==='neuroforge-f14-run').length;
+      if(!current && count>=maxItems) {
+        reject(new Error('F14_ARCHIVE_FULL: Delete an archived run before saving another.'));return;
+      }
+      const write=store.put(item);
+      write.onerror=()=>reject(write.error);
+      write.onsuccess=()=>resolve();
+    };
+  }));
+  return {...item,id:record.id,ownerScope:undefined};
+}
+
+export async function deleteVersionedSnapshotLocal(id,expectedRevision) {
+  if(typeof id!=='string' || !id.startsWith('f14-run:') ||
+     !Number.isInteger(expectedRevision) || expectedRevision<1)
+    throw new Error('F14_DELETE_REQUIRES_REVISION');
+  const key=ownerScope()+':'+id;
+  return executeTransaction('snapshots','readwrite',store=>new Promise((resolve,reject)=>{
+    const req=store.get(key);
+    req.onerror=()=>reject(req.error);
+    req.onsuccess=()=>{
+      if(!req.result || req.result.ownerScope!==ownerScope()) {
+        reject(new Error('F14_RUN_NOT_FOUND'));return;
+      }
+      if(req.result.revision!==expectedRevision) {
+        reject(new Error('REVISION_CONFLICT: Reload the archive before deleting.'));return;
+      }
+      const deletion=store.delete(key);
+      deletion.onerror=()=>reject(deletion.error);
+      deletion.onsuccess=()=>resolve(true);
+    };
+  }));
+}
+
 export async function saveRecoverySession(session) {
   const record = {
     ...session,

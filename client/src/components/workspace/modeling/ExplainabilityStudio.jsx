@@ -18,7 +18,7 @@ const views=[
   {id:'subgroups',name:'Subgroups'},
 ];
 
-function ExportButton({ matrix, model, candidate, importance, local, dependence, whatIf, subgroups, onError, onMessage }) {
+function ExportButton({ matrix, model, candidate, importance, local, dependence, whatIf, subgroups, onArchive, onError, onMessage }) {
   const run=async()=>{
     try{
       const receipt=await createExplanationReceipt({
@@ -33,7 +33,20 @@ function ExportButton({ matrix, model, candidate, importance, local, dependence,
       onError('');onMessage('Explanation evidence exported without individual row identifiers, source values or fitted model parameters.');
     }catch(error){onError(error.message);}
   };
-  return <button type="button" onClick={run} className={buttonClass}>Export explanation evidence JSON</button>;
+  const archive=async()=>{
+    if(!onArchive)return;
+    try{
+      const receipt=await createExplanationReceipt({
+        matrix,model,candidateId:candidate.id,importance,local,dependence,whatIf,subgroups,
+      });
+      await onArchive(receipt);
+      onError('');onMessage('Explanation evidence attached to the saved F14 run.');
+    }catch(reason){onError('Could not attach F13 evidence: '+reason.message);}
+  };
+  return <div className="flex flex-wrap gap-2">
+    <button type="button" onClick={run} className={buttonClass}>Export explanation evidence JSON</button>
+    <button type="button" onClick={archive} disabled={!onArchive} className={buttonClass}>Attach F13 evidence to saved F14 run</button>
+  </div>;
 }
 
 function ImportancePanel({ importance, job, onStart, onCancel }) {
@@ -236,7 +249,7 @@ function SubgroupsPanel({ feature, setFeature, matrix, result, onRun }) {
   </section>;
 }
 
-export default function ExplainabilityStudio({ matrix, candidate, plan }) {
+export default function ExplainabilityStudio({ matrix, candidate, plan, onArchive=null }) {
   const model=candidate.model;
   const validRows=useMemo(()=>validateExplanationContext(matrix,model),[matrix,model]);
   const controls=useMemo(()=>sourceFeatureControls(plan,matrix),[plan,matrix]);
@@ -369,7 +382,7 @@ export default function ExplainabilityStudio({ matrix, candidate, plan }) {
       <div className="rounded-xl border border-white/10 p-3 space-y-2">
         <h5 className="font-semibold">Reproducible explanation evidence</h5>
         <p className="text-xs text-text-muted">Exports method, selected candidate fingerprint, preparation lineage and aggregate results. No test rows are analyzed and no original source rows, individual identifiers, neighbor identities or model weights are included.</p>
-        <ExportButton matrix={matrix} model={model} candidate={candidate} importance={importance}
+        <ExportButton matrix={matrix} model={model} candidate={candidate} onArchive={onArchive} importance={importance}
           local={local} dependence={pdp} whatIf={whatIf} subgroups={subgroups}
           onError={setError} onMessage={setMessage}/>
       </div>
