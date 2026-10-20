@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { createFeatureMatrix } from '../../../ml/modelWorkbench/featureMatrix.js';
 import { MODEL_DEFINITIONS, fitWorkbenchModel, predictWorkbenchModel } from '../../../ml/modelWorkbench/models.js';
 import { evaluateWorkbenchPredictions } from '../../../ml/modelWorkbench/metrics.js';
+import ExplainabilityStudio from './ExplainabilityStudio.jsx';
 import { digest } from '../../../../../shared/domain.mjs';
 
 const buttonClass='min-h-10 rounded-lg border border-white/20 bg-obsidian px-3 py-2 text-sm text-text-primary disabled:opacity-40';
@@ -188,6 +189,7 @@ export default function ModelWorkbench({ plan }) {
         <ScorePanel report={selected.validation}/>
         <PredictionTable report={selected.validation}/>
       </section>}
+      {selected&&<ExplainabilityStudio key={selected.id} matrix={matrix} candidate={selected} plan={plan}/>}
       {selected&&!testResult&&<div className="rounded-xl border border-signal-amber/30 bg-surface-dark p-3 space-y-2">
         <h5 className="font-semibold">Protected final test</h5>
         <p className="text-xs text-text-muted">Finalize candidate selection before evaluating the {matrix.membership.test.length} held-out test records. This action reveals test metrics and freezes further model tuning in this session.</p>

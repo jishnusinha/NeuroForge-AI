@@ -36,6 +36,10 @@ The next data-science milestone builds a real, ordered train-fitted graph execut
 
 F12 introduces a browser-local task-aware model workbench consuming every numeric output feature from F11. It includes regression/binary/multiclass tasks, N-feature baseline/logistic/ridge/kNN models, validation evidence and a one-time session-level final test gate. Full feature scope and deferrals: [DS-F12 release notes](DS_F12_MODEL_WORKBENCH.md).
 
+## DS-F13 Explainability & Diagnostics Studio
+
+F13 adds candidate-specific validation-only permutation importance, exact logistic/ridge local contributions, kNN neighbor-vote evidence, partial dependence and ICE, frozen-F11 source-space what-if analysis, numerical subgroup diagnostics and privacy-conscious summary export. For methods and limits see [DS-F13 documentation](DS_F13_EXPLAINABILITY_STUDIO.md).
+
 ## Important limits
 - Current visual labs intentionally require two numerical feature columns; only supported binary targets and their valid stratified partitions are accepted.
 - Standalone PCA and optimizer landscape tools are educational computations, not automatically applied fitted transforms or real neural model telemetry.
