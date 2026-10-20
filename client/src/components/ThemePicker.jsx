@@ -1,6 +1,7 @@
 import React from 'react';
 import { Palette } from 'lucide-react';
-import { THEMES, useTheme } from '../theme/ThemeProvider.jsx';
+import { THEMES } from '../theme/themeConfig.js';
+import { useTheme } from '../theme/useTheme.js';
 export default function ThemePicker(){
  const {theme,setTheme}=useTheme();
  return <div className="px-3 py-2 border-t border-white/10 hidden lg:block">
