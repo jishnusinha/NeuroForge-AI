@@ -23,10 +23,10 @@ export default function DatasetPreparation({ initialData = null, onParsed }) {
   const launch=async workspace=>{
     try {
       if (!data) throw new Error('Import or select a dataset before preparation.');
-      if (new Set(Object.values(columns)).size!==3 || Object.values(columns).some(value => !value)) throw new Error('Choose two distinct inputs and a separate target.');
       if (!['x','y'].every(key => data.summary.find(column => column.name === columns[key])?.type === 'numeric')) {
         throw new Error('The current visual labs require two numeric input columns.');
       }
+      if (new Set(Object.values(columns)).size!==3 || Object.values(columns).some(value => !value)) throw new Error('Choose two distinct inputs and a separate target.');
       validateExecutionBudget(data.rows.length,2);
       const raw=data.rows.map(row=>({id:row.id,x:row[columns.x],y:row[columns.y],label:row[columns.target]}));
       if(raw.some(row=>![0,1].includes(row.label)))throw new Error('The visual classifier requires target values 0 and 1.');
