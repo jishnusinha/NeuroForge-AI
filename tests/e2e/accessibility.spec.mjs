@@ -51,7 +51,8 @@ test('F1: skip control focuses main workspace without altering the router locati
 
 test('F1: palette closes on backdrop without activating underlying links', async ({ page }) => {
   await page.goto('/app');
-  await page.keyboard.press('Control+k');
+  // Use the visible launcher: this scenario tests backdrop dismissal rather than shortcut focus.
+  await page.getByRole('button', { name: 'Command Palette (Ctrl+K)' }).click();
   const dialog = page.getByRole('dialog', { name: 'Quick commands' });
   await expect(dialog).toBeVisible();
   await page.mouse.click(3, 3);
