@@ -54,6 +54,9 @@ export default function Sidebar() {
         {sidebarExpanded && (
           <button 
             onClick={toggleSidebar}
+            type="button"
+            aria-label="Collapse sidebar"
+            aria-expanded={sidebarExpanded}
             title="Collapse sidebar"
             className="hidden lg:block p-1.5 rounded-lg text-[#9EACC4] hover:text-white hover:bg-white/5 transition-colors"
           >
@@ -133,6 +136,9 @@ export default function Sidebar() {
           ) : (
             <button 
               onClick={toggleSidebar}
+              type="button"
+              aria-label="Expand sidebar"
+              aria-expanded={sidebarExpanded}
               title="Expand sidebar"
               className="w-full flex justify-center p-2 rounded-lg text-[#9EACC4] hover:text-white hover:bg-white/5 transition-colors"
             >
