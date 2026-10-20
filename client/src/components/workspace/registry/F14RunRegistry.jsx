@@ -48,7 +48,20 @@ export default function F14RunRegistry(){
     }catch(reason){setError('Local F14 archive could not be opened: '+reason.message);}
     finally{setLoading(false);}
   };
-  useEffect(()=>{load();},[]);
+  useEffect(()=>{
+    let active=true;
+    listF14Runs().then(items=>{
+      if(!active)return;
+      setRuns(items);
+      setActiveId(items[0]?.runId??'');
+      setLoading(false);
+    }).catch(reason=>{
+      if(!active)return;
+      setError('Local F14 archive could not be opened: '+reason.message);
+      setLoading(false);
+    });
+    return ()=>{active=false;};
+  },[]);
   const active=runs.find(item=>item.runId===activeId);
   const visible=useMemo(()=>runs.filter(run=>
     (taskFilter==='all'||run.task.type===taskFilter) &&
