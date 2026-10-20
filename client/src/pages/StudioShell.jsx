@@ -25,6 +25,7 @@ import UnifiedChart from '../components/workspace/UnifiedChart';
 import ContextInspector from '../components/workspace/ContextInspector';
 import { modelRunner } from '../ml/modelRunner.js';
 import { deserializeModelArtifact } from '../ml/modelArtifacts.js';
+import OptimizerLandscapeLab from '../components/workspace/OptimizerLandscapeLab.jsx';
 import NeuralStudioDiagnostics from '../components/workspace/NeuralStudioDiagnostics.jsx';
 import ErrorExplorer from '../components/workspace/ErrorExplorer.jsx';
 import { isFeatureEnabled } from '../services/productionConfig.js';
@@ -766,6 +767,9 @@ export default function StudioShell() {
         )}
 
       </footer>
+      <section className="p-4">
+        <OptimizerLandscapeLab />
+      </section>
       <section className="p-4 space-y-4" aria-label="Model investigation">
         {isFeatureEnabled('neural_diagnostics') && modelWeights.length > 0 && <NeuralStudioDiagnostics layers={layers} weightsAndBiases={modelWeights.map(w => ({ weights:w.kernel,biases:w.bias }))} sample={probeInput} batchSamples={trainPoints.map(p => [p.x,p.y])} />}
         {isFeatureEnabled('error_explorer') && evaluationSamples.length > 0 && <ErrorExplorer baselineRunId={currentRunId} samples={evaluationSamples} onSelectSample={sample => setSelectedContext({type:'sample',data:sample})} />}
