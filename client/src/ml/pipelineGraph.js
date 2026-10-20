@@ -37,8 +37,8 @@ export function defaultStudioRecipe(dataset) {
     schemaVersion: STUDIO_SCHEMA_VERSION,
     featureColumns, targetColumn: target, splitPreset: '70/15/15', seed: 42,
     nodes: numeric.length ? [
-      { id: 'numeric-imputation', type: 'numeric.impute', columns: featureColumns, enabled: true, options: { strategy: 'mean' } },
-      { id: 'numeric-scaling', type: 'numeric.scale', columns: featureColumns, enabled: true, options: { strategy: 'standardize' } },
+      { id: 'numeric-imputation', type: 'numeric.impute', columns: [...featureColumns], enabled: true, options: { strategy: 'mean' } },
+      { id: 'numeric-scaling', type: 'numeric.scale', columns: [...featureColumns], enabled: true, options: { strategy: 'standardize' } },
     ] : [],
   };
 }
