@@ -5,7 +5,7 @@ test('F9: fitted Playground reliability lab shows observed calibration and subgr
   await page.getByRole('button',{name:'Recalculate Model Boundary',exact:true}).click();
   const lab=page.getByRole('region',{name:'Reliability and shift lab'});
   await expect(lab).toBeVisible();
-  await expect(lab.getByText('Brier score')).toBeVisible();
+  await expect(lab.getByText('Brier score',{exact:true})).toBeVisible();
   const table=lab.getByRole('region',{name:'Validation calibration table'});
   await expect(table).toBeVisible();
   await expect(table.getByRole('row')).toHaveCount(6);
