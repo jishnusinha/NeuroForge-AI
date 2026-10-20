@@ -1,4 +1,5 @@
 import ErrorExplorer from '../components/workspace/ErrorExplorer.jsx';
+import WhatIfExplorer from '../components/workspace/WhatIfExplorer.jsx';
 import { isFeatureEnabled, validateExecutionBudget } from '../services/productionConfig.js';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
@@ -931,6 +932,11 @@ export default function PlaygroundShell() {
         ))}
       </footer>
       {!isStale && modelResult?.predictProbability && isFeatureEnabled('error_explorer') && <section className="p-4"><ErrorExplorer baselineRunId={currentRunId} samples={testPoints.map(p=>({id:p.id,split:'validation',actual:p.label,predictedProb:modelResult.predictProbability(p.x,p.y),features:{x:p.x,y:p.y}}))} onSelectSample={sample=>setSelectedContext({type:'sample',data:sample})} /></section>}
+      {!isStale && modelResult?.predictProbability && ['Logistic Regression', 'K-Nearest Neighbors (KNN)'].includes(selectedAlgorithm) &&
+        <section className="p-4">
+          <WhatIfExplorer key={resultKey} predictProbability={modelResult.predictProbability}
+            trainPoints={trainPoints} threshold={selectedAlgorithm === 'Logistic Regression' ? threshold : .5}/>
+        </section>}
       {!isStale && heldOutPoints.length>0 && modelResult?.predictProbability && <section className="p-4"><p>{heldOutPoints.length} test samples remain held out. Viewing them is recorded.</p><button className="p-3 bg-cyan-800 rounded" onClick={()=>{const accuracy=heldOutPoints.filter(p=>(modelResult.predictProbability(p.x,p.y)>=threshold?1:0)===p.label).length/heldOutPoints.length;setTestResult(accuracy);setTestAccessHistory(history=>[...history,{accessedAt:new Date().toISOString(),configuration:configKey}]);}}>Evaluate held-out test</button>{testResult!==null&&<p>Test accuracy: {testResult.toFixed(4)}</p>}</section>}
     </div>
   );
