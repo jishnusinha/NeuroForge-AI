@@ -122,8 +122,8 @@ export default function AppShell() {
 
       {/* Main Workspace Frame */}
       <div
-        className={`min-w-0 w-full flex-1 flex flex-col transition-all duration-300 ease-in-out ${
-          focusMode ? 'pl-0' : (sidebarExpanded ? 'lg:pl-[232px] pl-[72px]' : 'pl-[72px]')
+        className={`neuroforge-app-frame min-w-0 w-full flex-1 flex flex-col transition-all duration-300 ease-in-out ${
+          focusMode ? 'pl-0' : (sidebarExpanded ? 'lg:pl-[232px]' : 'lg:pl-[72px]')
         }`}
       >
         <WorkspaceHeader />

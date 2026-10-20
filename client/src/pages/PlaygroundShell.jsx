@@ -459,7 +459,7 @@ export default function PlaygroundShell() {
         <section className="flex-1 min-w-0 flex flex-col bg-[#080D18] relative overflow-hidden">
 
           {/* Floating Canvas Toolbar */}
-          <div className="absolute top-4 left-4 z-20 flex items-center gap-1 p-1 rounded-xl bg-[#151E30]/90 backdrop-blur-md border border-white/10 shadow-lg">
+          <div role="toolbar" aria-label="Dataset canvas tools" className="absolute top-2 left-2 sm:top-4 sm:left-4 z-20 flex items-center gap-1 p-1 rounded-xl bg-[#151E30]/90 backdrop-blur-md border border-white/10 shadow-lg">
             {[
               { id: 'select', icon: MousePointer, label: 'Select / Drag Points' },
               { id: 'draw', icon: Pencil, label: 'Draw New Points' },
@@ -472,7 +472,9 @@ export default function PlaygroundShell() {
                 <button
                   key={tool.id}
                   onClick={() => setActiveTool(tool.id)}
-                  className={`p-2 rounded-lg text-xs font-medium transition-all ${
+                  aria-label={tool.label}
+                  aria-pressed={activeTool === tool.id}
+                  className={`min-w-9 min-h-9 p-2 rounded-lg text-xs font-medium transition-all ${
                     activeTool === tool.id
                       ? 'bg-[#46D7F2]/20 text-[#46D7F2] border border-[#46D7F2]/40 shadow-sm'
                       : 'text-[#9EACC4] hover:text-white hover:bg-white/5'
@@ -487,7 +489,7 @@ export default function PlaygroundShell() {
 
           {/* Stale Result Alert if user mutated data */}
           {isStale && (
-            <div className="absolute top-4 right-4 z-20 flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#F3B65E]/15 border border-[#F3B65E]/40 text-[#F3B65E] text-xs font-medium backdrop-blur-md shadow-lg animate-in fade-in">
+            <div className="absolute top-14 right-2 left-2 sm:left-auto sm:top-4 sm:right-4 z-20 flex flex-wrap items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#F3B65E]/15 border border-[#F3B65E]/40 text-[#F3B65E] text-xs font-medium backdrop-blur-md shadow-lg animate-in fade-in">
               <AlertTriangle className="w-3.5 h-3.5" />
               <span>Inputs changed: Boundary is stale reference.</span>
               <button

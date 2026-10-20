@@ -25,16 +25,18 @@ export default function Sidebar() {
     { name: 'Academy', path: '/app/learn', icon: BookOpen },
     { name: 'Dataset Explorer', path: '/app/datasets', icon: Database },
     { name: 'My Experiments', path: '/app/experiments', icon: FolderGit2 },
+    { name: 'Showcase', path: '/showcase', icon: Sparkles, mobileOnly: true },
   ];
 
   return (
-    <aside 
-      className={`fixed top-0 left-0 bottom-0 z-40 bg-[#0D1422] border-r border-white/10 flex flex-col transition-all duration-300 ease-in-out ${
-        sidebarExpanded ? 'lg:w-[232px] w-[72px]' : 'w-[72px]'
+    <aside
+      aria-label="Workspace sidebar"
+      className={`mobile-lab-nav fixed inset-x-0 bottom-0 top-auto z-40 h-[72px] w-full bg-[#0D1422] border-t border-white/10 flex flex-col transition-all duration-300 ease-in-out lg:top-0 lg:right-auto lg:bottom-0 lg:h-auto lg:border-t-0 lg:border-r ${
+        sidebarExpanded ? 'lg:w-[232px]' : 'lg:w-[72px]'
       }`}
     >
       {/* Brand Header */}
-      <div className="h-16 flex items-center px-4 border-b border-white/10 justify-between">
+      <div className="hidden lg:flex h-16 items-center px-4 border-b border-white/10 justify-between">
         <NavLink to="/" className="flex items-center gap-3 group">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#46D7F2]/20 to-[#A78BFA]/30 border border-[#46D7F2]/40 flex items-center justify-center font-display font-bold text-lg text-[#46D7F2] shadow-glow-cyan transition-transform group-hover:scale-105">
             N
@@ -66,7 +68,7 @@ export default function Sidebar() {
       </div>
 
       {/* Main Navigation */}
-      <div className="flex-1 py-4 px-3 space-y-1.5 overflow-y-auto overflow-x-hidden">
+      <nav aria-label="Primary navigation" className="flex-1 flex flex-row lg:flex-col gap-1 p-2 lg:py-4 lg:px-3 overflow-x-auto overflow-y-hidden lg:overflow-y-auto lg:overflow-x-hidden">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -76,7 +78,7 @@ export default function Sidebar() {
               aria-label={item.name}
               end={item.path === '/app'}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group relative ${
+                `flex flex-col lg:flex-row items-center justify-center lg:justify-start gap-1 lg:gap-3 min-w-[68px] min-h-[54px] lg:min-w-0 lg:min-h-0 px-2 lg:px-3 py-1.5 lg:py-2.5 rounded-xl text-sm font-medium transition-all group relative ${item.mobileOnly ? 'lg:hidden' : ''} ${
                   isActive
                     ? 'bg-[#46D7F2]/15 text-[#46D7F2] border border-[#46D7F2]/30 shadow-sm font-semibold'
                     : 'text-[#9EACC4] hover:text-white hover:bg-white/5'
@@ -85,6 +87,7 @@ export default function Sidebar() {
               title={!sidebarExpanded ? item.name : undefined}
             >
               <Icon className="w-5 h-5 flex-shrink-0" />
+              <span className="lg:hidden text-[10px] font-medium leading-tight text-center whitespace-nowrap">{item.name === 'Experiment Arena' ? 'Arena' : item.name === 'ML Playground' ? 'Playground' : item.name === 'Mission Control' ? 'Home' : item.name === 'Dataset Explorer' ? 'Datasets' : item.name === 'My Experiments' ? 'Runs' : item.name === 'Neural Studio' ? 'Studio' : item.name}</span>
               {sidebarExpanded && (
                 <div className="hidden lg:flex items-center justify-between flex-1 overflow-hidden">
                   <span className="truncate">{item.name}</span>
@@ -98,10 +101,10 @@ export default function Sidebar() {
             </NavLink>
           );
         })}
-      </div>
+      </nav>
 
       {/* Showcase Feature Highlight */}
-      <div className="p-3 border-t border-white/10 space-y-2">
+      <div className="hidden lg:block p-3 border-t border-white/10 space-y-2">
         <NavLink
           to="/showcase"
           className={({ isActive }) =>

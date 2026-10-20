@@ -94,3 +94,23 @@
     outline-offset: 2px;
   }
 }
+
+/* F1: small screens use a bottom dock instead of the desktop side rail. */
+@media (max-width: 1023px) {
+  .mobile-lab-nav {
+    height: calc(72px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .neuroforge-app-frame {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (max-width: 639px) {
+  .lab-workspace > div > section { min-height: 360px; height: 52dvh; }
+  .lab-workspace > div > aside { min-width: 0; }
+  .lab-workspace > footer > div:not(:first-child) {
+    overflow: visible;
+    min-height: 0;
+  }
+  .lab-workspace > footer > div:first-child { min-height: 44px; height: auto; }
+}

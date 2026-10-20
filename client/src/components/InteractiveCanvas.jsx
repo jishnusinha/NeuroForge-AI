@@ -18,6 +18,24 @@ export default function InteractiveCanvas({
 }) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
+  const activePointerRef = useRef(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+
+  // Redraw after orientation and responsive-layout changes without changing experiment data.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const measure = () => {
+      const width = Math.max(1, Math.round(container.clientWidth));
+      const height = Math.max(1, Math.round(container.clientHeight));
+      setCanvasSize(previous => previous.width === width && previous.height === height
+        ? previous : { width, height });
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(container);
+    measure();
+    return () => observer.disconnect();
+  }, []);
 
   // Viewport transformation: scale and translation
   const [viewTransform, setViewTransform] = useState({ scale: 75, offsetX: 0, offsetY: 0 });
@@ -310,16 +328,22 @@ export default function InteractiveCanvas({
     hoveredPoint,
     mathToScreen,
     screenToMath,
+    canvasSize,
   ]);
 
-  // Mouse Handlers
-  const handleMouseDown = (e) => {
+  // Pointer Events support mouse, pen and touch, including drags outside the canvas.
+  const handlePointerDown = (e) => {
+    if (!e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    if (activePointerRef.current !== null) return;
+    activePointerRef.current = e.pointerId;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    const sx = e.clientX - rect.left;
-    const sy = e.clientY - rect.top;
+    const sx = (e.clientX - rect.left) * canvas.width / rect.width;
+    const sy = (e.clientY - rect.top) * canvas.height / rect.height;
     const { mx, my } = screenToMath(sx, sy, canvas.width, canvas.height);
+    const hitRadius = e.pointerType === 'touch' ? 22 : 10;
 
     if (activeTool === 'pan') {
       setIsPanning(true);
@@ -341,7 +365,7 @@ export default function InteractiveCanvas({
       // Find point within radius
       const idx = points.findIndex((p) => {
         const { sx: px, sy: py } = mathToScreen(p.x, p.y, canvas.width, canvas.height);
-        return Math.hypot(px - sx, py - sy) < 10;
+        return Math.hypot(px - sx, py - sy) < hitRadius;
       });
       if (idx !== -1) {
         onDeletePoint?.(points[idx].id);
@@ -359,7 +383,7 @@ export default function InteractiveCanvas({
       if (algorithm === 'K-Means Clustering' && kCentroids.length > 0) {
         const cIdx = kCentroids.findIndex((c) => {
           const { sx: cx, sy: cy } = mathToScreen(c.x, c.y, canvas.width, canvas.height);
-          return Math.hypot(cx - sx, cy - sy) < 14;
+          return Math.hypot(cx - sx, cy - sy) < (e.pointerType === 'touch' ? 24 : 14);
         });
         if (cIdx !== -1) {
           setDraggedItem({ type: 'centroid', index: cIdx });
@@ -370,7 +394,7 @@ export default function InteractiveCanvas({
       // Check if clicking a data point
       const pIdx = points.findIndex((p) => {
         const { sx: px, sy: py } = mathToScreen(p.x, p.y, canvas.width, canvas.height);
-        return Math.hypot(px - sx, py - sy) < 10;
+        return Math.hypot(px - sx, py - sy) < hitRadius;
       });
       if (pIdx !== -1) {
         setDraggedItem({ type: 'point', index: pIdx });
@@ -378,12 +402,14 @@ export default function InteractiveCanvas({
     }
   };
 
-  const handleMouseMove = (e) => {
+  const handlePointerMove = (e) => {
+    if (activePointerRef.current !== null && e.pointerId !== activePointerRef.current) return;
+    if (e.pointerType === 'touch' && activePointerRef.current === null) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    const sx = e.clientX - rect.left;
-    const sy = e.clientY - rect.top;
+    const sx = (e.clientX - rect.left) * canvas.width / rect.width;
+    const sy = (e.clientY - rect.top) * canvas.height / rect.height;
     const { mx, my } = screenToMath(sx, sy, canvas.width, canvas.height);
 
     if (isPanning) {
@@ -415,7 +441,12 @@ export default function InteractiveCanvas({
     setHoveredPoint(p || null);
   };
 
-  const handleMouseUp = () => {
+  const handlePointerEnd = (e) => {
+    if (activePointerRef.current !== e.pointerId) return;
+    activePointerRef.current = null;
+    if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
     setIsPanning(false);
     setDraggedItem(null);
   };
@@ -434,11 +465,13 @@ export default function InteractiveCanvas({
       <canvas
         role="img" aria-label="Interactive dataset canvas"
         ref={canvasRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
+        onLostPointerCapture={handlePointerEnd}
         onWheel={handleWheel}
+        style={{ touchAction: 'none' }}
         className={`w-full h-full ${
           activeTool === 'pan' ? 'cursor-grab active:cursor-grabbing' :
           activeTool === 'draw' ? 'cursor-crosshair' :
