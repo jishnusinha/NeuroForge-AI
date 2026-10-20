@@ -256,7 +256,7 @@ export default function ModelWorkbench({ plan }) {
       </button>
       <ModelSelectionStudio plan={plan} matrix={matrix} onPromote={acceptF15Selection}
         disabled={busy||Boolean(testResult)||candidates.length>=8}/>
-      {candidates.length>=8&&<p className="text-xs text-signal-amber">Eight-candidate browser session limit reached. Start a new preparation session for further experiments.</p>
+      {candidates.length>=8&&<p className="text-xs text-signal-amber">Eight-candidate browser session limit reached. Start a new preparation session for further experiments.</p>}
       <p className="text-xs text-text-muted">The held-out test set is not evaluated while training or selecting candidates. Validation measurements drive comparison. This session is browser-local.</p>
 
       {candidates.length>0&&<section aria-label="F12 model candidates" className="space-y-3">
