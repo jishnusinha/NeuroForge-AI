@@ -186,6 +186,7 @@ export default function UnifiedChart({
             }`}
             title="Toggle accessible table view"
             aria-label="Toggle accessible table view"
+            aria-pressed={showTableView}
           >
             <Table className="w-3 h-3" />
           </button>
@@ -229,11 +230,12 @@ export default function UnifiedChart({
       {showTableView ? (
         <div className="mt-2 max-h-36 overflow-y-auto border border-white/5 rounded-lg">
           <table className="w-full text-left text-[11px] font-mono">
+            <caption className="sr-only">{title}: recorded training and validation values by epoch</caption>
             <thead className="bg-[#080D18] text-[#9EACC4] sticky top-0 border-b border-white/10">
               <tr>
-                <th className="p-1.5">Epoch</th>
-                <th className="p-1.5">Train</th>
-                <th className="p-1.5">Validation</th>
+                <th scope="col" className="p-1.5">Epoch</th>
+                <th scope="col" className="p-1.5">Train</th>
+                <th scope="col" className="p-1.5">Validation</th>
               </tr>
             </thead>
             <tbody>
