@@ -34,7 +34,7 @@ test('guest can enter the lab and use keyboard commands',async({page})=>{
   await page.keyboard.press('Control+k');
   const dialog=page.getByRole('dialog',{name:'Quick commands'});
   await expect(dialog).toBeVisible();
-  await page.getByRole('textbox',{name:'Search commands'}).fill('K-Means');
+  await page.getByRole('combobox',{name:'Search commands'}).fill('K-Means');
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/app\/playground/);
   await expect(page.getByRole('button',{name:'Gaussian Blobs',exact:true})).toBeVisible();
