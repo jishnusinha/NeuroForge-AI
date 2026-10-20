@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { parseAndValidateCSV } from '../../ml/datasetImport.js';
+import { profileDataset } from '../../ml/datasetProfiling.js';
 import { PreprocessingPipeline } from '../../ml/preprocessingPipeline.js';
 import { createStratifiedSplit } from '../../ml/evaluationProtocol.js';
 import { validateExecutionBudget } from '../../services/productionConfig.js';
@@ -9,7 +10,7 @@ import { useLabStore } from '../../store/useLabStore.js';
 
 function columnsFor(data) {
   if (!data) return { x:'', y:'', target:'' };
-  const numeric = data.summary.filter(column => column.type === 'numeric').map(column => column.name);
+  const numeric = profileDataset(data).columns.filter(column => column.type === 'numeric').map(column => column.name);
   const target = data.headers.find(header => /^(label|target|class|outcome)$/i.test(header))
     ?? data.headers.find(header => !numeric.slice(0, 2).includes(header))
     ?? data.headers.at(-1);
@@ -22,7 +23,7 @@ export default function DatasetPreparation({ initialData = null, onParsed }) {
   const launch=async workspace=>{
     try {
       if (!data) throw new Error('Import or select a dataset before preparation.');
-      if (!['x','y'].every(key => data.summary.find(column => column.name === columns[key])?.type === 'numeric')) {
+      if (!['x','y'].every(key => profileDataset(data).columns.find(column => column.name === columns[key])?.type === 'numeric')) {
         throw new Error('The current visual labs require two numeric input columns.');
       }
       if (new Set(Object.values(columns)).size!==3 || Object.values(columns).some(value => !value)) throw new Error('Choose two distinct inputs and a separate target.');
