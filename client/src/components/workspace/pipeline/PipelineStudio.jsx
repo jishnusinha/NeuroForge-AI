@@ -3,6 +3,7 @@ import { digest } from '../../../../../shared/domain.mjs';
 import { saveSnapshotLocal, getSnapshotLocal } from '../../../services/localRepository.js';
 import { classifyPipelineColumns, createStudioNode, defaultStudioRecipe, NODE_DEFINITIONS, STUDIO_MAX_NODES, validateStudioRecipe } from '../../../ml/pipelineGraph.js';
 import { executeStudioPipeline, transformStudioArtifact } from '../../../ml/pipelineExecutor.js';
+import ModelWorkbench from '../modeling/ModelWorkbench.jsx';
 
 const inputClass='mt-1 w-full min-h-10 rounded-lg border border-white/20 bg-obsidian px-2 py-2 text-sm text-text-primary';
 const STASH_ID='ds-f11-pipeline-recipe';
@@ -179,7 +180,7 @@ export default function PipelineStudio({ dataset, onLaunch }) {
   return <details className="rounded-xl border border-plasma-cyan/25 bg-surface-dark p-3 sm:p-4">
     <summary className="cursor-pointer text-lg font-semibold text-text-primary">Advanced Pipeline Studio (F11) <span className="block text-xs font-normal text-text-muted">Build real, ordered, reproducible transformations; open the editor</span></summary>
     <div role="region" aria-label="F11 Pipeline Studio" className="mt-4 space-y-4">
-      <p className="text-sm text-text-muted">Raw imported rows remain unchanged. Split membership is determined before any fitted transformation. General matrices are previewable; Playground and Studio require two numeric outputs with a 0/1 target.</p>
+      <p className="text-sm text-text-muted">Raw imported rows remain unchanged. Split membership is established before fitting. F12 accepts all prepared features for classification or regression; legacy Playground and Studio still require two numeric inputs with 0/1 labels.</p>
       <div className="grid gap-3 sm:grid-cols-2">
         <fieldset className="rounded-xl border border-white/10 bg-obsidian p-3">
           <legend className="px-1 text-sm font-semibold">Input features</legend>
@@ -193,6 +194,12 @@ export default function PipelineStudio({ dataset, onLaunch }) {
           </div>
         </fieldset>
         <div className="space-y-2 rounded-xl border border-white/10 bg-obsidian p-3">
+          <label className="block text-xs font-semibold">Learning task
+            <select aria-label="F12 learning task" value={recipe.taskType??'classification'} onChange={event=>setRecipe(previous=>({...previous,taskType:event.target.value}))} className={inputClass}>
+              <option value="classification">Classification (2–12 classes)</option>
+              <option value="regression">Regression (continuous numeric target)</option>
+            </select>
+          </label>
           <label className="block text-xs font-semibold">Target column
             <select aria-label="F11 target column" value={recipe.targetColumn} onChange={event=>setRecipe(previous=>({
               ...previous,targetColumn:event.target.value,
@@ -263,6 +270,7 @@ export default function PipelineStudio({ dataset, onLaunch }) {
         <button type="button" disabled={!result.plan?.labCompatible} onClick={launch('studio')}
           className="min-h-11 rounded-lg border border-plasma-cyan/40 bg-plasma-cyan/10 px-4 text-sm font-semibold text-plasma-cyan disabled:opacity-40">Launch F11 pipeline in Studio</button>
       </div>
+      {result.plan && <ModelWorkbench key={JSON.stringify(recipe)} plan={result.plan}/>}
       {message&&<p role="status" className="text-sm text-quantum-mint">{message}</p>}
       {error&&<p role="alert" className="text-sm text-signal-amber">{error}</p>}
       <p className="text-xs text-text-muted">This editor uses a bounded ordered pipeline, not an arbitrary graph executor. Recipes contain no raw rows. Fitted parameters and split identities accompany a launched run.</p>

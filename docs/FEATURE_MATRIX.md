@@ -32,6 +32,10 @@ The DS-F10 implementation adds shared dataset filters, missingness inspection, P
 
 The next data-science milestone builds a real, ordered train-fitted graph executor and interactive editor on the existing F3 workbench. It adds numeric and categorical transforms, fitted inspection, recipe import/export and owner-scoped local saving. General prepared matrices are previewable, while old labs only accept compatible two-feature 0/1 outputs. See [DS-F11 documentation](DS_F11_PIPELINE_STUDIO.md).
 
+## DS-F12 Generalized ML Workbench
+
+F12 introduces a browser-local task-aware model workbench consuming every numeric output feature from F11. It includes regression/binary/multiclass tasks, N-feature baseline/logistic/ridge/kNN models, validation evidence and a one-time session-level final test gate. Full feature scope and deferrals: [DS-F12 release notes](DS_F12_MODEL_WORKBENCH.md).
+
 ## Important limits
 - Current visual labs intentionally require two numerical feature columns; only supported binary targets and their valid stratified partitions are accepted.
 - Standalone PCA and optimizer landscape tools are educational computations, not automatically applied fitted transforms or real neural model telemetry.

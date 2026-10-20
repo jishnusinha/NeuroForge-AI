@@ -34,7 +34,7 @@ export function defaultStudioRecipe(dataset) {
   const numeric = eligible.filter(name => kinds[name] === 'numeric');
   const featureColumns = (numeric.length ? numeric : eligible).slice(0, 2);
   return {
-    schemaVersion: STUDIO_SCHEMA_VERSION,
+    schemaVersion: STUDIO_SCHEMA_VERSION, taskType: 'classification',
     featureColumns, targetColumn: target, splitPreset: '70/15/15', seed: 42,
     nodes: numeric.length ? [
       { id: 'numeric-imputation', type: 'numeric.impute', columns: [...featureColumns], enabled: true, options: { strategy: 'mean' } },
@@ -69,6 +69,8 @@ export function validateStudioRecipe(dataset, recipe) {
     throw new Error('F11_DATASET_BUDGET: Import 6–2000 rows with at most 20 columns.');
   if (!recipe || recipe.schemaVersion !== STUDIO_SCHEMA_VERSION || !Array.isArray(recipe.nodes))
     throw new Error('F11_RECIPE_SCHEMA: Unsupported or malformed recipe.');
+  if (recipe.taskType !== undefined && !['classification','regression'].includes(recipe.taskType))
+    throw new Error('F12_UNKNOWN_TASK_TYPE');
   if (!SPLIT_PRESETS[recipe.splitPreset] || !Number.isInteger(recipe.seed) ||
       recipe.seed < 0 || recipe.seed > 4294967295)
     throw new Error('F11_SPLIT_CONFIG: Choose a supported split and unsigned 32-bit seed.');
@@ -141,7 +143,7 @@ export function validateStudioRecipe(dataset, recipe) {
     };
   });
   return {
-    schemaVersion: STUDIO_SCHEMA_VERSION,
+    schemaVersion: STUDIO_SCHEMA_VERSION, taskType: recipe.taskType ?? 'classification',
     targetColumn: recipe.targetColumn, featureColumns: [...recipe.featureColumns],
     splitPreset: recipe.splitPreset, seed: recipe.seed, nodes,
   };

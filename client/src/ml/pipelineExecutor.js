@@ -1,4 +1,5 @@
 import { createStratifiedSplit } from './evaluationProtocol.js';
+import { createRegressionSplit } from './modelWorkbench/splits.js';
 import { SPLIT_PRESETS } from './pipelinePlanner.js';
 import { STUDIO_MAX_FEATURES, STUDIO_MAX_CATEGORIES, validateStudioRecipe } from './pipelineGraph.js';
 
@@ -155,10 +156,17 @@ export function transformStudioArtifact(artifact, sourceRows) {
 export function executeStudioPipeline(dataset, config) {
   const recipe=validateStudioRecipe(dataset,config);
   const raw=dataset.rows.map(row=>({...row}));
-  const labels=[...new Set(raw.map(row=>row[recipe.targetColumn]))];
-  if(labels.some(missing)||labels.length<2||labels.length>12)
+  const targets=raw.map(row=>row[recipe.targetColumn]);
+  const labels=[...new Set(targets)];
+  if(recipe.taskType==='regression') {
+    if(targets.some(value=>typeof value!=='number'||!Number.isFinite(value)))
+      throw new Error('F12_REGRESSION_REQUIRES_FINITE_TARGET');
+  } else if(labels.some(missing)||labels.length<2||labels.length>12) {
     throw new Error('F11_TARGET: Select an observed categorical target with 2–12 classes.');
-  const split=createStratifiedSplit(raw,recipe.targetColumn,{...SPLIT_PRESETS[recipe.splitPreset],seed:recipe.seed});
+  }
+  const split=recipe.taskType==='regression'
+    ?createRegressionSplit(raw,{...SPLIT_PRESETS[recipe.splitPreset],seed:recipe.seed})
+    :createStratifiedSplit(raw,recipe.targetColumn,{...SPLIT_PRESETS[recipe.splitPreset],seed:recipe.seed});
   const membership={
     train:split.train.map(row=>row.id),validation:split.validation.map(row=>row.id),test:split.test.map(row=>row.id),
   };
@@ -185,16 +193,18 @@ export function executeStudioPipeline(dataset, config) {
   const sourceTypesValid=recipe.featureColumns.length===2 && recipe.featureColumns.every(name =>
     raw.every(row => missing(row[name]) || finite(row[name])));
   const outputMappingValid=featureNames.length===2 && featureNames.every((name,index)=>name===recipe.featureColumns[index]);
-  const labCompatible=sourceTypesValid && outputMappingValid && labels.length===2 &&
+  const labCompatible=recipe.taskType!=='regression' && sourceTypesValid && outputMappingValid && labels.length===2 &&
     labels.every(value=>value===0||value===1);
-  const reason=labCompatible?null:featureNames.length!==2
+  const reason=labCompatible?null:recipe.taskType==='regression'
+    ? 'Regression is supported in F12 Model Workbench; legacy two-feature labs require binary targets.'
+    :featureNames.length!==2
     ? 'Current Playground and Studio accept exactly two numeric output features; this recipe produces '+featureNames.length+'.'
       : !sourceTypesValid || !outputMappingValid
         ? 'Current two-feature labs require two original numeric input columns with unchanged output names; categorical and expanded feature matrices are for F12.'
         : 'Current Playground and Studio require observed binary targets 0 and 1.';
   const artifact={
     kind:'neuroforge-f11-fitted-pipeline',schemaVersion:1,
-    featureColumns:[...recipe.featureColumns],targetColumn:recipe.targetColumn,
+    featureColumns:[...recipe.featureColumns],targetColumn:recipe.targetColumn,taskType:recipe.taskType,
     outputFeatures:[...featureNames],fittedNodes,splitPreset:recipe.splitPreset,seed:recipe.seed,membership,
   };
   return {
