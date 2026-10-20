@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { evaluateWhatIf, localWhatIfSensitivity, nearestClassFlip } from '../../ml/whatIf.js';
+import { localWhatIfSensitivity, nearestClassFlip } from '../../ml/whatIf.js';
 
 const display = value => Number.isFinite(value) ? Number(value.toFixed(4)).toLocaleString() : 'Unavailable';
 
