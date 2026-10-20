@@ -32,7 +32,7 @@ export default function EdaCorrelationView({ dataset, onInspectRow }) {
         </label>)}
       </div>
     </fieldset>
-    {selected.length<2 ? <p role="status" className="p-4 rounded-lg bg-obsidian">Select at least two numeric columns.</p>
+    {selected.length<2 ? <p role="status" className="p-4 rounded-lg bg-obsidian">At least two numeric columns are required for a correlation matrix.</p>
       : <div role="region" aria-label="Correlation matrix" tabIndex={0} className="overflow-x-auto rounded-xl border border-white/10">
         <table className="w-full min-w-[460px] text-center text-xs">
           <caption className="p-3 text-left text-text-muted">{method==='pearson'?'Pearson r':'Spearman rho'} with actual paired observation counts. Choose a cell to inspect evidence.</caption>
