@@ -67,7 +67,7 @@ export function buildDatasetPipeline(data, options = {}) {
   const pipeline = new PreprocessingPipeline(steps).fit(split.train, ['x', 'y']);
   const transformed = pipeline.transform(raw);
   if (transformed.some(row => !Number.isFinite(row.x) || !Number.isFinite(row.y))) {
-    throw new Error('NONFINITE_PREPARED_FEATURES');
+    throw new Error('NONFINITE_FEATURE: Add imputation before preparing the model.');
   }
   const membership = {
     train: split.train.map(row => row.id),

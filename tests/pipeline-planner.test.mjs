@@ -61,7 +61,7 @@ test('F3 custom split ratios and column choices yield consistent, replayable mem
     assert.ok(plan.counts.test>0);
   }
   assert.deepEqual(defaultPipelineColumns(data),{x:'feature_x',y:'feature_y',target:'label'});
-  assert.throws(()=>buildDatasetPipeline(data,{columns:{x:'feature_x',y:'label',target:'feature_y'}}),/numeric input/);
+  assert.throws(()=>buildDatasetPipeline(data,{columns:{x:'feature_x',y:'label',target:'feature_y'}}),/binary targets/);
   assert.throws(()=>buildDatasetPipeline(data,{columns:{x:'feature_x',y:'feature_x',target:'label'}}),/different numeric/);
 });
 
