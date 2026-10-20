@@ -4,13 +4,20 @@ permissions:
   contents: read
 jobs:
   verify:
-    runs-on: ubuntu-24.04 # Pin a known runner image; MongoDB 8.0 fails on latest 6.19+ kernels
+    runs-on: ubuntu-24.04 # Stable image; host kernel still needs Mongo compatibility checks
     timeout-minutes: 20
     services:
       mongo:
-        image: mongo:8.0
+        image: mongo:7.0
+        # Mongo 8 refuses to start on hosted Linux kernels 6.19–7.0.13 (SERVER-121912).
+        # Use supported Mongo 7 for CI until the runner and Mongo 8 combination is safe.
         ports:
           - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       NEUROFORGE_TEST_MONGODB_URI: mongodb://127.0.0.1:27017
     steps:
