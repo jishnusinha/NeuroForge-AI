@@ -698,9 +698,11 @@ export default function StudioShell() {
           bottomDockCollapsed ? 'h-9' : 'h-52'
         }`}
       >
-        <div
-          onClick={() => setBottomDockCollapsed(!bottomDockCollapsed)}
-          className="h-9 px-4 bg-[#151E30]/70 flex items-center justify-between cursor-pointer border-b border-white/5 hover:bg-[#151E30]"
+        <button type="button"
+          onClick={() => setBottomDockCollapsed(value => !value)}
+          aria-expanded={!bottomDockCollapsed}
+          aria-label={bottomDockCollapsed ? 'Expand Studio training analysis' : 'Collapse Studio training analysis'}
+          className="w-full min-h-9 px-4 bg-[#151E30]/70 flex items-center justify-between text-left cursor-pointer border-b border-white/5 hover:bg-[#151E30]"
         >
           <div className="flex items-center gap-3">
             <span className="text-xs font-mono font-semibold text-white flex items-center gap-2">
@@ -711,10 +713,10 @@ export default function StudioShell() {
               Optimizer: {optimizer} (α={learningRate}) · Batch: {batchSize} · Seeded fixed order
             </span>
           </div>
-          <button className="text-[#9EACC4] hover:text-white">
+          <span aria-hidden="true" className="text-[#9EACC4]">
             {bottomDockCollapsed ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
-        </div>
+          </span>
+        </button>
 
         {!bottomDockCollapsed && (
           <div className="flex-1 p-3 grid grid-cols-1 md:grid-cols-3 gap-3 overflow-hidden">
