@@ -268,7 +268,7 @@ export default function ModelWorkbench({ plan }) {
         </p>}
       </section>}
       {selected&&<ExplainabilityStudio key={selected.id} matrix={matrix} candidate={selected} plan={plan}
-        onArchive={savedRun?attachF13:null}/>
+        onArchive={savedRun?attachF13:null}/>}
       {selected&&!testResult&&<div className="rounded-xl border border-signal-amber/30 bg-surface-dark p-3 space-y-2">
         <h5 className="font-semibold">Protected final test</h5>
         <p className="text-xs text-text-muted">Finalize candidate selection before evaluating the {matrix.membership.test.length} held-out test records. This action reveals test metrics and freezes further model tuning in this session.</p>
@@ -285,7 +285,7 @@ export default function ModelWorkbench({ plan }) {
       </button>
       {message&&<p role="status" className="text-sm text-quantum-mint">{message}</p>}
       {error&&<p role="alert" className="text-sm text-signal-amber">{error}</p>}
-      <p className="text-xs text-text-muted">Model coefficients stay in this browser session. Export contains metadata and measured metrics only, not original source rows or kNN training vectors. Persistence and Arena integration are future F12 phases.</p>
+      <p className="text-xs text-text-muted">Standard F12 evidence exports contain only metadata and measured metrics. F14 can store a research receipt locally; fitted model parameters are saved only with explicit opt-in, never for kNN. Full source-data restoration and N-dimensional Arena integration remain future work.</p>
     </div>
   </details>;
 }
