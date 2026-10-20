@@ -14,7 +14,6 @@ export const MODEL_DEFINITIONS = Object.freeze([
   { id:'knn',label:'k-Nearest Neighbors (N features)',tasks:['binary_classification','multiclass_classification'] },
 ]);
 
-const vectors = rows => rows.map(row => row.values);
 function fitStandardizer(trainRows) {
   const n = trainRows.length, columns = trainRows[0].values.length;
   const mean=Array.from({length:columns},(_,j)=>trainRows.reduce((sum,row)=>sum+row.values[j],0)/n);

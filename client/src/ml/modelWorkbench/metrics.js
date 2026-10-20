@@ -40,8 +40,11 @@ export function evaluateWorkbenchPredictions(matrix,predictions,split='validatio
     return {name,support,precision,recall,f1:precision===null||recall===null?null:divide(2*precision*recall,precision+recall)};
   });
   const correct=confusion.reduce((sum,row,i)=>sum+row[i],0);
-  const macroF1=average(perClass.map(item=>item.f1).filter(x=>x!==null));
-  const weightedF1=perClass.reduce((sum,item)=>sum+(item.f1??0)*item.support,0)/rows.length;
+  // Do not silently drop undefined class measures from a macro average.
+  const f1Available=perClass.every(item=>item.f1!==null);
+  const macroF1=f1Available?average(perClass.map(item=>item.f1)):null;
+  const weightedF1=f1Available
+    ?perClass.reduce((sum,item)=>sum+item.f1*item.support,0)/rows.length:null;
   const accuracy=correct/rows.length;
   const positive=perClass.length===2?perClass[1]:null;
   return {task:matrix.task.type,split,count:rows.length,confusion,perClass,
