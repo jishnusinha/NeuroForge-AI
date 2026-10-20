@@ -24,11 +24,19 @@ jobs:
           cache: npm
           cache-dependency-path: client/package-lock.json
       - run: npm --prefix client ci
+      - run: npm --prefix server ci
+      - run: npm ci
+      - name: Run real ML and API unit tests
+        run: npm test
+      - name: Check frontend lint
+        run: npm run lint
       - name: Build browser-only demonstration
         run: npm --prefix client run build
         env:
           GITHUB_PAGES: 'true'
           VITE_STATIC_DEMO: 'true'
+      - name: Verify built GitHub Pages asset paths
+        run: node scripts/verify-pages-build.mjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
