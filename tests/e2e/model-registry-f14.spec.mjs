@@ -99,7 +99,7 @@ test('F14: comparable binary runs rank only validation measures; revision-aware 
   await expect(archive.getByRole('region',{name:'F14 saved run list'})).toContainText('F14 logistic contender');
   await archive.getByRole('checkbox',{name:'F14 compare F14 baseline reference'}).check();
   await archive.getByRole('checkbox',{name:'F14 compare F14 logistic contender'}).check();
-  const compare=archive.getByRole('region',{name:'F14 comparison'});
+  const compare=archive.getByRole('region',{name:'F14 comparison',exact:true});
   await expect(compare).toContainText('Comparison: comparable');
   await expect(compare.getByRole('region',{name:'F14 comparison scores'}).getByRole('row')).toHaveCount(3);
   await archive.getByRole('textbox',{name:'F14 search runs'}).fill('logistic');
