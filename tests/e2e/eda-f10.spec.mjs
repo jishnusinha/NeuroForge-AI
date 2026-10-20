@@ -52,5 +52,5 @@ test('F10: imported source rows drill down and explicit subset handoff retains o
   await lab.getByRole('button',{name:'Use filtered rows for preparation'}).click();
   lab=page.getByRole('region',{name:'Dataset profile dashboard'});
   await expect(lab).toContainText('6 original / 6 analyzed');
-  await expect(page.getByRole('region',{name:'CSV preparation'})).toContainText('6 source rows');
+  await expect(page.getByRole('region',{name:'CSV preparation'}).filter({hasText:'6 source rows'}).first()).toBeVisible();
 });
