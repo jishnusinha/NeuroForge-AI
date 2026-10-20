@@ -1,4 +1,6 @@
 import DatasetPreparation from '../components/workspace/DatasetPreparation.jsx';
+import DataScienceWorkbench from '../components/workspace/DataScienceWorkbench.jsx';
+import { parseAndValidateCSV } from '../ml/datasetImport.js';
 import { isFeatureEnabled } from '../services/productionConfig.js';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +9,8 @@ import { useLabStore } from '../store/useLabStore';
 const presets = { 'Two Moons': generateTwoMoons, 'XOR Problem': generateXOR, 'Gaussian Blobs': generateGaussianBlobs, 'Linear Trend': generateLinearTrend, 'Concentric Circles': generateConcentricCircles, Spiral: generateSpiral };
 export default function DatasetsPage() {
   const [name, setName] = useState('Two Moons');
+  const [exploredFile, setExploredFile] = useState(null);
+  const [datasetRevision, setDatasetRevision] = useState(0);
   const [query, setQuery] = useState('');
   const [noise, setNoise] = useState(.15);
   const [count, setCount] = useState(200);
@@ -17,6 +21,14 @@ export default function DatasetsPage() {
   const split = useMemo(() => trainTestSplit(points,ratio,42),[points,ratio]);
   const colors = ['#46D7F2','#A78BFA','#3CD5AA'];
   const extent = Math.max(2.5,...points.flatMap(p => [Math.abs(p.x),Math.abs(p.y)]));
+  const loadSampleForAnalysis = () => {
+    const sample = generateTwoMoons(120, .15, 42);
+    const csv = ['feature_x,feature_y,label',
+      ...sample.map(point => [point.x, point.y, point.label].join(','))].join('\n');
+    const data = parseAndValidateCSV(csv, { requiredNumericCols: 0 });
+    setExploredFile({ data, name: 'Two Moons sample (seed 42)' });
+    setDatasetRevision(previous => previous + 1);
+  };
   const launch = () => {
     const algorithm = name === 'Linear Trend' ? 'Linear Regression' : name === 'Gaussian Blobs' ? 'K-Means Clustering' : 'Logistic Regression';
     loadRun({workspace:'playground',algorithm,dataset:{name,points,noise,trainRatio:ratio,seed:42},hyperparameters:{}});
@@ -24,7 +36,26 @@ export default function DatasetsPage() {
   };
   return <div className="p-6 space-y-5 max-w-6xl mx-auto w-full">
     <h2 className="text-2xl font-bold">Dataset Explorer & Microscope</h2>
-    {isFeatureEnabled('anti_leakage_prep') && <DatasetPreparation />}
+    {isFeatureEnabled('anti_leakage_prep') && (
+      <section aria-label="Data Science Workbench" className="space-y-4 rounded-2xl border border-cyan-400/20 bg-[#0D1422] p-3 sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-xl font-semibold text-white">Data Science Workbench</h3>
+            <p className="mt-1 max-w-2xl text-sm text-[#9EACC4]">Explore real CSV columns, missingness and relationships locally before preparing a leakage-safe model.</p>
+          </div>
+          <button type="button" onClick={loadSampleForAnalysis}
+            className="rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-4 py-2.5 text-sm font-semibold text-cyan-200 hover:bg-cyan-400/20">
+            Try sample dataset
+          </button>
+        </div>
+        <DatasetPreparation key={datasetRevision} initialData={exploredFile?.data}
+          onParsed={(data, fileName) => {
+            setExploredFile(data ? { data, name: fileName } : null);
+            setDatasetRevision(previous => previous + 1);
+          }} />
+        <DataScienceWorkbench key={datasetRevision} dataset={exploredFile?.data} name={exploredFile?.name} />
+      </section>
+    )}
     <label className="block text-sm">Search datasets<input aria-label="Search datasets" className="block p-2 bg-[#151E30] rounded w-full" value={query} onChange={e=>setQuery(e.target.value)} /></label>
     <div className="flex flex-wrap gap-2">{Object.keys(presets).filter(n=>n.toLowerCase().includes(query.toLowerCase())).map(n=><button key={n} aria-pressed={name===n} onClick={()=>setName(n)} className={`p-2 rounded border ${name===n?'border-cyan-300':'border-white/10'}`}>{n}</button>)}</div>
     <div className="grid lg:grid-cols-[1fr_260px] gap-5">
