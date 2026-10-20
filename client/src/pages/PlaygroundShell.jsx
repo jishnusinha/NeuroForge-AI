@@ -1,4 +1,5 @@
 import ErrorExplorer from '../components/workspace/ErrorExplorer.jsx';
+import WhatIfExplorer from '../components/workspace/WhatIfExplorer.jsx';
 import ReliabilityLab from '../components/workspace/ReliabilityLab.jsx';
 import { isFeatureEnabled, validateExecutionBudget } from '../services/productionConfig.js';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -932,7 +933,12 @@ export default function PlaygroundShell() {
         ))}
       </footer>
       {!isStale && modelResult?.predictProbability && isFeatureEnabled('error_explorer') && <section className="p-4"><ErrorExplorer baselineRunId={currentRunId} samples={testPoints.map(p=>({id:p.id,split:'validation',actual:p.label,predictedProb:modelResult.predictProbability(p.x,p.y),features:{x:p.x,y:p.y}}))} onSelectSample={sample=>setSelectedContext({type:'sample',data:sample})} /></section>}
-      {!isStale && modelResult?.predictProbability && ['Logistic Regression','K-Nearest Neighbors (KNN)'].includes(selectedAlgorithm) &&
+      {!isStale && modelResult?.predictProbability && ['Logistic Regression', 'K-Nearest Neighbors (KNN)'].includes(selectedAlgorithm) &&
+        <section className="p-4">
+          <WhatIfExplorer key={resultKey} predictProbability={modelResult.predictProbability}
+            trainPoints={trainPoints} threshold={selectedAlgorithm === 'Logistic Regression' ? threshold : .5}/>
+        </section>}
+      {!isStale && modelResult?.predictProbability && ['Logistic Regression', 'K-Nearest Neighbors (KNN)'].includes(selectedAlgorithm) &&
         <section className="p-4">
           <ReliabilityLab key={resultKey} predictProbability={modelResult.predictProbability}
             samples={testPoints} trainPoints={trainPoints}

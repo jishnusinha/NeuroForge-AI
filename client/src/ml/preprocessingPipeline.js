@@ -32,9 +32,14 @@ export class PreprocessingPipeline {
         if (!values.length) throw new Error('NO_FINITE_TRAINING_VALUES: ' + feature);
         const mean = values.reduce((a,b) => a+b,0)/values.length;
         const std = Math.sqrt(values.reduce((a,b) => a+(b-mean)**2,0)/Math.max(1,values.length-1)) || 1;
-        stats[feature] = { mean, std, min: Math.min(...values), max: Math.max(...values) };
+        const ordered = values.slice().sort((a,b) => a - b);
+        const mid = Math.floor(ordered.length / 2);
+        const median = ordered.length % 2 ? ordered[mid] : (ordered[mid - 1] + ordered[mid]) / 2;
+        stats[feature] = { mean, median, std, min: ordered[0], max: ordered.at(-1) };
       }
-      const fitted = { type: step.type, features: [...features], stats };
+      const strategy = step.type === 'impute' ? (step.options?.strategy ?? 'mean') : undefined;
+      if (strategy && !['mean', 'median'].includes(strategy)) throw new Error('UNSUPPORTED_IMPUTATION_STRATEGY');
+      const fitted = { type: step.type, features: [...features], stats, ...(strategy ? { strategy } : {}) };
       params.stepParams.push(fitted);
       working = this.applyStep(working, fitted);
       if (step.type === 'polynomial') features = [...features, ...features.map(f => f+'^2'), ...(features.length >= 2 ? [features[0]+'*'+features[1]] : [])];
@@ -55,13 +60,13 @@ export class PreprocessingPipeline {
     return this.fittedParams.stepParams.reduce((current, step) => this.applyStep(current, step), rows.map(row => ({ ...row })));
   }
 
-  applyStep(rows, { type, features, stats }) {
+  applyStep(rows, { type, features, stats, strategy = 'mean' }) {
     return rows.map(row => {
       const out = { ...row };
       for (const feature of features) {
         const value = out[feature];
         const { mean, std, min, max } = stats[feature];
-        if (type === 'impute') { if (!Number.isFinite(value)) out[feature] = mean; }
+        if (type === 'impute') { if (!Number.isFinite(value)) out[feature] = strategy === 'median' ? stats[feature].median : mean; }
         else {
           if (!Number.isFinite(value)) throw new Error('NONFINITE_FEATURE: Add imputation before scaling.');
           if (type === 'standardize') out[feature] = (value - mean) / std;
