@@ -1,4 +1,5 @@
 import ChallengeHub from '../components/workspace/ChallengeHub.jsx';
+import { summarizeLearningTracks, readAcademyProgress, writeAcademyProgress } from '../ml/learningPaths.js';
 import { useLabStore } from '../store/useLabStore.js';
 import { isFeatureEnabled } from '../services/productionConfig.js';
 import React, { useState } from 'react';
@@ -12,26 +13,30 @@ export default function AcademyPage() {
 
   const [revealed, setRevealed] = useState({});
   const [answers, setAnswers] = useState({});
-  const [progress, setProgress] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('neuroforge_learning_progress') || '{}'); } catch { return {}; }
-  });
+  const accountScope = typeof localStorage !== 'undefined' ? localStorage.getItem('neuroforge_account_id') : null;
+  const [progress, setProgress] = useState(() => readAcademyProgress(localStorage, accountScope));
+  const tracks = summarizeLearningTracks(progress);
   const { slug } = useParams();
   const { loadRun, setExperimentName } = useLabStore();
   const choices = {
     'lesson-xor': ['One straight line is sufficient', 'A hidden nonlinear representation is needed'],
     'lesson-lr': ['The updates can overshoot and diverge', 'Larger steps always converge faster'],
     'lesson-overfitting': ['The model necessarily generalizes well', 'Training and validation behavior suggest overfitting'],
+    'lesson-leakage': ['Fit scaling separately on training, validation and test data', 'Fit preprocessing using training rows only, then transform held-out rows'],
+    'lesson-imbalance': ['High overall accuracy guarantees good minority-class recall', 'Inspect class-specific errors and use a stratified split'],
+    'lesson-counterfactual': ['A prediction-changing edit proves that intervention will work in reality', 'A model-based counterfactual is not a causal guarantee'],
   };
-  const correct = { 'lesson-xor': 1, 'lesson-lr': 0, 'lesson-overfitting': 1 };
+  const correct = { 'lesson-xor': 1, 'lesson-lr': 0, 'lesson-overfitting': 1,
+    'lesson-leakage': 1, 'lesson-imbalance': 1, 'lesson-counterfactual': 1 };
   const answer = (id, index) => {
     setAnswers(prev => ({ ...prev, [id]: index }));
     if (index === correct[id]) {
       const next = { ...progress, [id]: true }; setProgress(next);
-      try { localStorage.setItem('neuroforge_learning_progress', JSON.stringify(next)); } catch { /* Progress remains in this session. */ }
+      try { writeAcademyProgress(localStorage,accountScope,next); } catch { /* Progress remains in this session. */ }
     }
   };
   const openLesson = id => {
-    if (id === 'lesson-overfitting') return;
+    if (!['lesson-xor','lesson-lr'].includes(id)) return;
     const xor = id === 'lesson-xor';
     loadRun({ workspace: xor ? 'studio' : 'playground', algorithm: xor ? 'Dense MLP (2-4-1)' : 'Linear Regression',
       dataset: { name: xor ? 'XOR Problem' : 'Linear Trend', points: xor ? generateXOR(180,.12,42) : generateLinearTrend(120,.25,42), noise: xor ? .12 : .25, trainRatio:.8, seed:42 },
@@ -71,6 +76,27 @@ export default function AcademyPage() {
       labLink: '/app/arena',
       labLabel: 'Inspect Overfitting in Arena',
     },
+    {
+      id:'lesson-leakage',track:'Evaluation & Trustworthy Data',
+      title:'Why must preprocessing fit training data only?',
+      question:'When computing a feature standardization mean, should the validation and test rows influence it?',
+      explanation:'No. A mean, median, standard deviation, or scale estimated using validation/test samples leaks evaluation information into the model pipeline. Fit each transformation only on the training partition, then apply the unchanged fitted values to validation/test rows.',
+      labLink:'/app/datasets',labLabel:'Inspect the CSV pipeline',
+    },
+    {
+      id:'lesson-imbalance',track:'Evaluation & Trustworthy Data',
+      title:'What can class imbalance conceal?',
+      question:'A classifier reaches 95% overall accuracy when 95% of examples are class 0. Does the accuracy alone show that class 1 is detected?',
+      explanation:'No. A majority-class-only classifier can achieve that accuracy while recovering zero minority examples. Examine the class distribution, stratified splits, confusion matrix, precision, recall, and minority-class errors before comparing models.',
+      labLink:'/app/datasets',labLabel:'Investigate class balance',
+    },
+    {
+      id:'lesson-counterfactual',track:'Explainability',
+      title:'What does a model counterfactual really show?',
+      question:'An input change flips a classifier prediction. Does that establish a feasible real-world intervention or causality?',
+      explanation:'A counterfactual probe demonstrates how the fitted function responds at chosen inputs. Features can have causal dependencies, measurement constraints, and correlations. The nearest result within a bounded grid is not a global optimum or guaranteed intervention.',
+      labLink:'/app/playground',labLabel:'Explore classifier predictions',
+    },
   ];
 
   return (
@@ -84,7 +110,15 @@ export default function AcademyPage() {
       </div>
 
       <div className="space-y-6">
-        <p className="text-sm text-[#3CD5AA]">Checkpoints completed: {Object.values(progress).filter(Boolean).length} / {lessons.length}</p>
+        <p className="text-sm text-[#3CD5AA]">Checkpoints completed: {lessons.filter(lesson => progress[lesson.id]===true).length} / {lessons.length}</p>
+        <div role="region" aria-label="Learning paths" className="grid gap-3 sm:grid-cols-3">
+          {tracks.map(track=><div key={track.id} className="rounded-xl border border-white/10 bg-[#151E30] p-4">
+            <h3 className="text-sm font-semibold text-white">{track.title}</h3>
+            <p className="mt-2 text-xs text-[#9EACC4]">{track.completed} of {track.total} correctly answered checkpoints</p>
+            <progress aria-label={track.title + ' progress'} value={track.completed} max={track.total} className="mt-2 w-full accent-emerald-400" />
+            <p className="mt-2 text-xs text-[#3CD5AA]">{track.finished?'Track checkpoints completed':'In progress'}</p>
+          </div>)}
+        </div>
         {lessons.filter(lesson => !slug || lesson.id === slug).map((lesson) => {
           const isRevealed = revealed[lesson.id];
           return (
