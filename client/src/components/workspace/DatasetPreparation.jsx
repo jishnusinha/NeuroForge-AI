@@ -5,6 +5,7 @@ import { buildDatasetPipeline, defaultPipelineColumns, SPLIT_PRESETS } from '../
 import { validateExecutionBudget } from '../../services/productionConfig.js';
 import { digest } from '../../../../shared/domain.mjs';
 import { useLabStore } from '../../store/useLabStore.js';
+import PipelineStudio from './pipeline/PipelineStudio.jsx';
 
 const display = value => Number.isFinite(value) ? Number(value.toFixed(4)).toLocaleString() : 'Missing';
 
@@ -60,6 +61,38 @@ export default function DatasetPreparation({ initialData = null, onParsed }) {
     } catch (reason) {
       setError(reason.message);
     }
+  };
+
+
+  const launchAdvanced = async (plan, workspace) => {
+    if (!data || !plan.labCompatible || !plan.labPoints) throw new Error('F11_LAB_COMPATIBILITY: Choose exactly two numeric output features and binary targets 0/1.');
+    validateExecutionBudget(plan.labPoints.length, plan.outputFeatures.length);
+    const serialized = plan.artifact;
+    const preparation = {
+      pipeline: serialized,
+      originalPoints: plan.labRaw,
+      seed: plan.recipe.seed,
+      membership: plan.membership,
+      testAccessHistory: [],
+      plan: {
+        kind: 'f11-pipeline-studio', recipe: plan.recipe,
+        outputFeatures: plan.outputFeatures, splitPreset: plan.recipe.splitPreset,
+      },
+    };
+    loadRun({
+      workspace, algorithm: 'Logistic Regression',
+      dataset: {
+        name: 'Imported CSV (F11 prepared)',
+        points: plan.labPoints,
+        preparation,
+        preprocessing: 'pipeline:' + await digest(serialized),
+        trainRatio: plan.protocol.ratios.trainRatio,
+        seed: null,
+      },
+      hyperparameters: {},
+    });
+    setError('');
+    navigate('/app/' + workspace);
   };
 
   return <section aria-label="CSV preparation" className="space-y-4 rounded-xl border border-white/10 bg-obsidian/50 p-3 sm:p-4">
@@ -189,6 +222,7 @@ export default function DatasetPreparation({ initialData = null, onParsed }) {
         <button type="button" className="min-h-11 rounded-xl border border-white/20 px-4 py-2 font-semibold text-white hover:bg-white/10"
           onClick={() => launch('studio')}>Prepare for Studio</button>
       </div>
+      <PipelineStudio dataset={data} onLaunch={launchAdvanced}/>
     </>}
     {error && <p role="alert" className="rounded-lg border border-red-400/20 bg-red-400/5 p-3 text-sm text-red-200">{error}</p>}
   </section>;
