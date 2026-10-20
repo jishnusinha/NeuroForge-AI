@@ -106,6 +106,16 @@ export default function ArenaShell() {
         <svg role="img" aria-label={`Recorded ${metric} curves: cyan baseline, violet variant; dashed validation`} viewBox="0 0 600 210" className="w-full max-h-80 bg-[#151E30] rounded-xl">
           <text x="20" y="15" fill="#9EACC4" fontSize="10">{maxValue.toFixed(3)}</text>
           {histories.map((history, i) => fields.map((field, j) => <path key={`${i}-${field}`} d={path(history, field)} fill="none" stroke={i ? '#A78BFA' : '#46D7F2'} strokeWidth="2" strokeDasharray={j ? '5 4' : undefined} />))}
+          {/* Sparse checkpoints must still be visible when interpolation is intentionally omitted. */}
+          {histories.map((history, i) => fields.flatMap((field, j) => history
+            .filter(row => Number.isFinite(row[field]))
+            .map(row => <circle key={`${i}-${field}-${row.epoch}`}
+              cx={20 + row.epoch / maxEpoch * 560}
+              cy={180 - row[field] / maxValue * 160}
+              r={j ? 2.3 : 3.2}
+              fill={i ? '#A78BFA' : '#46D7F2'}
+              stroke="#151E30" strokeWidth="0.8" />)
+          ))}
           <line x1={20 + selectedEpoch / maxEpoch * 560} x2={20 + selectedEpoch / maxEpoch * 560} y1="20" y2="180" stroke="#3CD5AA" strokeDasharray="3 3" />
           <text x="20" y="200" fill="#9EACC4" fontSize="10">0</text><text x="530" y="200" fill="#9EACC4" fontSize="10">Epoch {maxEpoch}</text>
         </svg>
