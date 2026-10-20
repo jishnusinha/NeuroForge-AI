@@ -6,7 +6,7 @@ test('F5: fitted Playground classifier supports genuine What-If probes and bound
   const lab=page.getByRole('region',{name:'Model-backed What-If Lab'});
   await expect(lab).toBeVisible();
   await expect(lab.getByText('Live predicted class / probability')).toBeVisible();
-  await lab.getByRole('slider',{name:'What-If X coordinate'}).fill('0');
+  await lab.getByRole('spinbutton',{name:'What-If X value'}).fill('0');
   await lab.getByRole('button',{name:'Find nearest class flip'}).click();
   const result=lab.getByRole('region',{name:'Counterfactual search evidence'});
   await expect(result).toBeVisible();
