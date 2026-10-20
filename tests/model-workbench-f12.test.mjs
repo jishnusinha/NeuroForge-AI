@@ -150,7 +150,7 @@ test('F12 regression validates finite numeric target and does not invoke class s
 
 test('F12 task-aware model registry offers only compatible algorithms',()=>{
   assert.deepEqual(MODEL_DEFINITIONS.filter(item=>item.tasks.includes('regression')).map(item=>item.id),
-    ['baseline','ridge']);
+    ['baseline','ridge','cart','forest']);
   assert.deepEqual(MODEL_DEFINITIONS.filter(item=>item.tasks.includes('multiclass_classification')).map(item=>item.id),
-    ['baseline','knn']);
+    ['baseline','knn','softmax','cart','forest']);
 });

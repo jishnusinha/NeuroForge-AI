@@ -2,6 +2,9 @@
  * Small, deterministic, browser-local N-feature models. Models see only
  * training rows. Each fitted artifact is JSON-safe and supports replay.
  */
+import { trainSoftmax, softmaxOutput } from './softmax.js';
+import { trainCart, traverseCart } from './cart.js';
+import { trainRandomForest, forestOutput } from './randomForest.js';
 const numeric = value => typeof value === 'number' && Number.isFinite(value);
 const clamp = (value,low,high) => Math.max(low,Math.min(high,value));
 const sigmoid = value => 1 / (1 + Math.exp(-clamp(value,-35,35)));
@@ -12,6 +15,9 @@ export const MODEL_DEFINITIONS = Object.freeze([
   { id:'logistic',label:'Logistic regression (N features)',tasks:['binary_classification'] },
   { id:'ridge',label:'Ridge regression (N features)',tasks:['regression'] },
   { id:'knn',label:'k-Nearest Neighbors (N features)',tasks:['binary_classification','multiclass_classification'] },
+  { id:'softmax',label:'Multiclass Softmax Regression',tasks:['binary_classification','multiclass_classification'] },
+  { id:'cart',label:'N-dimensional Decision Tree (CART)',tasks:['binary_classification','multiclass_classification','regression'] },
+  { id:'forest',label:'Random Forest',tasks:['binary_classification','multiclass_classification','regression'] },
 ]);
 
 function fitStandardizer(trainRows) {
@@ -58,7 +64,21 @@ function validateModelConfig(matrix, algorithm, options) {
   const epochs=options.epochs??180;
   if(algorithm==='logistic'&&(!Number.isInteger(epochs)||epochs<20||epochs>400))
     throw new Error('F12_EPOCH_RANGE');
-  return {lambda,k,epochs};
+  const maxDepth=options.maxDepth??4;
+  const minLeaf=options.minLeaf??3;
+  const trees=options.trees??12;
+  const seed=options.seed??42;
+  if(['cart','forest'].includes(algorithm) &&
+      (!Number.isInteger(maxDepth)||maxDepth<1||maxDepth>7||
+       !Number.isInteger(minLeaf)||minLeaf<2||minLeaf>30||
+       !Number.isInteger(seed)||seed<0||seed>0xffffffff))
+    throw new Error('F15_TREE_PARAMETER_RANGE');
+  if(algorithm==='forest'&&(!Number.isInteger(trees)||trees<3||trees>30))
+    throw new Error('F15_FOREST_TREE_LIMIT');
+  if(algorithm==='softmax'&&(!numeric(lambda)||lambda<0.000001||lambda>10||
+       !Number.isInteger(epochs)||epochs<20||epochs>400))
+    throw new Error('F15_SOFTMAX_PARAMETER_RANGE');
+  return {lambda,k,epochs,maxDepth,minLeaf,trees,seed};
 }
 
 export function fitWorkbenchModel(matrix,algorithm,options={}) {
@@ -110,6 +130,12 @@ export function fitWorkbenchModel(matrix,algorithm,options={}) {
     if(weights.some(value=>!numeric(value)))throw new Error('F12_TRAINING_DIVERGED');
     fitted.parameters={standardizer:stat,weights,lambda:cfg.lambda,epochs:cfg.epochs};
   }
+  if(algorithm==='softmax')
+    fitted.parameters=trainSoftmax(train,matrix.features,classes,{lambda:cfg.lambda,epochs:cfg.epochs});
+  if(algorithm==='cart')
+    fitted.parameters=trainCart(train,matrix.features,task,classes,cfg);
+  if(algorithm==='forest')
+    fitted.parameters=trainRandomForest(train,matrix.features,task,classes,cfg);
   if(algorithm==='knn') {
     const stat=fitStandardizer(train);
     fitted.parameters={standardizer:stat,k:Math.min(cfg.k,train.length),
@@ -125,6 +151,18 @@ export function predictWorkbenchModel(model,inputs) {
     if(!Array.isArray(vector)||vector.length!==model.features.length||!vector.every(numeric))
       throw new Error('F12_PREDICTION_SCHEMA_MISMATCH');
     const p=model.parameters;
+    if(model.algorithm==='cart'){
+      const leaf=traverseCart(p.root,vector);
+      if(model.task==='regression'){
+        if(!numeric(leaf.value))throw new Error('F15_TREE_NONFINITE');
+        return {predicted:leaf.value,probabilities:null};
+      }
+      if(!Array.isArray(leaf.probabilities)||leaf.probabilities.length!==model.classes.length)
+        throw new Error('F15_TREE_CLASS_SCHEMA');
+      const index=leaf.probabilities.indexOf(Math.max(...leaf.probabilities));
+      return {predicted:model.classes[index],probabilities:[...leaf.probabilities]};
+    }
+    if(model.algorithm==='forest')return forestOutput(p,vector,model.task,model.classes);
     if(model.task==='regression') {
       const predicted=model.algorithm==='baseline'?p.mean:dot(p.weights,[1,...standardized(vector,p.standardizer)]);
       if(!numeric(predicted))throw new Error('F12_NONFINITE_PREDICTION');
@@ -136,6 +174,7 @@ export function predictWorkbenchModel(model,inputs) {
       const prob=sigmoid(dot(p.weights,[1,...standardized(vector,p.standardizer)]));
       probabilities=[1-prob,prob];
     }
+    if(model.algorithm==='softmax')probabilities=softmaxOutput(p,vector);
     if(model.algorithm==='knn') {
       const input=standardized(vector,p.standardizer);
       const distances=p.training.map((row,index)=>({

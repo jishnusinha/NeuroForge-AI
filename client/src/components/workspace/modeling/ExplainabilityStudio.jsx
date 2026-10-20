@@ -121,7 +121,7 @@ function LocalPanel({ explanation }) {
       </div>
     </>}
     {explanation.votes&&<>
-      <h6 className="text-sm font-semibold">Training-neighbor vote evidence</h6>
+      <h6 className="text-sm font-semibold">{explanation.treeCount?'Forest tree votes':'Training-neighbor vote evidence'}</h6>
       <div role="region" aria-label="F13 kNN class vote evidence" className="overflow-auto rounded-lg border border-white/10">
         <table className="w-full text-left text-xs">
           <thead><tr><th scope="col" className="p-2">Class</th><th scope="col" className="p-2">Votes</th></tr></thead>
@@ -130,8 +130,16 @@ function LocalPanel({ explanation }) {
           </tr>)}</tbody>
         </table>
       </div>
-      <p className="text-xs text-text-muted">Neighbor distances: {explanation.neighbors.map(item=>displayNumber(item.distance)).join(', ')}. Original training row values and identities are not displayed.</p>
+      {explanation.neighbors&&<p className="text-xs text-text-muted">Neighbor distances: {explanation.neighbors.map(item=>displayNumber(item.distance)).join(', ')}. Original training row values and identities are not displayed.</p>}
     </>}
+    {explanation.decisions&&<div className="space-y-2">
+      <h6 className="text-sm font-semibold">Exact decision path · leaf support {explanation.support}</h6>
+      <ol className="list-inside list-decimal text-xs text-text-muted">
+        {explanation.decisions.map((step,i)=><li key={i}>{step.feature} {step.direction==='left'?'≤':'>'} {displayNumber(step.threshold)}</li>)}
+      </ol>
+    </div>}
+    {explanation.treeCount&&<p className="text-xs text-text-muted">Forest aggregates {explanation.treeCount} fitted trees.</p>}
+    {explanation.meanPrediction!==undefined&&<p className="text-xs text-text-muted">Mean tree prediction: {displayNumber(explanation.meanPrediction)}</p>}
     {explanation.classPrior&&<p className="text-xs text-text-muted">Training class priors: {explanation.classPrior.map(displayNumber).join(', ')}</p>}
   </section>;
 }

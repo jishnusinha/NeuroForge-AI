@@ -6,6 +6,7 @@ import { digest } from '../../../../shared/domain.mjs';
 import { validateExplanationContext } from '../modelWorkbench/explainabilityContracts.js';
 import { predictWorkbenchModel } from '../modelWorkbench/models.js';
 import { evaluateWorkbenchPredictions } from '../modelWorkbench/metrics.js';
+import { validateSelectionEvidence } from '../modelSelection/selectionEvidence.js';
 
 export const F14_SCHEMA_VERSION = 1;
 export const F14_RUN_PREFIX = 'f14-run:';
@@ -56,6 +57,8 @@ export function validateRunReceipt(receipt) {
       typeof receipt.createdAt !== 'string' || typeof receipt.updatedAt !== 'string') {
     throw new Error('F14_INVALID_RUN_RECEIPT');
   }
+  if(receipt.selectionEvidence!==undefined&&receipt.selectionEvidence!==null)
+    validateSelectionEvidence(receipt.selectionEvidence,receipt.model.algorithm,receipt.task.type);
   if(receipt.task.type === 'regression' && receipt.task.classes.length !== 0)
     throw new Error('F14_INVALID_CLASS_SCHEMA');
   if(receipt.task.type !== 'regression' &&
@@ -166,6 +169,8 @@ export async function createRunReceipt({
       confusion:measured.confusion?plain(measured.confusion):null,
       perClass:measured.perClass?plain(measured.perClass):null},
     finalTest:{accessHistory},explanations:existing?.explanations.map(plain)??[],
+    selectionEvidence:validateSelectionEvidence(candidate.selectionEvidence??existing?.selectionEvidence??null,
+      candidate.algorithm,matrix.task.type),
     limitations:[
       'Research receipt: source rows, per-row predictions and fitted F11 preprocessing are not stored.',
       'Final test is a local audit safeguard, not a cryptographically enforceable lock.',

@@ -44,6 +44,10 @@ F13 adds candidate-specific validation-only permutation importance, exact logist
 
 F14 preserves F12 research receipts and F13 aggregate explanations in the owner-scoped local archive, with source/split/model/pipeline fingerprints, validation-comparable run comparisons, local final-test access audit, and opt-in verified replay of baseline/logistic/ridge fitted models. kNN remains receipt-only. See [DS-F14 documentation](DS_F14_RUN_REGISTRY.md). Full source-data restoration and cloud sync are not included.
 
+## DS-F15 Advanced Model Selection
+
+F15 adds N-feature softmax, classification/regression CART and bounded random forests. The browser-local F15 Model Selection Studio performs deterministic 3/5-fold cross-validation with **fresh per-fold F11 preprocessing**, bounded worker searches, a measured fold leaderboard and promotion into F12 fixed validation. F13 model-specific views and F14 summary-only model-selection evidence are included. See [DS-F15 documentation](DS_F15_ADVANCED_MODEL_SELECTION.md).
+
 ## Important limits
 - Current visual labs intentionally require two numerical feature columns; only supported binary targets and their valid stratified partitions are accepted.
 - Standalone PCA and optimizer landscape tools are educational computations, not automatically applied fitted transforms or real neural model telemetry.

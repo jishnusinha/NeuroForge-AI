@@ -24,6 +24,16 @@ export function createRunResearchReport(runs,{title='NeuroForge research record'
       ('Access recorded at '+clean(access[0].accessedAt)+'. This result was not used to rank candidates.') :
       'No final-test access recorded in this archived receipt.'));
   }
+  head.push('','## F15 model-selection evidence','');
+  for(const run of runs){
+    const selection=run.selectionEvidence;
+    head.push('- **'+clean(run.title)+'**: '+(selection
+      ?('Selected '+clean(selection.algorithm)+' using '+selection.folds+
+        ' fold inner cross-validation; '+clean(selection.metric)+
+        ' mean '+fmt(selection.selectedMean)+', fold SD '+fmt(selection.selectedSampleSd)+
+        '; fold digest '+selection.foldMembershipDigest+'.')
+      :'No F15 selection evidence attached.'));
+  }
   head.push('','## Attached explanation evidence','');
   for(const run of runs){
     head.push('- **'+clean(run.title)+'**: '+run.explanations.length+

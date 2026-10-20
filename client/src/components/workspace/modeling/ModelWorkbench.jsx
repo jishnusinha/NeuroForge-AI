@@ -4,6 +4,7 @@ import { createFeatureMatrix } from '../../../ml/modelWorkbench/featureMatrix.js
 import { MODEL_DEFINITIONS, fitWorkbenchModel, predictWorkbenchModel } from '../../../ml/modelWorkbench/models.js';
 import { evaluateWorkbenchPredictions } from '../../../ml/modelWorkbench/metrics.js';
 import ExplainabilityStudio from './ExplainabilityStudio.jsx';
+import ModelSelectionStudio from './ModelSelectionStudio.jsx';
 import { createRunReceipt } from '../../../ml/modelRegistry/runContracts.js';
 import { attachExplanationToRun } from '../../../ml/modelRegistry/runLifecycle.js';
 import { saveF14Run } from '../../../services/modelRegistryRepository.js';
@@ -70,6 +71,9 @@ export default function ModelWorkbench({ plan }) {
   const [lambda,setLambda]=useState(0.1);
   const [k,setK]=useState(5);
   const [epochs,setEpochs]=useState(180);
+  const [maxDepth,setMaxDepth]=useState(4);
+  const [minLeaf,setMinLeaf]=useState(3);
+  const [trees,setTrees]=useState(12);
   const [candidates,setCandidates]=useState([]);
   const [selectedId,setSelectedId]=useState(null);
   const [testResult,setTestResult]=useState(null);
@@ -83,8 +87,22 @@ export default function ModelWorkbench({ plan }) {
   const algorithm=available.some(model=>model.id===modelId)?modelId:available[0]?.id;
   const selected=candidates.find(run=>run.id===selectedId)??candidates.at(-1);
   const scoreKey=primaryMetric(matrix.task.type);
-  const options={lambda,k,epochs};
+  const options={lambda,k,epochs,maxDepth,minLeaf,trees,seed:42};
   const savedRun=selected?savedByCandidate[selected.id]??null:null;
+
+  const acceptF15Selection=({algorithm:advancedAlgorithm,options:advancedOptions,selectionEvidence})=>{
+    if(busy||testResult||candidates.length>=8)throw new Error('F15_CANDIDATE_SESSION_LOCKED');
+    const fitted=fitWorkbenchModel(matrix,advancedAlgorithm,advancedOptions);
+    const rows=matrix.rows.filter(row=>row.split==='validation');
+    const validation=evaluateWorkbenchPredictions(matrix,
+      predictWorkbenchModel(fitted,rows.map(row=>row.values)),'validation');
+    const id='f15-'+Date.now()+'-'+candidates.length;
+    setCandidates(previous=>[...previous,{id,algorithm:advancedAlgorithm,
+      options:{...advancedOptions},model:fitted,validation,selectionEvidence}]);
+    setSelectedId(id);
+    setMessage('F15 inner CV selection refitted on original training rows; fixed outer validation measured. Test remains sealed.');
+    setError('');
+  };
 
   const train=async()=>{
     if(busy||testResult)return;
@@ -144,7 +162,7 @@ export default function ModelWorkbench({ plan }) {
         matrix,plan,candidate:selected,finalTest:testResult,
         title:saveTitle.trim()||previous?.title||selected.algorithm+' F12 investigation',
         tags:previous?.tags??[],notes:previous?.notes??'',
-        includeArtifact:selected.algorithm==='knn'?false:saveArtifact,
+        includeArtifact:['baseline','logistic','ridge'].includes(selected.algorithm)?saveArtifact:false,
         existing:previous,
       });
       const stored=await saveF14Run(next,previous?.revision??0);
@@ -201,7 +219,7 @@ export default function ModelWorkbench({ plan }) {
             {available.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}
           </select>
         </label>
-        {['ridge','logistic'].includes(algorithm)&&<label className="text-xs font-semibold">L2 regularization
+        {['ridge','logistic','softmax'].includes(algorithm)&&<label className="text-xs font-semibold">L2 regularization
           <input aria-label="F12 regularization" type="number" min="0.000001" max="10" step="0.01" value={lambda}
             disabled={busy||Boolean(testResult)} onChange={event=>setLambda(Number(event.target.value))}
             className="mt-1 w-full min-h-10 rounded-lg border border-white/20 bg-surface-dark p-2 text-sm text-text-primary"/>
@@ -211,9 +229,24 @@ export default function ModelWorkbench({ plan }) {
             disabled={busy||Boolean(testResult)} onChange={event=>setK(Number(event.target.value))}
             className="mt-1 w-full min-h-10 rounded-lg border border-white/20 bg-surface-dark p-2 text-sm text-text-primary"/>
         </label>}
-        {algorithm==='logistic'&&<label className="text-xs font-semibold">Training epochs
+        {['logistic','softmax'].includes(algorithm)&&<label className="text-xs font-semibold">Training epochs
           <input aria-label="F12 epochs" type="number" min="20" max="400" step="10" value={epochs}
             disabled={busy||Boolean(testResult)} onChange={event=>setEpochs(Number(event.target.value))}
+            className="mt-1 w-full min-h-10 rounded-lg border border-white/20 bg-surface-dark p-2 text-sm text-text-primary"/>
+        </label>}
+        {['cart','forest'].includes(algorithm)&&<label className="text-xs font-semibold">Tree depth
+          <input type="number" aria-label="F15 tree depth" value={maxDepth} min={1} max={7} step={1}
+            disabled={busy||Boolean(testResult)} onChange={event=>setMaxDepth(Number(event.target.value))}
+            className="mt-1 w-full min-h-10 rounded-lg border border-white/20 bg-surface-dark p-2 text-sm text-text-primary"/>
+        </label>}
+        {['cart','forest'].includes(algorithm)&&<label className="text-xs font-semibold">Minimum leaf rows
+          <input type="number" aria-label="F15 tree minimum leaf" value={minLeaf} min={2} max={30} step={1}
+            disabled={busy||Boolean(testResult)} onChange={event=>setMinLeaf(Number(event.target.value))}
+            className="mt-1 w-full min-h-10 rounded-lg border border-white/20 bg-surface-dark p-2 text-sm text-text-primary"/>
+        </label>}
+        {algorithm==='forest'&&<label className="text-xs font-semibold">Forest trees
+          <input type="number" aria-label="F15 forest trees" value={trees} min={3} max={30} step={1}
+            disabled={busy||Boolean(testResult)} onChange={event=>setTrees(Number(event.target.value))}
             className="mt-1 w-full min-h-10 rounded-lg border border-white/20 bg-surface-dark p-2 text-sm text-text-primary"/>
         </label>}
       </div>
@@ -221,7 +254,9 @@ export default function ModelWorkbench({ plan }) {
         className="min-h-11 rounded-lg bg-plasma-cyan px-4 text-sm font-semibold text-ink-on-accent disabled:opacity-40">
         {busy?'Training model…':'Train and evaluate validation'}
       </button>
-      {candidates.length>=8&&<p className="text-xs text-signal-amber">Eight-candidate browser session limit reached. Start a new preparation session for further experiments.</p>}
+      <ModelSelectionStudio plan={plan} matrix={matrix} onPromote={acceptF15Selection}
+        disabled={busy||Boolean(testResult)||candidates.length>=8}/>
+      {candidates.length>=8&&<p className="text-xs text-signal-amber">Eight-candidate browser session limit reached. Start a new preparation session for further experiments.</p>
       <p className="text-xs text-text-muted">The held-out test set is not evaluated while training or selecting candidates. Validation measurements drive comparison. This session is browser-local.</p>
 
       {candidates.length>0&&<section aria-label="F12 model candidates" className="space-y-3">
@@ -254,8 +289,8 @@ export default function ModelWorkbench({ plan }) {
         </label>
         <label className="flex items-start gap-2 text-xs text-text-muted">
           <input type="checkbox" aria-label="F14 opt-in fitted artifact" checked={saveArtifact}
-            disabled={selected.algorithm==='knn'} onChange={event=>setSaveArtifact(event.target.checked)}/>
-          <span>Opt in to saving fitted model parameters for prepared-vector inference replay. This may disclose training statistics. Never available for kNN; F11 preprocessing and source data are not stored.</span>
+            disabled={!['baseline','logistic','ridge'].includes(selected.algorithm)} onChange={event=>setSaveArtifact(event.target.checked)}/>
+          <span>Opt in to saving fitted model parameters for prepared-vector inference replay (baseline, logistic and ridge only). Training statistics may be sensitive. F15 tree/forest/softmax and kNN models are receipt-only until artifact validators are implemented.</span>
         </label>
         <div className="flex flex-wrap items-center gap-2">
           <button type="button" disabled={saving} onClick={archiveRun} className={buttonClass}>
