@@ -61,7 +61,7 @@ function HistogramPlot({spec,zoom}){
   </div>;
 }
 
-export default function ScientificHistogram({dataset,column,binCount=8,sourceName='Imported CSV',sourceCount=null}){
+export default function ScientificHistogram({dataset,column,binCount=8,sourceName='Imported CSV',sourceCount=null,onOpenStudio}){
   const [view,setView]=useState('chart');
   const [zoom,setZoom]=useState(1);
   const [message,setMessage]=useState('');
@@ -191,6 +191,7 @@ export default function ScientificHistogram({dataset,column,binCount=8,sourceNam
       </div>}
     </div>
     <footer className="prism-chart-footer">
+      {onOpenStudio&&<button type="button" className={chartButton} onClick={onOpenStudio}>Open in Chart Studio</button>}
       <div className="flex flex-wrap gap-2">
         <button type="button" onClick={()=>{saveText('neuroforge-chart-data.csv',csv,'text/csv');setMessage('Histogram summary CSV exported. No original observations included.');}} className={chartButton}>
           <Download size={14} aria-hidden="true"/> Data CSV

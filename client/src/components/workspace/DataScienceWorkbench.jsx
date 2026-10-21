@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { lazy,Suspense,useMemo, useState } from 'react';
 import { profileDataset } from '../../ml/datasetProfiling.js';
 import ScientificHistogram from './charts/ScientificHistogram.jsx';
 import { applyEdaFilters } from '../../ml/edaFilters.js';
@@ -7,10 +7,11 @@ import EdaMissingnessView from './eda/EdaMissingnessView.jsx';
 import EdaQualityView from './eda/EdaQualityView.jsx';
 import EdaCorrelationView from './eda/EdaCorrelationView.jsx';
 import EdaRowExplorer from './eda/EdaRowExplorer.jsx';
-import DataSheet from './datasheet/DataSheet.jsx';
+import DataSheetWorkspace from './datasheet/DataSheetWorkspace.jsx';
 import EdaReportPanel from './eda/EdaReportPanel.jsx';
 import DatasetInvestigation from './DatasetInvestigation.jsx';
 import AlgorithmInsights from './AlgorithmInsights.jsx';
+const ChartStudio=lazy(()=>import('./charts/ChartStudio.jsx'));
 
 const format = value => Number.isFinite(value)
   ? (Math.abs(value) >= 1000 ? value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : value.toFixed(2))
@@ -54,16 +55,20 @@ function CategoricalDistribution({ column }) {
   </div>;
 }
 
-export default function DataScienceWorkbench({ dataset, name, onCreateSubset }) {
-  const [tab, setTab] = useState('overview');
+export default function DataScienceWorkbench({ dataset, name, onCreateSubset, onCommitVersion, recovery }) {
+  const [tab, setTab] = useState(recovery?'datasheet':'overview');
+  const [analysisIds,setAnalysisIds]=useState(null);
+  const [studioRequest,setStudioRequest]=useState(null);
+  const [studioOpened,setStudioOpened]=useState(false);
+  const [linkedIds,setLinkedIds]=useState([]);
   const [selectedColumn, setSelectedColumn] = useState(dataset?.headers?.[0] ?? '');
   const [filters, setFilters] = useState([]);
   const [binCount, setBinCount] = useState(8);
   const [selectedRowId, setSelectedRowId] = useState(null);
   const filtered = useMemo(() => dataset ? applyEdaFilters(dataset, filters) : null, [dataset, filters]);
   const analyzedDataset = useMemo(() => dataset && filtered
-    ? { headers: dataset.headers, rows: filtered.rows }
-    : null, [dataset, filtered]);
+    ? { headers: dataset.headers, rows: analysisIds?filtered.rows.filter(row=>analysisIds.includes(row.id)):filtered.rows }
+    : null, [dataset, filtered, analysisIds]);
   const report = useMemo(() => analyzedDataset ? profileDataset(analyzedDataset) : null, [analyzedDataset]);
   const inspectRow = id => { setSelectedRowId(id); setTab('rows'); };
   if (!report) return <div className="rounded-xl border border-dashed border-white/20 p-5 text-sm text-text-muted" role="status">
@@ -71,13 +76,13 @@ export default function DataScienceWorkbench({ dataset, name, onCreateSubset }) 
   </div>;
 
   const active = report.columns.find(column=>column.name===selectedColumn) ?? report.columns[0];
-  const tabs = [{id:'overview',name:'Overview'}, {id:'distributions',name:'Distributions'}, {id:'relationships',name:'Relationships'}, {id:'balance',name:'Class balance'}, {id:'outliers',name:'Outliers & quality'}, {id:'algorithms',name:'Algorithms'}, {id:'correlations',name:'Correlations'}, {id:'missingness',name:'Missingness'}, {id:'quality-pro',name:'Quality Pro'}, {id:'datasheet',name:'DataSheet'}, {id:'rows',name:'Row Explorer'}, {id:'evidence',name:'Evidence & export'}, {id:'preview',name:'Row preview'}];
+  const tabs = [{id:'overview',name:'Overview'}, {id:'distributions',name:'Distributions'}, {id:'chart-studio',name:'Chart Studio'}, {id:'relationships',name:'Relationships'}, {id:'balance',name:'Class balance'}, {id:'outliers',name:'Outliers & quality'}, {id:'algorithms',name:'Algorithms'}, {id:'correlations',name:'Correlations'}, {id:'missingness',name:'Missingness'}, {id:'quality-pro',name:'Quality Pro'}, {id:'datasheet',name:'DataSheet'}, {id:'rows',name:'Row Explorer'}, {id:'evidence',name:'Evidence & export'}, {id:'preview',name:'Row preview'}];
   return <section role="region" aria-label="Dataset profile dashboard" className="prism-lab space-y-5 rounded-2xl border border-white/10 bg-surface-dark p-3 sm:p-5">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div className="min-w-0">
         <div className="prism-eyebrow mb-2">NEUROFORGE / PRISM RESEARCH CANVAS</div>
         <h4 className="font-display text-xl font-semibold tracking-tight text-text-primary sm:text-2xl">Exploratory data analysis</h4>
-        <p className="text-xs text-text-muted">Source: {name || 'Imported CSV'} · {filtered.sourceCount} original / {filtered.visibleCount} analyzed · Exploratory statistics only.</p>
+        <p className="text-xs text-text-muted">Source: {name || 'Imported CSV'} · {filtered.sourceCount} original / {report.rowCount} analyzed · Exploratory statistics only.</p>
       </div>
       <span className="prism-status-pill">Local-only analysis · F16 foundation</span>
     </div>
@@ -87,9 +92,10 @@ export default function DataScienceWorkbench({ dataset, name, onCreateSubset }) 
       <Metric label="Missing cells" value={report.missingCells} />
       <Metric label="Duplicate rows" value={report.duplicateRows} />
     </dl>
+    {analysisIds&&<button type="button" onClick={()=>setAnalysisIds(null)}>Clear DataSheet analysis scope ({analysisIds.length} selected observations)</button>}
     <EdaFilterToolbar headers={dataset.headers} filters={filters} onChange={setFilters} sourceCount={filtered.sourceCount} visibleCount={filtered.visibleCount} />
     <div role="group" aria-label="Workbench views" className="prism-workbench-nav flex gap-2 overflow-x-auto pb-2">
-      {tabs.map(item => <button key={item.id} type="button" aria-pressed={tab===item.id} onClick={()=>setTab(item.id)}
+      {tabs.map(item => <button key={item.id} type="button" aria-pressed={tab===item.id} onClick={()=>{if(item.id==='chart-studio')setStudioOpened(true);setTab(item.id);}}
         className={`min-h-10 rounded-lg border px-3 py-2 text-sm font-medium ${tab===item.id ? 'border-cyan-400 bg-cyan-400/15 text-cyan-200' : 'border-white/10 bg-obsidian text-text-muted hover:text-white'}`}>
         {item.name}
       </button>)}
@@ -130,7 +136,8 @@ export default function DataScienceWorkbench({ dataset, name, onCreateSubset }) 
       </label>}
       {active.type==='numeric'
         ?<ScientificHistogram dataset={analyzedDataset} column={active.name} binCount={binCount}
-          sourceName={name||'Imported CSV'} sourceCount={filtered.sourceCount}/>
+          sourceName={name||'Imported CSV'} sourceCount={filtered.sourceCount}
+          onOpenStudio={()=>{setStudioRequest({dataset:analyzedDataset,sourceDataset:dataset,population:filters.length||analysisIds?'filtered_source':'source',columns:[active.name],type:'histogram'});setTab('chart-studio');}}/>
         :<CategoricalDistribution column={active}/>} 
     </div>}
     {['relationships','balance','outliers'].includes(tab) && <DatasetInvestigation dataset={analyzedDataset} report={report} mode={tab} onSelectRow={inspectRow} />}
@@ -138,8 +145,17 @@ export default function DataScienceWorkbench({ dataset, name, onCreateSubset }) 
     {tab==='correlations' && <EdaCorrelationView dataset={analyzedDataset} onInspectRow={inspectRow}/>}
     {tab==='missingness' && <EdaMissingnessView dataset={analyzedDataset} onInspectRow={inspectRow}/>}
     {tab==='quality-pro' && <EdaQualityView dataset={analyzedDataset} onInspectRow={inspectRow}/>}
-    {tab==='datasheet' && <DataSheet dataset={analyzedDataset} selectedRowId={selectedRowId}
-      onSelectRow={setSelectedRowId} onInspectRow={inspectRow}/>}
+    {(studioOpened||studioRequest)&&<div hidden={tab!=='chart-studio'}><Suspense fallback={<p role="status">Loading Chart Studio…</p>}><ChartStudio active={tab==='chart-studio'}
+      key={studioRequest?.key||JSON.stringify([studioRequest?.columns,studioRequest?.population,filters,analysisIds])}
+      dataset={studioRequest?.dataset||analyzedDataset} sourceDataset={studioRequest?.sourceDataset||dataset}
+      population={studioRequest?.population||(filters.length||analysisIds?'filtered_source':'source')} sourceName={name}
+      initialColumns={studioRequest?.columns} initialType={studioRequest?.type}
+      onLink={ids=>setLinkedIds(ids)} onShowSheet={()=>setTab('datasheet')}
+      onFilterMissing={column=>{setFilters(previous=>[...previous,{id:crypto.randomUUID(),column,operator:'missing'}]);setStudioRequest(null);setTab('datasheet');}}/></Suspense></div>}
+    {dataset&&<div hidden={tab!=='datasheet'}><DataSheetWorkspace dataset={dataset} filters={filters} name={name} recovery={recovery} selectedRowId={selectedRowId}
+      onSelectRow={setSelectedRowId} onInspectRow={inspectRow} onCommit={onCommitVersion} highlightedRowIds={linkedIds}
+      onChart={request=>{setStudioRequest({...request,key:crypto.randomUUID()});setTab('chart-studio');}}
+      onAnalyze={(ids,column)=>{setAnalysisIds(ids);if(column)setSelectedColumn(column);setTab('distributions');}}/></div>}
     {tab==='rows' && <EdaRowExplorer dataset={analyzedDataset} selectedRowId={selectedRowId} onSelectRow={setSelectedRowId}/>}
     {tab==='evidence' && <EdaReportPanel source={dataset} filteredRows={analyzedDataset.rows}
       filters={filters} sourceName={name || 'Imported CSV'} onCreateSubset={onCreateSubset}/>}

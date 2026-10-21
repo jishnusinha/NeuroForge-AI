@@ -1,4 +1,5 @@
 import DatasetPreparation from '../components/workspace/DatasetPreparation.jsx';
+import { DataSheetRecovery } from '../components/workspace/datasheet/DataSheetWorkspace.jsx';
 import DataScienceWorkbench from '../components/workspace/DataScienceWorkbench.jsx';
 import { parseAndValidateCSV } from '../ml/datasetImport.js';
 import { isFeatureEnabled } from '../services/productionConfig.js';
@@ -48,12 +49,18 @@ export default function DatasetsPage() {
             Try sample dataset
           </button>
         </div>
-        <DatasetPreparation key={datasetRevision} initialData={exploredFile?.data}
+        <DataSheetRecovery onRecover={record=>{
+          setExploredFile(record.version?{data:record.version,name:record.name+' · committed version'}:{data:record.source,name:record.name,recovery:record});
+          setDatasetRevision(previous=>previous+1);
+        }}/>
+        <DatasetPreparation key={'preparation-'+datasetRevision} initialData={exploredFile?.data}
           onParsed={(data, fileName) => {
             setExploredFile(data ? { data, name: fileName } : null);
             setDatasetRevision(previous => previous + 1);
           }} />
-        <DataScienceWorkbench key={datasetRevision} dataset={exploredFile?.data} name={exploredFile?.name}
+        <DataScienceWorkbench key={'workbench-'+datasetRevision} dataset={exploredFile?.data} name={exploredFile?.name}
+          recovery={exploredFile?.recovery}
+          onCommitVersion={(data,fileName)=>{setExploredFile({data,name:fileName});setDatasetRevision(previous=>previous+1);}}
           onCreateSubset={rows => {
             if (!exploredFile?.data || rows.length < 4) return;
             const subset = {

@@ -153,6 +153,23 @@ export function transformStudioArtifact(artifact, sourceRows) {
   return rows;
 }
 
+/** F18: replay existing frozen nodes only. Never call fitNode or a splitter. */
+export function replayFittedStages(artifact,sourceRows){
+  if(artifact?.schemaVersion!==1||!Array.isArray(artifact.fittedNodes)||
+     !Array.isArray(artifact.featureColumns)||!Array.isArray(sourceRows)||sourceRows.length>2000)
+    throw new Error('F18_FROZEN_PIPELINE_REQUIRED');
+  let rows=sourceRows.map(row=>({...row})),features=[...artifact.featureColumns];
+  const stages=[];
+  for(const fitted of artifact.fittedNodes){
+    const before=rows,inputFeatures=[...features];
+    const result=applyFittedNode(rows,fitted,features);rows=result.rows;features=result.featureNames;
+    stages.push({id:fitted.id,type:fitted.type,inputFeatures,outputFeatures:[...features],
+      before,after:rows,parameters:structuredClone(fitted.parameters),columns:[...fitted.columns]});
+  }
+  if(JSON.stringify(features)!==JSON.stringify(artifact.outputFeatures))throw new Error('F11_ARTIFACT_SCHEMA_MISMATCH');
+  return stages;
+}
+
 export function executeStudioPipeline(dataset, config, { membershipOverride = null } = {}) {
   const recipe=validateStudioRecipe(dataset,config);
   const raw=dataset.rows.map(row=>({...row}));

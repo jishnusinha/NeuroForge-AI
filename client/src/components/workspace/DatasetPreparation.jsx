@@ -51,7 +51,8 @@ export default function DatasetPreparation({ initialData = null, onParsed }) {
         workspace, algorithm: 'Logistic Regression',
         dataset: {
           name: 'Imported CSV', points: plan.points, preparation,
-          preprocessing: 'pipeline:' + await digest(serialized),
+          ...(data.provenance?{provenance:structuredClone(data.provenance)}:{}),
+          preprocessing: 'pipeline:' + await digest(serialized) + (data.provenance ? ':dataset:' + data.provenance.fingerprint : ''),
           trainRatio: plan.protocol.ratios.trainRatio, seed: null,
         },
         hyperparameters: {},
@@ -83,9 +84,10 @@ export default function DatasetPreparation({ initialData = null, onParsed }) {
       workspace, algorithm: 'Logistic Regression',
       dataset: {
         name: 'Imported CSV (F11 prepared)',
+        ...(data.provenance?{provenance:structuredClone(data.provenance)}:{}),
         points: plan.labPoints,
         preparation,
-        preprocessing: 'pipeline:' + await digest(serialized),
+        preprocessing: 'pipeline:' + await digest(serialized) + (data.provenance ? ':dataset:' + data.provenance.fingerprint : ''),
         trainRatio: plan.protocol.ratios.trainRatio,
         seed: null,
       },

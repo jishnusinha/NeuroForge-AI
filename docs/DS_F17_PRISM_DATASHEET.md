@@ -1,73 +1,41 @@
-# DS-F17.0 — PRISM DataSheet Foundation
+# F17 - PRISM DataSheet
 
-F17.0 introduces an Excel-like **read-only DataSheet** inside Dataset Explorer → Data Science Workbench → DataSheet. This is the first of four scoped F17 releases, not a claim of full spreadsheet editing, XLSX fidelity, formula engines or workbook persistence.
+Dataset Explorer now includes the complete bounded DataSheet workflow, extending the F17.0 virtual grid through analytical interactions, safe working copies and local dataset versions.
 
-## What ships
+## Analytical workspace (F17.0 / F17.1)
 
-- **Two-axis virtualization:** independently mount only visible observation rows and columns plus bounded overscan, supporting the existing 2,000-row / 20-column importer and 2 MiB CSV budget. Mounted counts are visible in the footer; 40,000 DOM cells are not created.
-- A theme-derived PRISM scientific surface with real column letters A–T, frozen headers and row numbers, type badges, draggable column widths, missing-value display, a formula-style cell inspector, an observation-ID inspector, and a responsive scroll container.
-- **Keyboard navigation:** Arrow keys, Home/End, Ctrl/Command+Home/End, PageUp/PageDown, Tab/Shift+Tab and Enter/Shift+Enter, with automated viewport scrolling for active cells. Focus a column-resize handle and press Left/Right to change its width; Shift steps by 25px.
-- **Stable source selection:** cells are selected by original observation `id` and original column name, not by transient visible row position. The DataSheet can open the original row in the existing Row Explorer; reentering the sheet retains the selected ID.
-- **F10 integration:** F10 filters supply the visible row population. Neither the DataSheet nor the chart/ML engines mutate the imported dataset. The existing row explorer, dataset evidence/report, PRISM histogram, F11 preparation and F12–F15 downstream systems remain unchanged.
-- Accessible `grid` roles, known row/column counts, active-descendant and selected-cell metadata, column/row headers, keyboard help, and text inspector. On small screens, swipe/scroll horizontally to inspect further columns.
+The existing dependency-free React grid retains two-axis virtualization, frozen column headers and row numbers, resizing, accessible cell roles, keyboard navigation and stable source row IDs. The original Row Explorer remains available.
 
-## Implementation choice and dependency assessment
+Use search for values or column names. Click a column name to sort; Shift-click adds sort priorities. F10 typed filters apply to the sheet. Shift-click or Shift+arrows selects ranges. Selected cells are tracked by original row ID and column name, including after sorting. Copy produces TSV in displayed order, preserving missing cells; filtered CSV export includes column headers. Formula-like categorical strings are escaped for spreadsheet safety. Values are always rendered literally and never evaluated.
 
-The F17 plan proposed evaluating the MIT-licensed React Data Grid, which is attractive for spreadsheet editing and keyboard tooling. For **this first read-only slice**, we use a small **dependency-free React virtual grid** instead:
+The value inspector, selected-range count/missing/numeric/sum/mean statistics and selected-column profile use the actual displayed data. Analyze visible rows / Chart explicitly hands the population to the F10 distribution/PRISM chart view. Clear DataSheet analysis scope restores the ordinary F10 population. Edited values require a committed version before entering analysis or preparation.
 
-- The present source limit is only 2,000 × 20.
-- The source schema and observation identity rules are already well defined.
-- The design requires predictable F10 filtered-row identity and no implicit changes to source data.
-- A new grid dependency and package-lock migration would expand the risk of the initial release.
-- The pure geometry and navigation functions can be independently tested at exact maximum dimensions.
+## Safe working copies (F17.2)
 
-This does **not** settle the final spreadsheet-editing library decision. During F17.1/F17.2, compare the existing virtual grid against React Data Grid for robust range selection, complex clipboard/paste, touch behavior, editing and maintainability. If migrating, keep the pure domain contract and F10 source identity rules intact.
+Create working copy enables the value editor, missing-value clearing, rectangular TSV paste, fill down/right and undo/redo. The source dataset stays immutable. Numeric columns require finite decimal/scientific values; categorical columns preserve strings, including numeric-looking strings. Mixed numeric source cells retain numeric validation even after clearing. Empty input explicitly creates a missing value. Quoted TSV supports tabs, quotes and newlines.
 
-## Source and viewport contract
+Every paste or fill validates completely before changing state and creates one history entry. Undo/redo retain up to 50 transactions. Ctrl/Command+Z, Ctrl/Command+Y and Ctrl/Command+Shift+Z work in the focused grid; F2 focuses the value editor and Enter applies its value. Review changes displays each source ID, column and before/after value.
 
-`client/src/ml/datasheet/gridModel.js` provides:
+Draft edits survive view changes within the workbench. Save draft locally explicitly persists them; unsaved edits have a browser unload warning. No autosave success is implied. Export working copy downloads a typed JSON bundle; import can restore that bundle from Dataset Explorer or replace the current working copy against exactly the same source.
 
-- `validateDataSheet(dataset)`: validates bounded headers, stable unique original row IDs, and source cell kinds. No coercion or mutation.
-- `columnLetter(index)` and `cellAddress(rowIndex,columnIndex)`: Excel-style **display** positions A1–T2000. Addresses reflect filtered view positions, not source identities.
-- `columnKinds(dataset)`: observed numeric/categorical/mixed/empty metadata and missing counts without fitting preprocessing.
-- `normalizeColumnWidths`: 110–360 pixel constrained widths.
-- `gridViewport`: deterministic visible row/column window, offsets and full scroll dimensions.
-- `moveSheetCell`: bounded navigation, including Tab wrapping and first/last jumps.
+## Dataset versions and recovery (F17.3)
 
-The grid renders source data **as literal text** with no `innerHTML`, `eval`, formulas or source transformations. Missing cells show as `Missing`. Original row IDs are displayed independently in the inspector and passed to F10's existing row-inspection handler.
+Save draft locally and Commit new dataset version use a dedicated IndexedDB database, NeuroForgeDataSheets, independent of the small F14 receipt API. Records contain the full immutable source and working copy. Saved DataSheets can be recovered, reopened, refreshed or deleted from Dataset Explorer after a browser refresh.
 
-F17.0 uses the active F10 filter result. The existing Row Explorer remains as a separate tab with its own sorting/pagination. Sorting, additional DataSheet search, multi-cell range selection, copy, paste, editing and filtered CSV exports are deliberately deferred.
+The repository scopes keys to neuroforge_account_id (or guest), validates stable schema/row order, uses atomic read/compare/write revision checks, and acknowledges saves only on transaction completion. Cross-tab stale writers receive F17_REVISION_CONFLICT. Identity changes cancel saves. Storage failure and quota errors remain visible. There is no silent in-memory durability fallback.
 
-## Source safety and training separation
+Bounds: 2,000 rows, 20 columns and a 2 MiB serialized sheet budget, at most eight records per owner, and the existing global 10 MiB local-storage soft limit. Navigator storage estimates also check available origin quota. Source plus working copy overhead counts toward the repository budget. Export and delete older work to free capacity.
 
-- DataSheet is `aria-readonly="true"` and supplies **no cell-edit mutation path**.
-- Selecting/scrolling cells never changes F11 source data, F12 fits, F13 explanations, F14 receipts or F15 fold memberships.
-- F10 filters change displayed row membership; they do **not** modify the imported dataset.
-- F17.0 makes **no IndexedDB schema, API or server changes** and does not save any source rows to remote services.
-- A selected address A17 is view-relative; a stable ID such as `sample-19` is source-relative. They must not be conflated.
-- F17.2/F17.3 will introduce explicit immutable working copies and versioned commit semantics before enabling editing or durable drafts.
+Commit requires real changes and produces a fresh UUID, SHA-256 content fingerprint, parent fingerprint, timestamp and changed-cell count. It copies only dataset values and new provenance, excluding old fitted pipelines, evaluation scores and folds. Dataset Explorer remounts preparation with fresh defaults and refits all preparation stages. Both basic and F11 lab handoffs carry the provenance and include the full source-version fingerprint in preprocessing identity, so even an edit outside the chosen features changes research identity. Previously saved research remains associated with its original dataset.
 
-## Files
+## Implementation and verification
 
-| File | Role |
-|---|---|
-| `client/src/ml/datasheet/gridModel.js` | Read-only schema, viewport geometry, keyboard navigation and column type rules |
-| `client/src/components/workspace/datasheet/DataSheet.jsx` | PRISM virtual grid, sticky headers, resizing, active cell, inspector and navigation |
-| `client/src/components/workspace/DataScienceWorkbench.jsx` | Additional DataSheet tab and selection bridge into legacy F10 Row Explorer |
-| `client/src/index.css` | Scoped theme-aware DataSheet styles, responsive view, reduced motion |
-| `tests/prism-datasheet-f17.test.mjs` | Source validation, 2,000×20 viewport, keyboard, filters, missing values and immutability |
-| `tests/e2e/prism-datasheet-f17.spec.mjs` | Browser navigation, original IDs, F10 filtered scope, last cell virtualization and missing observations |
+- ml/datasheet/gridModel.js: bounded grid geometry and navigation.
+- ml/datasheet/transactions.js: typed transactions, clipboard parsing, safe exports, stable range statistics, immutable commits and fingerprints.
+- services/datasetVersionRepository.js: dedicated bounded, owner-scoped IndexedDB persistence.
+- components/workspace/datasheet/DataSheetWorkspace.jsx: analytical controls, working-copy history, review, recovery and explicit handoffs.
+- Existing F17.0 domain/browser tests retain maximum-size virtualization and source-ID coverage.
+- New domain tests cover validation, atomic rollback, typed missing values, TSV quoting, injection-safe export, selection statistics and version identity.
+- New desktop/mobile browser tests cover paste rollback, undo/redo, fill, JSON round trips, refresh recovery, conflict detection, owner isolation, quota errors and version commitment.
 
-## Verification gates
-
-The PR must pass `npm run check`, `npm run test:e2e:memory` and `npm run baseline:summary` on both push and PR-triggered GitHub Actions before leaving draft.
-
-Include desktop/mobile E2E checks for viewport virtualization and keyboard navigation. Verify no old F2/F10/F11/F12/F13/F14/F15 workflows regress.
-
-## Remaining F17 roadmap
-
-1. **F17.1 — Analytical Spreadsheet:** quick search, multi-column sorting, range selection/copy, column profiles, filtered CSV export and chart handoff, preserving F10 filter source semantics.
-2. **F17.2 — Safe Editing:** opt-in working copy, typed validation, atomic paste, fill, undo/redo and full edit review.
-3. **F17.3 — Dataset Versions:** owner-scoped persisted drafts, conflict detection, explicit new version fingerprints and carefully controlled F11/F12/F15 handoff.
-
-No future capability in this section should be described as shipped in F17.0.
+Full Excel formulas, macros, pivot tables and XLSX fidelity are outside F17. This implementation adds no grid library or remote data-upload dependency.

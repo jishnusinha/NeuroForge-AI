@@ -11,7 +11,7 @@ const rowKey=row=>row.id;
 const selectedStyle='prism-sheet-cell-active';
 const gridCellId=(rowIndex,colIndex)=>'prism-cell-'+rowIndex+'-'+colIndex;
 
-export default function DataSheet({dataset,selectedRowId=null,onSelectRow=()=>{},onInspectRow=()=>{}}){
+export default function DataSheet({dataset,sourceCount=dataset.rows.length,selectedRowId=null,onSelectRow=()=>{},onInspectRow=()=>{},workingCopy=false,selection=[],highlightedRowIds=[],onCellSelect=()=>{},onSort=()=>{},onCopy=()=>{},onPaste=()=>{},onHistory=()=>{},onEdit=()=>{}}){
   const safe=useMemo(()=>validateDataSheet(dataset),[dataset]);
   const headers=safe.headers,rows=safe.rows;
   const kinds=useMemo(()=>columnKinds(safe),[safe]);
@@ -27,6 +27,8 @@ export default function DataSheet({dataset,selectedRowId=null,onSelectRow=()=>{}
   const [helpOpen,setHelpOpen]=useState(false);
   const gridRef=useRef(null);
   const resizeRef=useRef(null);
+  const selectedCells=useMemo(()=>new Set(selection.flat().map(c=>JSON.stringify([c.rowId,c.column]))),[selection]);
+  const highlighted=useMemo(()=>new Set(highlightedRowIds),[highlightedRowIds]);
 
   const rowIndexById=useMemo(()=>
     new Map(rows.map((row,index)=>[rowKey(row),index])),[rows]);
@@ -60,13 +62,14 @@ export default function DataSheet({dataset,selectedRowId=null,onSelectRow=()=>{}
     queueMicrotask(measure);
   },[]);
 
-  const focusCell=(nextRow,nextCol,{scroll=true}={})=>{
+  const focusCell=(nextRow,nextCol,{scroll=true,extend=false}={})=>{
     if(!rows.length)return;
     const index=Math.max(0,Math.min(rows.length-1,nextRow));
     const col=Math.max(0,Math.min(headers.length-1,nextCol));
     const row=rows[index];
     setActive({rowId:rowKey(row),column:headers[col]});
     onSelectRow(rowKey(row));
+    onCellSelect({rowId:rowKey(row),column:headers[col]},extend);
     if(scroll&&gridRef.current){
       const node=gridRef.current;
       const cellTop=SHEET_HEADER_HEIGHT+index*SHEET_ROW_HEIGHT;
@@ -86,6 +89,10 @@ export default function DataSheet({dataset,selectedRowId=null,onSelectRow=()=>{}
   };
   const keyboard=event=>{
     if(event.altKey||event.target!==gridRef.current)return;
+    if(workingCopy&&(event.ctrlKey||event.metaKey)&&['z','y'].includes(event.key.toLowerCase())){
+      event.preventDefault();onHistory(event.key.toLowerCase()==='y'||event.shiftKey?'redo':'undo');return;
+    }
+    if(workingCopy&&event.key==='F2'){event.preventDefault();onEdit();return;}
     const next=moveSheetCell({
       rowIndex,columnIndex,rowCount:rows.length,columnCount:headers.length,
       key:event.key,shiftKey:event.shiftKey,
@@ -94,7 +101,7 @@ export default function DataSheet({dataset,selectedRowId=null,onSelectRow=()=>{}
     });
     if(!next)return;
     event.preventDefault();
-    focusCell(next.rowIndex,next.columnIndex);
+    focusCell(next.rowIndex,next.columnIndex,{extend:event.shiftKey&&event.key!=='Tab'});
   };
 
   const startResize=(event,index)=>{
@@ -151,7 +158,7 @@ export default function DataSheet({dataset,selectedRowId=null,onSelectRow=()=>{}
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
-        <span className="prism-status-pill"><LockKeyhole size={13} aria-hidden="true"/> Source · Read-only</span>
+        <span className="prism-status-pill"><LockKeyhole size={13} aria-hidden="true"/> {workingCopy?'Working copy · Draft edits':'Source · Read-only'}</span>
         <button type="button" className="prism-sheet-action" onClick={()=>setHelpOpen(value=>!value)}
           aria-expanded={helpOpen} aria-controls="prism-sheet-help">
           <Keyboard size={14} aria-hidden="true"/> Keyboard
@@ -162,7 +169,8 @@ export default function DataSheet({dataset,selectedRowId=null,onSelectRow=()=>{}
       Focus the grid, then use Arrow keys to move between cells. Home/End move across a row,
       Ctrl/Command+Home and Ctrl/Command+End jump to the first/last cell,
       PageUp/PageDown jump through rows, and Tab/Shift+Tab move across cells.
-      Column separators are draggable or can be resized with Left/Right when focused. F17.0 does not change source values.
+      Column separators are draggable or can be resized with Left/Right when focused.
+      Shift-click or Shift+arrows selects a range. In a working copy, F2 opens the value editor and Ctrl/Command+Z undoes edits.
     </div>}
     <div className="prism-sheet-formula" aria-label="Selected source cell">
       <div className="prism-sheet-address" aria-label="Selected cell address">
@@ -176,7 +184,7 @@ export default function DataSheet({dataset,selectedRowId=null,onSelectRow=()=>{}
     </div>
     <div className="prism-sheet-container">
       <div ref={gridRef} role="grid" tabIndex={0}
-        aria-label="PRISM DataSheet cells" aria-readonly="true"
+        aria-label="PRISM DataSheet cells" aria-readonly={!workingCopy}
         aria-rowcount={rows.length+1} aria-colcount={headers.length+1}
         aria-activedescendant={activeCellVisible?gridCellId(rowIndex,columnIndex):undefined}
         onScroll={event=>{
@@ -185,6 +193,8 @@ export default function DataSheet({dataset,selectedRowId=null,onSelectRow=()=>{}
             previous:{...previous,top:element.scrollTop,left:element.scrollLeft});
         }}
         onKeyDown={keyboard}
+        onCopy={event=>{event.preventDefault();onCopy();}}
+        onPaste={event=>{event.preventDefault();onPaste(event.clipboardData.getData('text/plain'));}}
         className="prism-sheet-viewport">
         <div className="prism-sheet-plane" style={{
           width:viewport.totalWidth,height:viewport.totalHeight,
@@ -204,7 +214,7 @@ export default function DataSheet({dataset,selectedRowId=null,onSelectRow=()=>{}
                   height:SHEET_HEADER_HEIGHT,
                 }}>
                 <div className="prism-sheet-column-letter">{columnLetter(index)}</div>
-                <div className="prism-sheet-column-name" title={name}>{name}</div>
+                <button type="button" className="prism-sheet-column-name" title={name} aria-label={'Sort column '+name} onClick={event=>onSort(name,event.shiftKey)}>{name}</button>
                 <span className="prism-sheet-column-type">{kinds[index].kind}</span>
                 <button type="button" className="prism-sheet-resize"
                   aria-label={'Resize DataSheet column '+name}
@@ -221,7 +231,8 @@ export default function DataSheet({dataset,selectedRowId=null,onSelectRow=()=>{}
             const index=viewport.rowStart+offset;
             const rowIsActive=rowIndex===index;
             return <div role="row" aria-rowindex={index+2} key={rowKey(row)}
-              className={'prism-sheet-row '+(rowIsActive?'prism-sheet-row-current':'')}
+              className={'prism-sheet-row '+(rowIsActive?'prism-sheet-row-current':'')+(highlighted.has(row.id)?' prism-sheet-row-linked':'')}
+              data-linked={highlighted.has(row.id)?'true':undefined}
               style={{
                 top:SHEET_HEADER_HEIGHT+index*SHEET_ROW_HEIGHT,
                 height:SHEET_ROW_HEIGHT,width:viewport.totalWidth,
@@ -234,12 +245,12 @@ export default function DataSheet({dataset,selectedRowId=null,onSelectRow=()=>{}
               </div>
               {headers.slice(viewport.colStart,viewport.colEnd).map((name,colOffset)=>{
                 const col=viewport.colStart+colOffset;
-                const selected=rowIsActive&&col===columnIndex;
+                const selected=(rowIsActive&&col===columnIndex)||selectedCells.has(JSON.stringify([row.id,name]));
                 return <div key={name} role="gridcell" id={gridCellId(index,col)}
                   aria-colindex={col+2} aria-selected={selected}
                   aria-label={cellAddress(index,col)+', '+name+', '+cellDisplay(row[name])}
                   title={cellDisplay(row[name])}
-                  onClick={()=>{focusCell(index,col,{scroll:false});gridRef.current?.focus();}}
+                  onClick={event=>{focusCell(index,col,{scroll:false,extend:event.shiftKey});gridRef.current?.focus();}}
                   className={'prism-sheet-cell '+(selected?selectedStyle:'')+
                     (isSheetMissing(row[name])?' prism-sheet-cell-missing':'')}
                   style={{left:viewport.offsets[col],width:fittedWidths[col],
@@ -270,9 +281,9 @@ export default function DataSheet({dataset,selectedRowId=null,onSelectRow=()=>{}
       </button>
     </div>
     <footer className="prism-sheet-footer">
-      <span>{rows.length.toLocaleString()} visible of {rows.length.toLocaleString()} filtered observations</span>
+      <span>{rows.length.toLocaleString()} visible of {sourceCount.toLocaleString()} source observations</span>
       <span>Mounted: {viewport.mountedRowCount} rows × {viewport.mountedColumnCount} columns</span>
-      <span>Read-only · No dataset mutation</span>
+      <span>{workingCopy?'Working copy · Source preserved':'Read-only · No dataset mutation'}</span>
     </footer>
   </section>;
 }

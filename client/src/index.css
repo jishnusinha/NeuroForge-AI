@@ -727,3 +727,37 @@
 @media(prefers-reduced-motion:reduce) {
   .prism-sheet-shell *, .prism-sheet-shell *::before { transition: none !important; }
 }
+/* F17 analytical sheet controls remain usable on narrow research workspaces. */
+.prism-sheet-tools { display:flex; flex-wrap:wrap; align-items:end; gap:.65rem; }
+.prism-sheet-tools label { display:grid; gap:.35rem; font-size:.8rem; min-width:0; }
+.prism-sheet-tools button,.prism-sheet-edit button { min-height:40px; padding:.45rem .7rem; border:1px solid var(--border-color,#64748b); border-radius:.5rem; font-size:.8rem; }
+.prism-sheet-tools button:disabled,.prism-sheet-edit button:disabled { opacity:.45; cursor:not-allowed; }
+.prism-sheet-tools input,.prism-sheet-edit input,.prism-sheet-edit textarea { color:inherit; background:transparent; border:1px solid #64748b; border-radius:.4rem; padding:.5rem; max-width:100%; }
+.prism-sheet-edit { border:1px solid #64748b; border-radius:.75rem; padding:1rem; }
+.prism-sheet-edit textarea { display:block; width:100%; min-height:5rem; margin-top:.4rem; }
+.prism-sheet-review { overflow:auto; max-height:28rem; }
+.prism-sheet-review th,.prism-sheet-review td { padding:.5rem; text-align:left; border-bottom:1px solid #64748b; overflow-wrap:anywhere; }
+.prism-sheet-tools :focus-visible,.prism-sheet-edit :focus-visible { outline:2px solid #46d7f2; outline-offset:2px; }
+/* F18 scientific studio: chart family loads and plotted evidence stay bounded. */
+.prism-f18-studio { min-width:0; border:1px solid rgb(var(--nf-accent-rgb)/.25); border-radius:1rem; overflow:hidden; }
+.prism-f18-layout { display:grid; grid-template-columns:minmax(210px,260px) minmax(0,1fr); gap:1rem; padding:1rem; align-items:start; }
+.prism-f18-library { padding:.8rem; border:1px solid rgb(var(--nf-accent-rgb)/.2); border-radius:.7rem; min-width:0; }
+.prism-f18-library summary,.prism-f18-pipeline>summary { min-height:44px; cursor:pointer; font-size:.9rem; font-weight:600; padding:.4rem; }
+.prism-f18-library label { display:grid; font-size:.76rem; gap:.35rem; overflow-wrap:anywhere; }
+.prism-f18-library input:not([type=checkbox]),.prism-f18-library select,.prism-f18-chart select { color:rgb(var(--nf-text-rgb)); background:rgb(var(--nf-surface-rgb)); border:1px solid #64748b; border-radius:.4rem; padding:.5rem; min-height:40px; width:100%; min-width:0; }
+.prism-f18-library label:has(input[type=checkbox]) { display:flex; align-items:center; gap:.5rem; }
+.prism-f18-column-list { max-height:10rem; overflow:auto; display:grid; gap:.4rem; margin:.4rem 0; }
+.prism-f18-axis-controls { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; }
+.prism-f18-canvas { width:100%; height:480px; min-width:0; margin-top:.8rem; }
+.prism-f18-plot-layout { display:grid; grid-template-columns:minmax(0,1fr) 175px; gap:.8rem; }
+.prism-f18-inspector { border-left:1px solid rgb(var(--nf-muted-rgb)/.25); padding:.8rem; font-size:.75rem; overflow-wrap:anywhere; }
+.prism-f18-inspector dl { display:grid; gap:.4rem; margin:.5rem 0; }.prism-f18-inspector dt { color:rgb(var(--nf-muted-rgb)); }.prism-f18-inspector dd { font-variant-numeric:tabular-nums; }
+@media(max-width:1200px){.prism-f18-plot-layout{grid-template-columns:1fr}.prism-f18-inspector{border-left:0;border-top:1px solid rgb(var(--nf-muted-rgb)/.25)}.prism-f18-inspector>dl{grid-template-columns:repeat(2,minmax(0,1fr))}.prism-f18-inspector details{display:inline-block;vertical-align:top;padding:.4rem;min-width:8rem}}
+.prism-f18-consent { padding:1rem; font-size:.78rem; border-top:1px solid #64748b; display:grid; gap:.7rem; }
+.prism-f18-consent label { display:flex; align-items:start; gap:.5rem; }
+.prism-f18-provenance { font-size:.75rem; overflow-wrap:anywhere; display:grid; gap:.4rem; }
+.prism-f18-saved { display:grid; grid-template-columns:1fr auto; gap:.4rem; margin:.5rem 0; font-size:.75rem; }
+.prism-f18-pipeline { border:1px solid rgb(var(--nf-accent-rgb)/.25); padding:.6rem; border-radius:.75rem; }
+.prism-sheet-row-linked .prism-sheet-cell { background:rgb(var(--nf-accent-rgb)/.18); box-shadow:inset 0 -2px 0 rgb(var(--nf-accent-rgb)/.5); }
+.prism-f18-studio button:focus-visible,.prism-f18-studio input:focus-visible,.prism-f18-studio select:focus-visible { outline:2px solid rgb(var(--nf-accent-rgb)); outline-offset:2px; }
+@media(max-width:900px){.prism-f18-layout {grid-template-columns:1fr;padding:.6rem}.prism-f18-canvas{height:370px}.prism-f18-column-list{grid-template-columns:repeat(2,minmax(0,1fr))}.prism-f18-library>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem}.prism-f18-library fieldset{grid-column:1/-1}}

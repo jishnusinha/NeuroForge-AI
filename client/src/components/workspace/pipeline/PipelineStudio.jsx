@@ -4,6 +4,7 @@ import { saveSnapshotLocal, getSnapshotLocal } from '../../../services/localRepo
 import { classifyPipelineColumns, createStudioNode, defaultStudioRecipe, NODE_DEFINITIONS, STUDIO_MAX_NODES, validateStudioRecipe } from '../../../ml/pipelineGraph.js';
 import { executeStudioPipeline, transformStudioArtifact } from '../../../ml/pipelineExecutor.js';
 import ModelWorkbench from '../modeling/ModelWorkbench.jsx';
+import PipelineVisualization from './PipelineVisualization.jsx';
 
 const inputClass='mt-1 w-full min-h-10 rounded-lg border border-white/20 bg-obsidian px-2 py-2 text-sm text-text-primary';
 const STASH_ID='ds-f11-pipeline-recipe';
@@ -270,6 +271,7 @@ export default function PipelineStudio({ dataset, onLaunch }) {
         <button type="button" disabled={!result.plan?.labCompatible} onClick={launch('studio')}
           className="min-h-11 rounded-lg border border-plasma-cyan/40 bg-plasma-cyan/10 px-4 text-sm font-semibold text-plasma-cyan disabled:opacity-40">Launch F11 pipeline in Studio</button>
       </div>
+      {result.plan&&<PipelineVisualization dataset={dataset} plan={result.plan}/>}
       {result.plan && <ModelWorkbench key={JSON.stringify(recipe)} plan={result.plan}/>}
       {message&&<p role="status" className="text-sm text-quantum-mint">{message}</p>}
       {error&&<p role="alert" className="text-sm text-signal-amber">{error}</p>}
