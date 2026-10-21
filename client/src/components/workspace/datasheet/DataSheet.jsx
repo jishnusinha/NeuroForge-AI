@@ -123,6 +123,18 @@ export default function DataSheet({dataset,selectedRowId=null,onSelectRow=()=>{}
     if(event.currentTarget.hasPointerCapture(event.pointerId))
       event.currentTarget.releasePointerCapture(event.pointerId);
   };
+  const keyboardResize=(event,index)=>{
+    if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;
+    event.preventDefault();
+    event.stopPropagation();
+    setWidths(previous=>{
+      const result=normalizeColumnWidths(previous,headers.length);
+      const delta=(event.shiftKey?25:10)*(event.key==='ArrowRight'?1:-1);
+      result[index]=Math.max(SHEET_MIN_COLUMN_WIDTH,
+        Math.min(SHEET_MAX_COLUMN_WIDTH,result[index]+delta));
+      return result;
+    });
+  };
 
   const activeCellVisible=selectedRow&&
     rowIndex>=viewport.rowStart&&rowIndex<viewport.rowEnd&&
@@ -150,7 +162,7 @@ export default function DataSheet({dataset,selectedRowId=null,onSelectRow=()=>{}
       Focus the grid, then use Arrow keys to move between cells. Home/End move across a row,
       Ctrl/Command+Home and Ctrl/Command+End jump to the first/last cell,
       PageUp/PageDown jump through rows, and Tab/Shift+Tab move across cells.
-      Column separators are draggable. F17.0 does not change source values.
+      Column separators are draggable or can be resized with Left/Right when focused. F17.0 does not change source values.
     </div>}
     <div className="prism-sheet-formula" aria-label="Selected source cell">
       <div className="prism-sheet-address" aria-label="Selected cell address">
@@ -195,8 +207,9 @@ export default function DataSheet({dataset,selectedRowId=null,onSelectRow=()=>{}
                 <div className="prism-sheet-column-name" title={name}>{name}</div>
                 <span className="prism-sheet-column-type">{kinds[index].kind}</span>
                 <button type="button" className="prism-sheet-resize"
-                  tabIndex={-1} aria-label={'Resize DataSheet column '+name}
-                  title={'Drag to resize '+name}
+                  aria-label={'Resize DataSheet column '+name}
+                  title={'Drag or use Left/Right arrow keys to resize '+name}
+                  onKeyDown={event=>keyboardResize(event,index)}
                   onPointerDown={event=>startResize(event,index)}
                   onPointerMove={resizeMove}
                   onPointerUp={endResize}

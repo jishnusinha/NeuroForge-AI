@@ -21,6 +21,13 @@ test('F17.0: PRISM spreadsheet navigates filtered original cells and inspects st
   await expect(sheet).toContainText('Source · Read-only');
   await expect(sheet).toContainText('120 filtered observations');
 
+  const resize=sheet.getByRole('button',{name:'Resize DataSheet column feature_x'});
+  const originalWidth=await resize.evaluate(element=>element.parentElement.getBoundingClientRect().width);
+  await resize.focus();
+  await resize.press('ArrowRight');
+  const resizedWidth=await resize.evaluate(element=>element.parentElement.getBoundingClientRect().width);
+  expect(resizedWidth).toBeGreaterThan(originalWidth);
+
   await grid.focus();
   await grid.press('ArrowRight');
   await expect(sheet.getByLabel('Selected cell address')).toHaveText('B1');
@@ -56,7 +63,7 @@ test('F17.0: F10 filter changes DataSheet population without changing source ide
   await grid.focus();
   await grid.press('ArrowDown');
   await expect(sheet.getByRole('region',{name:'DataSheet source inspector'})).toContainText('sample-61');
-  await lab.getByRole('button',{name:'Row Explorer'}).click();
+  await lab.getByRole('button',{name:'Row Explorer',exact:true}).click();
   await expect(lab.getByRole('region',{name:'Filtered source row table'})).toContainText('sample-61');
   await lab.getByRole('button',{name:'DataSheet',exact:true}).click();
   await expect(lab.getByRole('region',{name:'DataSheet source inspector'})).toContainText('sample-61');
@@ -108,7 +115,7 @@ test('F17.0: missing source values remain missing and old Row Explorer stays ava
   await expect(grid.getByRole('gridcell',{name:/A2, age, Missing/})).toHaveAttribute('aria-selected','true');
   await expect(sheet.getByRole('region',{name:'DataSheet source inspector'})).toContainText('sample-1');
   await expect(sheet).toContainText('Missing');
-  await lab.getByRole('button',{name:'Row Explorer'}).click();
+  await lab.getByRole('button',{name:'Row Explorer',exact:true}).click();
   const legacy=lab.getByRole('region',{name:'Filtered source row table'});
   await expect(legacy).toBeVisible();
   await expect(legacy).toContainText('Missing');

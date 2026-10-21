@@ -621,6 +621,12 @@
 }
 .prism-sheet-resize:hover,
 .prism-sheet-resize:active { border-right-color: rgb(var(--nf-accent-rgb)); }
+.prism-sheet-resize:focus-visible {
+  z-index: 2;
+  outline: 2px solid rgb(var(--nf-accent-rgb));
+  outline-offset: -2px;
+  background: rgb(var(--nf-accent-rgb) / .16);
+}
 .prism-sheet-row { position: absolute; left: 0; }
 .prism-sheet-row-number {
   position: sticky;
