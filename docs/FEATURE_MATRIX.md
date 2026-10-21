@@ -48,6 +48,10 @@ F14 preserves F12 research receipts and F13 aggregate explanations in the owner-
 
 F15 adds N-feature softmax, classification/regression CART and bounded random forests. The browser-local F15 Model Selection Studio performs deterministic 3/5-fold cross-validation with **fresh per-fold F11 preprocessing**, bounded worker searches, a measured fold leaderboard and promotion into F12 fixed validation. F13 model-specific views and F14 summary-only model-selection evidence are included. See [DS-F15 documentation](DS_F15_ADVANCED_MODEL_SELECTION.md).
 
+## DS-F16.0 PRISM Scientific Chart Foundation
+
+The first PRISM visual release adds a theme-aware scientific histogram inside F10's numeric Distribution view, using unchanged F10 counted bins. Each chart exposes Chart/Data/Python views, copyable Matplotlib/Seaborn code, summary-only CSV/JSON/script exports and a chart-scope SHA-256 fingerprint. F17 Excel-style DataSheet and F18–F20 expanded visualization remain planned, not implemented. See [F16 PRISM documentation](DS_F16_PRISM_FOUNDATION.md).
+
 ## Important limits
 - Current visual labs intentionally require two numerical feature columns; only supported binary targets and their valid stratified partitions are accepted.
 - Standalone PCA and optimizer landscape tools are educational computations, not automatically applied fitted transforms or real neural model telemetry.
