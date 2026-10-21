@@ -1,6 +1,10 @@
 import {validateChartSpec} from '../chartSpecV2.js';
+import {restoreModelRenderers} from '../modelRenderPrimitives.js';
 export function generateJavaScript(spec){
   validateChartSpec(spec);
+  const rendering=['horizontal_error','waterfall'].includes(spec.plot.kind)
+    ?`const restoreModelRenderers = ${restoreModelRenderers.toString()};\nchart.setOption(restoreModelRenderers(spec, spec.renderOption));`
+    :'chart.setOption(spec.renderOption);';
   return `// NeuroForge PRISM: exact plot-data reproduction, never a preprocessing refit.
 // Use a bundler with Apache ECharts installed, serve alongside the exported JSON,
 // and provide <div id="chart" style="width:100%;height:550px"></div>.
@@ -13,7 +17,7 @@ if (spec.schemaVersion !== 2 || !spec.renderOption || spec.exportManifest.mode =
   throw new Error("Export the exact plot data, with observation consent when required");
 }
 const chart = echarts.init(document.getElementById("chart"), null, { renderer: "svg" });
-chart.setOption(spec.renderOption);
+${rendering}
 const observer = new ResizeObserver(() => chart.resize());
 observer.observe(document.getElementById("chart"));
 // On component teardown: observer.disconnect(); chart.dispose();

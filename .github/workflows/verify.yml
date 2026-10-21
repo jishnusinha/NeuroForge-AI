@@ -5,7 +5,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-24.04 # Stable image; host kernel still needs Mongo compatibility checks
-    timeout-minutes: 20
+    timeout-minutes: 50
     services:
       mongo:
         image: mongo:7.0
@@ -34,6 +34,12 @@ jobs:
       - run: npm --prefix client ci
       - run: npm --prefix server ci
       - run: npx playwright install --with-deps chromium
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pandas==2.2.3 numpy==2.2.6 matplotlib==3.10.3 seaborn==0.13.2
+      - run: node scripts/export-python-chart-fixtures.mjs
+      - run: python scripts/verify-python-charts.py
       - run: npm run check
       - run: npm run test:e2e:memory
       - run: npm run baseline:summary

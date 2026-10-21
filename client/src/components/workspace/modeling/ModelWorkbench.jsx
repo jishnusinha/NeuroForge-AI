@@ -4,6 +4,7 @@ import { createFeatureMatrix } from '../../../ml/modelWorkbench/featureMatrix.js
 import { MODEL_DEFINITIONS, fitWorkbenchModel, predictWorkbenchModel } from '../../../ml/modelWorkbench/models.js';
 import { evaluateWorkbenchPredictions } from '../../../ml/modelWorkbench/metrics.js';
 import ExplainabilityStudio from './ExplainabilityStudio.jsx';
+import ModelVisualization from './ModelVisualization.jsx';
 import ModelSelectionStudio from './ModelSelectionStudio.jsx';
 import { createRunReceipt } from '../../../ml/modelRegistry/runContracts.js';
 import { attachExplanationToRun } from '../../../ml/modelRegistry/runLifecycle.js';
@@ -92,13 +93,14 @@ export default function ModelWorkbench({ plan }) {
 
   const acceptF15Selection=({algorithm:advancedAlgorithm,options:advancedOptions,selectionEvidence})=>{
     if(busy||testResult||candidates.length>=8)throw new Error('F15_CANDIDATE_SESSION_LOCKED');
-    const fitted=fitWorkbenchModel(matrix,advancedAlgorithm,advancedOptions);
+    const trace=[];
+    const fitted=fitWorkbenchModel(matrix,advancedAlgorithm,{...advancedOptions,onTrainingTrace:p=>trace.push(p)});
     const rows=matrix.rows.filter(row=>row.split==='validation');
     const validation=evaluateWorkbenchPredictions(matrix,
       predictWorkbenchModel(fitted,rows.map(row=>row.values)),'validation');
     const id='f15-'+Date.now()+'-'+candidates.length;
     setCandidates(previous=>[...previous,{id,algorithm:advancedAlgorithm,
-      options:{...advancedOptions},model:fitted,validation,selectionEvidence}]);
+      options:{...advancedOptions},model:fitted,validation,selectionEvidence,trainingTrace:trace.length?{points:trace}:null}]);
     setSelectedId(id);
     setMessage('F15 inner CV selection refitted on original training rows; fixed outer validation measured. Test remains sealed.');
     setError('');
@@ -110,12 +112,13 @@ export default function ModelWorkbench({ plan }) {
     // Yield a paint before bounded synchronous work; no dataset is sent to a server.
     await new Promise(resolve=>setTimeout(resolve,0));
     try {
-      const fitted=fitWorkbenchModel(matrix,algorithm,options);
+      const trace=[];
+      const fitted=fitWorkbenchModel(matrix,algorithm,{...options,onTrainingTrace:p=>trace.push(p)});
       const validationRows=matrix.rows.filter(row=>row.split==='validation');
       const predictions=predictWorkbenchModel(fitted,validationRows.map(row=>row.values));
       const validation=evaluateWorkbenchPredictions(matrix,predictions,'validation');
       const id='f12-'+Date.now()+'-'+candidates.length;
-      const candidate={id,algorithm,options:{...options},model:fitted,validation};
+      const candidate={id,algorithm,options:{...options},model:fitted,validation,trainingTrace:trace.length?{points:trace}:null};
       setCandidates(previous=>[...previous,candidate].slice(-8));
       setSelectedId(id);
       setMessage('Training complete. Only validation predictions were evaluated; the test set remains sealed.');
@@ -278,6 +281,7 @@ export default function ModelWorkbench({ plan }) {
         <ScorePanel report={selected.validation}/>
         <PredictionTable report={selected.validation}/>
       </section>}
+      {selected&&<ModelVisualization key={'f19-'+selected.id} matrix={matrix} candidate={selected}/>}
       {selected&&<section aria-label="F14 save research run" className="space-y-3 rounded-xl border border-plasma-cyan/30 bg-surface-dark p-3">
         <h5 className="font-semibold">F14 — Preserve this research run</h5>
         <p className="text-xs text-text-muted">Save validation metrics, fingerprints and any recorded final-test access locally. Raw rows and per-row prediction records are never stored. This is a research receipt, not automatic model deployment.</p>
@@ -314,6 +318,7 @@ export default function ModelWorkbench({ plan }) {
         <p className="text-xs text-text-muted">Test accessed at {testResult.accessedAt}. This is the single recorded final evaluation for the selected candidate.</p>
         <ScorePanel report={testResult.report}/>
         <PredictionTable report={testResult.report}/>
+        <ModelVisualization key={'f19-final-'+selected.id} matrix={matrix} candidate={selected} finalTest={testResult}/>
       </section>}
       <button type="button" onClick={exportEvidence} disabled={!candidates.length} className={buttonClass}>
         Export F12 evidence JSON

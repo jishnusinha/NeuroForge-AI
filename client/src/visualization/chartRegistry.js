@@ -11,11 +11,18 @@ const definitions = [
   ['pipeline_lineage','Pipeline lineage','pipeline'],['pipeline_split','Split composition','pipeline'],
   ['pipeline_summary','Fitted transformation summary','pipeline'],['pipeline_invalid','Dropped / unavailable values','pipeline'],
 ];
-export const CHART_REGISTRY_VERSION=1;
+export const MODEL_CHARTS=[
+  ['actual_predicted','Actual vs predicted'],['residuals','Residual analysis'],['residual_distribution','Residual distribution'],['error_range','Error by target range'],
+  ['confusion','Confusion matrix'],['per_class','Per-class performance'],['roc','ROC curve'],['precision_recall','Precision–recall curve'],['calibration','Probability calibration'],['confidence','Prediction confidence'],['training_loss','Real training loss'],
+].map(([id,label])=>({id,label,family:'evaluation'}));
+export const EXPLANATION_CHARTS=[['importance','Permutation importance'],['contributions','Local contribution waterfall'],['dependence','PDP + ICE'],['whatif','Hypothetical comparison'],['subgroups','Subgroup performance'],['model_specific','Model-specific explanation']].map(([id,label])=>({id:'model_'+id,label,family:'explanation'}));
+export const CHART_REGISTRY_VERSION=2;
 export const CHART_REGISTRY=Object.freeze(definitions.map(([id,label,family])=>Object.freeze({id,label,family})));
-export function chartDefinition(type){const def=CHART_REGISTRY.find(d=>d.id===type);if(!def)throw new Error('F18_UNKNOWN_CHART');return def;}
+export function chartDefinition(type){const def=[...CHART_REGISTRY,...MODEL_CHARTS,...EXPLANATION_CHARTS].find(d=>d.id===type);if(!def)throw new Error('F18_UNKNOWN_CHART');return def;}
 export async function loadChartAdapter(type){
   const {family}=chartDefinition(type);
+  if(family==='evaluation')return import('./adapters/modelEvaluationAdapter.js');
+  if(family==='explanation')return import('./adapters/modelExplanationAdapter.js');
   if(family==='distribution')return import('./adapters/distributionAdapter.js');
   if(family==='relationship')return import('./adapters/relationshipAdapter.js');
   if(family==='quality')return import('./adapters/qualityAdapter.js');

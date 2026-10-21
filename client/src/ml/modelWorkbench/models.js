@@ -126,12 +126,18 @@ export function fitWorkbenchModel(matrix,algorithm,options={}) {
         const regularization=j===0?0:cfg.lambda*weights[j];
         weights[j]-=rate*(grad[j]/train.length+regularization);
       }
+      if(options.onTrainingTrace){
+        let loss=0;
+        for(const row of train){const x=[1,...standardized(row.values,stat)],p=sigmoid(dot(weights,x)),y=Number(row.target===classes[1]);loss+=-y*Math.log(Math.max(p,1e-15))-(1-y)*Math.log(Math.max(1-p,1e-15));}
+        loss=loss/train.length+cfg.lambda/2*weights.slice(1).reduce((s,w)=>s+w*w,0);
+        options.onTrainingTrace({epoch:epoch+1,loss});
+      }
     }
     if(weights.some(value=>!numeric(value)))throw new Error('F12_TRAINING_DIVERGED');
     fitted.parameters={standardizer:stat,weights,lambda:cfg.lambda,epochs:cfg.epochs};
   }
   if(algorithm==='softmax')
-    fitted.parameters=trainSoftmax(train,matrix.features,classes,{lambda:cfg.lambda,epochs:cfg.epochs});
+    fitted.parameters=trainSoftmax(train,matrix.features,classes,{lambda:cfg.lambda,epochs:cfg.epochs,onTrainingTrace:options.onTrainingTrace});
   if(algorithm==='cart')
     fitted.parameters=trainCart(train,matrix.features,task,classes,cfg);
   if(algorithm==='forest')

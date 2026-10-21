@@ -1,4 +1,5 @@
 // Pure rendering instructions: all statistical work belongs to adapters.
+import {restoreModelRenderers} from './modelRenderPrimitives.js';
 export const PALETTES={prism:['#42a5ad','#d49a6a','#9a85c7','#62b69d','#dfbc60','#c9798d','#638bc0','#9ca873'],
   publication:['#0072B2','#D55E00','#009E73','#CC79A7','#E69F00','#56B4E9','#000000','#999999'],
   diverging:['#386aa6','#739dc4','#e9edf0','#d9a084','#b84a4a']};
@@ -17,11 +18,20 @@ export function chartOptions(spec,{dark=false,compact=false}={}){
   const groups=unique(rows.map(r=>r.series||'Measured evidence'));
   if(kind==='heatmap'){
     const xs=unique(rows.map(r=>String(r.x))),ys=unique(rows.map(r=>String(r.y)));
-    base.xAxis={...base.xAxis,type:'category',data:xs,axisLabel:{color:text,hideOverlap:true,rotate:compact?35:0}};base.yAxis={...base.yAxis,type:'category',data:ys};
-    base.visualMap={min:spec.plot.correlation?-1:0,max:1,calculable:false,orient:'horizontal',left:'center',bottom:38,inRange:{color:spec.plot.correlation?['#386aa6','#f0f1ed','#b84a4a']:['#365c6c','#e3ad62']},textStyle:{color:text}};
-    base.series=[{name:spec.plot.correlation?'Correlation':'Missing (1) / observed (0)',type:'heatmap',progressive:0,
+    base.xAxis={...base.xAxis,type:'category',data:xs,axisLabel:{color:text,hideOverlap:true,rotate:compact?35:0}};base.yAxis={...base.yAxis,type:'category',data:ys,inverse:true};
+    base.visualMap={min:spec.plot.correlation?-1:0,max:spec.plot.scaleMax??1,calculable:false,orient:'horizontal',left:'center',bottom:38,inRange:{color:spec.plot.correlation?['#386aa6','#f0f1ed','#b84a4a']:['#365c6c','#e3ad62']},textStyle:{color:text}};
+    base.series=[{name:spec.plot.scaleName||(spec.plot.correlation?'Correlation':'Missing (1) / observed (0)'),type:'heatmap',progressive:0,
       label:{show:spec.visual.showLabels&&xs.length<=8&&ys.length<=12,color:text,formatter:'{@[2]}'},
       data:rows.flatMap((r,i)=>r.value==null?[]:[item([xs.indexOf(String(r.x)),ys.indexOf(String(r.y)),r.value],i)])}];
+  }else if(kind==='horizontal_error'){
+    base.yAxis={...base.yAxis,type:'category',data:rows.map(r=>r.x),inverse:true};
+    base.xAxis={...base.xAxis,name:spec.plot.xLabel};base.yAxis.name='';delete base.dataZoom;
+    base.series=[{type:'bar',name:'Signed importance',data:rows.map((r,i)=>item(r.y,i)),markLine:{silent:true,symbol:'none',data:[{xAxis:0}]}},
+      {type:'custom',name:'Repetition SD (not confidence interval)',encode:{x:[1,2],y:0},data:rows.map((r,i)=>[i,r.low,r.high])}];
+  }else if(kind==='waterfall'){
+    base.grid.bottom=110;
+    base.xAxis={...base.xAxis,type:'category',nameGap:60,data:rows.map(r=>r.x),axisLabel:{color:text,rotate:30,hideOverlap:true}};
+    base.series=[{type:'custom',name:'Exact additive contributions',encode:{x:0,y:[1,2]},data:rows.map((r,i)=>item([i,r.start,r.end],i))}];
   }else if(kind==='lineage'){
     delete base.xAxis;delete base.yAxis;delete base.dataZoom;delete base.brush;
     base.series=[{type:'graph',layout:'none',roam:true,symbolSize:40,label:{show:true,position:'bottom',color:text},edgeSymbol:['none','arrow'],edgeSymbolSize:10,
@@ -63,7 +73,7 @@ export function chartOptions(spec,{dark=false,compact=false}={}){
     const categories=unique(rows.map(r=>String(r.x)));
     if(!numericX)base.xAxis={...base.xAxis,type:'category',data:categories,axisLabel:{color:text,hideOverlap:true,rotate:categories.length>5?30:0}};
     for(const group of groups){
-      const points=rows.map((r,i)=>({...r,i})).filter(r=>(r.series||'Measured evidence')===group&&r.y!=null);
+      const points=rows.map((r,i)=>({...r,i})).filter(r=>(r.series||'Measured evidence')===group&&r.x!=null);
       const seriesType=kind==='line'||spec.plot.trend&&group==='OLS fit'?'line':kind==='scatter'||kind==='hexbin'?'scatter':'bar';
       base.series.push({name:group,type:seriesType,symbolSize:kind==='hexbin'?20:6,symbol:kind==='hexbin'?'path://M0,-1 L0.866,-0.5 L0.866,0.5 L0,1 L-0.866,0.5 L-0.866,-0.5 Z':'circle',
         step:spec.plot.step?'end':false,showSymbol:kind!=='line',areaStyle:spec.chartType==='kde'?{opacity:.16}:undefined,
@@ -71,6 +81,13 @@ export function chartOptions(spec,{dark=false,compact=false}={}){
     }
     if(kind==='hexbin')base.visualMap={min:0,max:Math.max(1,...rows.map(r=>r.count)),dimension:2,inRange:{color:['#d7e8e8','#237f88']},show:true,right:0,textStyle:{color:text}};
   }
+  if(spec.plot.reference&&kind!=='horizontal_error'&&base.series.length){
+    if(spec.plot.reference==='zero')base.series[0].markLine={silent:true,symbol:'none',data:[{yAxis:0}],lineStyle:{type:'dashed',color:text}};
+    if(spec.plot.reference==='identity'){
+      const values=rows.flatMap(r=>[r.x,r.y]).filter(v=>typeof v==='number'&&Number.isFinite(v)),low=Math.min(...values),high=Math.max(...values);
+      if(values.length)base.series.push({name:'Identity reference',type:'line',symbol:'none',silent:true,lineStyle:{type:'dashed',color:text},data:[[low,low],[high,high]]});
+    }
+  }
   if(!Array.isArray(base.yAxis)&&base.yAxis){if(spec.visual.axisMin!==null)base.yAxis.min=spec.visual.axisMin;if(spec.visual.axisMax!==null)base.yAxis.max=spec.visual.axisMax;}
-  return base;
+  return restoreModelRenderers(spec,base);
 }

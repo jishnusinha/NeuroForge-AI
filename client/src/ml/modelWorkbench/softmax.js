@@ -11,7 +11,7 @@ function stableProbabilities(logits) {
   if(!finite(total)||total<=0)throw new Error('F15_SOFTMAX_NONFINITE');
   return exps.map(value=>value/total);
 }
-export function trainSoftmax(rows,features,classes,{lambda=0.01,epochs=160,learningRate=0.2}={}) {
+export function trainSoftmax(rows,features,classes,{lambda=0.01,epochs=160,learningRate=0.2,onTrainingTrace=null}={}) {
   if(!Array.isArray(rows)||rows.length<4||rows.length>2000 ||
       !Array.isArray(features)||features.length<1||features.length>20 ||
       !Array.isArray(classes)||classes.length<2||classes.length>12 ||
@@ -45,6 +45,11 @@ export function trainSoftmax(rows,features,classes,{lambda=0.01,epochs=160,learn
     for(let k=0;k<c;k++)for(let j=0;j<=d;j++){
       const regularizer=j===0?0:lambda*weights[k][j];
       weights[k][j]-=learningRate*(grad[k][j]/rows.length+regularizer);
+    }
+    if(onTrainingTrace){
+      const loss=transformed.reduce((s,{x,index})=>s-Math.log(Math.max(stableProbabilities(weights.map(w=>dot(w,x)))[index],1e-15)),0)/rows.length+
+        lambda/2*weights.reduce((s,w)=>s+w.slice(1).reduce((t,v)=>t+v*v,0),0);
+      onTrainingTrace({epoch:epoch+1,loss});
     }
   }
   if(weights.some(row=>row.some(v=>!finite(v))))throw new Error('F15_SOFTMAX_DIVERGED');

@@ -9,7 +9,13 @@ export function chartCsv(spec,{consent=false}={}){
 export function portableChart(spec,{consent=false}={}){
   validateChartSpec(spec);
   const result=structuredClone(spec),requires=spec.privacy.observationLevel&&!consent;
-  if(requires){result.evidence.rows=[];result.evidence.status='unavailable';result.evidence.warnings=['Observation-level plot data withheld. Explicit export consent is required to reproduce the plot.'];}
+  if(requires){
+    result.evidence.rows=[];result.evidence.stats={withheld:true};result.evidence.status='unavailable';
+    // Local softmax axis units can name the observed predicted class. Keep
+    // metadata-only exports free of those observation-derived plot labels too.
+    result.plot={kind:spec.plot.kind,xLabel:'Observation evidence withheld',yLabel:'Observation evidence withheld'};
+    result.evidence.warnings=['Observation-level plot data withheld. Explicit export consent is required to reproduce the plot.'];
+  }
   result.exportManifest={mode:requires?'metadata_only':spec.privacy.observationLevel?'observation_plot_data':'aggregate_plot_data',
     reproduction:'Plots exported measured evidence; does not recompute analysis or fit preprocessing.',
     dataFilename:'neuroforge-chart-data.csv',schemaVersion:1,rawRowIds:false,observationConsent:!!consent,csvEscapes:[]};

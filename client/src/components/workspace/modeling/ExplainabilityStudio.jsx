@@ -5,6 +5,7 @@ import { partialDependence } from '../../../ml/modelWorkbench/partialDependence.
 import { sourceFeatureControls, sourceWhatIf } from '../../../ml/modelWorkbench/whatIfDiagnostics.js';
 import { subgroupDiagnostics } from '../../../ml/modelWorkbench/subgroupDiagnostics.js';
 import { createExplanationReceipt } from '../../../ml/modelWorkbench/explanationEvidence.js';
+import {ModelChart} from './ModelVisualization.jsx';
 
 const inputClass='mt-1 min-h-10 w-full rounded-lg border border-white/20 bg-obsidian px-2 py-2 text-sm text-text-primary';
 const buttonClass='min-h-10 rounded-lg border border-white/20 bg-obsidian px-3 py-2 text-sm text-text-primary disabled:opacity-40';
@@ -274,6 +275,7 @@ export default function ExplainabilityStudio({ matrix, candidate, plan, onArchiv
   const [job,setJob]=useState({status:'idle',completed:0,total:0});
   const [error,setError]=useState('');
   const [message,setMessage]=useState('');
+  const [chartOpen,setChartOpen]=useState(false);
   const workerRef=useRef(null);
   const requestIdRef=useRef(0);
   useEffect(()=>()=>{workerRef.current?.terminate();},[]);
@@ -281,6 +283,9 @@ export default function ExplainabilityStudio({ matrix, candidate, plan, onArchiv
   const local=useMemo(()=>explainLocalPrediction(matrix,model,rowId),[matrix,model,rowId]);
   const rawRow=plan.raw.find(row=>row.id===rowId);
   const selectedControl=controls.find(item=>item.name===editFeature);
+  const visualResult=active==='importance'?importance:active==='local'?local:active==='dependence'?pdp:active==='whatif'?whatIf:subgroups;
+  const visualType=active==='local'?(local.scale?'model_contributions':'model_model_specific'):'model_'+active;
+  const visualEnvelope=useMemo(()=>visualResult?{candidateId:candidate.id,model:candidate.model,result:visualResult}:null,[candidate.id,candidate.model,visualResult]);
 
   const cancel=()=>{
     if(workerRef.current){workerRef.current.terminate();workerRef.current=null;}
@@ -379,12 +384,16 @@ export default function ExplainabilityStudio({ matrix, candidate, plan, onArchiv
           </select>
         </label>
         <WhatIfPanel controls={controls} editFeature={editFeature} setEditFeature={value=>{setEditFeature(value);setWhatIf(null);}}
-          editValue={editValue} setEditValue={setEditValue}
+          editValue={editValue} setEditValue={value=>{setEditValue(value);setWhatIf(null);}}
           sourceValue={rawRow?.[editFeature]} onRun={evaluateWhatIf} result={whatIf}/>
       </div>}
       {active==='subgroups'&&<SubgroupsPanel matrix={matrix} feature={feature}
         setFeature={value=>{setFeature(value);setPdp(null);setSubgroups(null);}}
         result={subgroups} onRun={inspectSubgroups}/>}
+      <details className="prism-chart-card" onToggle={e=>setChartOpen(e.currentTarget.open)}>
+        <summary className="cursor-pointer p-3 font-semibold">F19 — Visual Explainability</summary>
+        {chartOpen&&(visualEnvelope?<ModelChart matrix={matrix} candidate={candidate} type={visualType} explanation={visualEnvelope}/>:<p role="status" className="p-3">Complete the selected F13 calculation to visualize its measured evidence.</p>)}
+      </details>
       {error&&<p role="alert" className="text-sm text-signal-amber">{error}</p>}
       {message&&<p role="status" className="text-sm text-quantum-mint">{message}</p>}
       <div className="rounded-xl border border-white/10 p-3 space-y-2">

@@ -4,10 +4,11 @@ import { validateDataSheet } from '../ml/datasheet/gridModel.js';
 import { validatePrismChartSpec } from './chartSpec.js';
 
 export const CHART_SCHEMA_VERSION=2;
-const populations=['source','filtered_source','selection','working_copy','prepared_pipeline'];
+const populations=['source','filtered_source','selection','working_copy','prepared_pipeline','model_validation','model_test','model_train'];
 export function validateChartConfig(config,headers,{pipeline=false}={}){
   if(!config||!headers?.length)throw new Error('F18_INVALID_CONFIGURATION');
   const def=chartDefinition(config.type);
+  if(['evaluation','explanation'].includes(def.family))throw new Error('F19_MODEL_CONTEXT_REQUIRED');
   if(def.family==='pipeline'&&!pipeline)throw new Error('F18_FROZEN_PIPELINE_REQUIRED');
   if(pipeline&&def.family!=='pipeline')throw new Error('F18_PIPELINE_CHART_REQUIRED');
   if(['distribution','relationship'].includes(def.family)&&(!config.x||!headers.includes(config.x)))throw new Error('F18_UNKNOWN_VARIABLE');
@@ -31,8 +32,15 @@ export function validateChartSpec(spec){
      !Number.isInteger(spec.source.sourceCount)||spec.source.sourceCount<spec.source.rowCount||spec.source.sourceCount>2000||
      !Array.isArray(spec.evidence?.columns)||!Array.isArray(spec.evidence?.rows)||spec.evidence.rows.length>40000||
      !['ok','unavailable'].includes(spec.evidence.status)||!Array.isArray(spec.evidence.warnings)||!Array.isArray(spec.method.notes))throw new Error('F18_INVALID_CHART_SPEC');
-  chartDefinition(spec.chartType);
-  if(!['bar','line','scatter','matrix','hexbin','heatmap','box','violin','lineage','range'].includes(spec.plot?.kind)||
+  const definition=chartDefinition(spec.chartType);
+  if(['evaluation','explanation'].includes(definition.family)){
+    const context=spec.modelContext;
+    if(!context||!['validation','test','train'].includes(context.split)||spec.source.population!=='model_'+context.split||context.split==='train'&&spec.chartType!=='training_loss'||
+       !['regression','binary_classification','multiclass_classification'].includes(context.task)||
+       !['candidateDigest','modelDigest','reportDigest','membershipDigest'].every(k=>/^[a-f0-9]{64}$/.test(context[k]))||
+       context.split==='test'&&!context.finalAccessedAt||definition.family==='explanation'&&context.split!=='validation')throw new Error('F19_INVALID_MODEL_PROVENANCE');
+  }else if(spec.modelContext||spec.source.population.startsWith('model_'))throw new Error('F19_INVALID_MODEL_PROVENANCE');
+  if(!['bar','line','scatter','matrix','hexbin','heatmap','box','violin','lineage','range','horizontal_error','waterfall'].includes(spec.plot?.kind)||
      !['prism','publication','diverging'].includes(spec.visual?.palette)||typeof spec.privacy?.observationLevel!=='boolean')throw new Error('F18_INVALID_CHART_SPEC');
   const keys=spec.evidence.columns.map(c=>c.key);
   if(keys.length>32||new Set(keys).size!==keys.length||keys.some(k=>typeof k!=='string'||!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(k)||['id','rowId','__proto__','constructor','prototype'].includes(k))||

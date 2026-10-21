@@ -51,8 +51,18 @@ if kind == "heatmap":
     xs, ys = list(df["x"].unique()), list(df["y"].unique())
     values = df.pivot(index="y", columns="x", values="value").reindex(index=ys, columns=xs)
     sns.heatmap(values, mask=values.isna(), vmin=-1 if spec["plot"].get("correlation") else 0,
-                vmax=1, cmap="vlag" if spec["plot"].get("correlation") else "YlGnBu",
+                vmax=spec["plot"].get("scaleMax", 1), cmap="vlag" if spec["plot"].get("correlation") else "YlGnBu",
                 annot=spec["visual"]["showLabels"] and len(xs) <= 8 and len(ys) <= 12, ax=ax)
+elif kind == "horizontal_error":
+    ax.barh(df["x"], df["y"], color=palette[0])
+    ax.errorbar(df["y"], df["x"], xerr=df["sd"], fmt="none", ecolor="gray", capsize=4)
+    ax.invert_yaxis()
+    ax.axvline(0, color="gray", linestyle="--")
+elif kind == "waterfall":
+    for i, row in df.iterrows():
+        ax.bar(i, abs(row["end"]-row["start"]), bottom=min(row["start"], row["end"]),
+               color=palette[0] if row["end"] >= row["start"] else palette[1])
+    ax.set_xticks(range(len(df)), df["x"], rotation=30, ha="right")
 elif kind == "range":
     categories = list(df["x"].unique())
     for i, name in enumerate(groups):
@@ -118,6 +128,12 @@ else:
         ax.set_xticks(range(len(categories)), categories, rotation=30, ha="right")
     if len(groups) > 1:
         ax.legend()
+if spec["plot"].get("reference") == "identity":
+    values = pd.concat([df["x"], df["y"]]).dropna()
+    if len(values):
+        ax.plot([values.min(), values.max()], [values.min(), values.max()], linestyle="--", color="gray")
+elif spec["plot"].get("reference") == "zero" and kind != "horizontal_error":
+    ax.axhline(0, color="gray", linestyle="--")
 if kind != "matrix":
     ax.set_title(spec["title"])
     ax.set_xlabel(spec["plot"].get("xLabel", ""))

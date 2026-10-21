@@ -2,7 +2,7 @@
 
 Review fixes, persistence behavior, verification commands, and current limitations are documented in [Implementation notes](docs/IMPLEMENTATION_NOTES.md).
 
-PRISM workspace guides: [F17 DataSheet](docs/DS_F17_PRISM_DATASHEET.md) and [F18 Scientific Visualization Studio](docs/DS_F18_PRISM_VISUALIZATION.md).
+PRISM workspace guides: [F17 DataSheet](docs/DS_F17_PRISM_DATASHEET.md), [F18 Scientific Visualization Studio](docs/DS_F18_PRISM_VISUALIZATION.md), and [F19 Model Evaluation & Explainability](docs/DS_F19_MODEL_VISUALIZATION.md).
 
 > **Don't just study intelligence. Build it. Train it. Understand it.**
 

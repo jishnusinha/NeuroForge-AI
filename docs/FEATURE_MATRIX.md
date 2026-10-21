@@ -50,14 +50,22 @@ F15 adds N-feature softmax, classification/regression CART and bounded random fo
 
 ## DS-F16.0 PRISM Scientific Chart Foundation
 
-The first PRISM visual release adds a theme-aware scientific histogram inside F10's numeric Distribution view, using unchanged F10 counted bins. Each chart exposes Chart/Data/Python views, copyable Matplotlib/Seaborn code, summary-only CSV/JSON/script exports and a chart-scope SHA-256 fingerprint. F17 Excel-style DataSheet and F18–F20 expanded visualization remain planned, not implemented. See [F16 PRISM documentation](DS_F16_PRISM_FOUNDATION.md).
+The first PRISM visual release adds a theme-aware scientific histogram inside F10's numeric Distribution view, using unchanged F10 counted bins. Each chart exposes Chart/Data/Python views, copyable Matplotlib/Seaborn code, summary-only CSV/JSON/script exports and a chart-scope SHA-256 fingerprint. See [F16 PRISM documentation](DS_F16_PRISM_FOUNDATION.md).
 
-## DS-F17.0 PRISM DataSheet Foundation
+## DS-F17 PRISM DataSheet
 
-Read-only Excel-like DataSheet in F10 Dataset Explorer: theme-aware spreadsheet with virtualized 2,000×20 source observations, frozen row/column headers, column resizing, keyboard navigation, missing-value indicators, formula-style inspector, and stable source-ID handoff to legacy Row Explorer. Existing F10 filters control visible data. **Search, range copying, editing, undo/redo and dataset version commits remain planned F17.1–F17.3 work.** See [F17 DataSheet documentation](DS_F17_PRISM_DATASHEET.md).
+Excel-like DataSheet in F10 Dataset Explorer: virtualized 2,000×20 observations, frozen headers, column resizing, keyboard navigation, search, sorting, range copy/statistics, atomic typed editing/paste/fill, undo/redo, owner-scoped draft recovery, and explicit dataset version commits. Committed edits invalidate preparation and fitted evidence. See [F17 DataSheet documentation](DS_F17_PRISM_DATASHEET.md).
+
+## DS-F18 PRISM Scientific Visualization Studio
+
+Twenty-five EDA and fitted-pipeline views, Chart/Data/Python/JavaScript/Methods panels, exact plotted-data exports, SVG/Canvas rendering, saved local chart configurations, and linked DataSheet selections. F11 visualizations replay frozen training-fitted parameters. See [F18 documentation](DS_F18_PRISM_VISUALIZATION.md).
+
+## DS-F19 Model Evaluation and Visual Explainability
+
+Candidate-specific regression/classification diagnostics, recorded-probability ROC/PR/calibration/confidence, faithful F13 explanation visuals, and genuine logistic/softmax training traces. Shared PRISM exports and provenance preserve the explicit final-test gate. Prediction-level chart sessions remain temporary; F14 receipts do not restore them. See [F19 documentation](DS_F19_MODEL_VISUALIZATION.md). These source capabilities do not certify deployment; F20 research comparison dashboards remain future work.
 
 ## Important limits
-- Current visual labs intentionally require two numerical feature columns; only supported binary targets and their valid stratified partitions are accepted.
+- Legacy Playground/TF.js launch adapters require two numerical feature columns and compatible targets. F12 uses the full prepared matrix for regression and binary/multiclass classification.
 - Standalone PCA and optimizer landscape tools are educational computations, not automatically applied fitted transforms or real neural model telemetry.
 - A successful counterfactual search does not prove real-world causal intervention.
 - A simulated input shift does not establish real production drift, fairness compliance or a privacy/security certification.

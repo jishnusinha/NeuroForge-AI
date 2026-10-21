@@ -9,7 +9,7 @@ import {generateJavaScript} from '../../../visualization/codegen/javascriptCodeg
 import ChartInspector from './ChartInspector.jsx';
 
 const display=value=>value==null?'Unavailable':typeof value==='number'?String(Number(value.toPrecision(12))):String(value);
-const populationLabel={source:'Source',filtered_source:'Filtered View',selection:'Selection',working_copy:'Working Copy',prepared_pipeline:'Prepared Pipeline Output'};
+const populationLabel={source:'Source',filtered_source:'Filtered View',selection:'Selection',working_copy:'Working Copy',prepared_pipeline:'Prepared Pipeline Output',model_validation:'Recorded Model Validation',model_test:'Final Held-out Test (already accessed)',model_train:'Training Only (recorded iterations)'};
 function dataDownload(name,url){const a=document.createElement('a');a.download=name;a.href=url;document.body.append(a);a.click();a.remove();}
 async function rasterize(url,background){
   const image=new Image();image.src=url;await image.decode();
@@ -30,7 +30,7 @@ export default function ScientificChart({result,dataset,onLink=()=>{},onShowShee
     if(tab!=='Chart'||!host.current||spec.evidence.status!=='ok')return;
     let cancelled=false,instance,observer;
     const start=performance.now(),family=chartDefinition(spec.chartType).family;
-    const loader=family==='distribution'?import('../../../visualization/renderers/distribution.js'):
+    const loader=['evaluation','explanation'].includes(family)?import('../../../visualization/renderers/model.js'):family==='distribution'?import('../../../visualization/renderers/distribution.js'):
       family==='relationship'?import('../../../visualization/renderers/relationship.js'):
       family==='quality'?import('../../../visualization/renderers/quality.js'):import('../../../visualization/renderers/pipeline.js');
     loader.then(({echarts})=>{
@@ -67,7 +67,7 @@ export default function ScientificChart({result,dataset,onLink=()=>{},onShowShee
   const exportAllowed=!spec.privacy.observationLevel||consent;
   const changeTab=value=>{setTab(value);setError('');setMessage('');};
   const maxPage=Math.max(0,Math.ceil(spec.evidence.rows.length/100)-1),currentPage=Math.min(page,maxPage);
-  return <section ref={root} className="prism-chart-card prism-f18-chart" aria-label="F18 scientific chart">
+  return <section ref={root} className="prism-chart-card prism-f18-chart" aria-label={spec.modelContext?'F19 scientific chart':'F18 scientific chart'}>
     <header className="prism-chart-head"><div>
       <p className="prism-eyebrow">PRISM / REPRODUCIBLE VISUAL EVIDENCE</p><h5 className="prism-chart-title">{spec.title}</h5>
       <p className="prism-subtitle">Population: <strong>{populationLabel[spec.source.population]}</strong> · {spec.source.rowCount} observations · {spec.evidence.rows.length} measured plot records</p>
@@ -84,7 +84,8 @@ export default function ScientificChart({result,dataset,onLink=()=>{},onShowShee
             <button onClick={()=>{chart.current?.dispatchAction({type:'brush',areas:[]});onLink([]);}}>Clear chart selection</button></>}
           {onShowSheet&&<button onClick={onShowSheet}>Show linked DataSheet</button>}
         </div>
-        <div className="prism-f18-plot-layout"><div className="min-w-0 overflow-x-auto">{spec.evidence.status==='ok'?<div ref={host} className="prism-f18-canvas" style={spec.plot.kind==='matrix'?{minWidth:600}:undefined} role="img" aria-label={spec.title+' measured chart; equivalent exact values in Data view'} data-renderer={renderer}/>:
+        {spec.modelContext&&<p className="prism-chart-caption">Scroll horizontally on narrow screens to inspect the full chart; Data provides every exact plotted value.</p>}
+        <div className="prism-f18-plot-layout"><div className="min-w-0 overflow-x-auto" role={spec.modelContext?'region':undefined} aria-label={spec.modelContext?'Scrollable model chart canvas':undefined} tabIndex={spec.modelContext?0:undefined}>{spec.evidence.status==='ok'?<div ref={host} className="prism-f18-canvas" style={spec.plot.kind==='matrix'?{minWidth:600}:spec.modelContext?{minWidth:480}:undefined} role="img" aria-label={spec.title+' measured chart; equivalent exact values in Data view'} data-renderer={renderer}/>:
           <p role="status" className="prism-empty">No defined measured evidence for this chart and population. Adjust the variables or inspect Methods.</p>}</div><ChartInspector spec={spec}/></div>
         {benchmark&&<p className="prism-chart-caption" data-testid="f18-render-benchmark">{benchmark.renderer.toUpperCase()} ready in {benchmark.initMs} ms · {benchmark.evidenceRows} evidence records · zoom by wheel/pinch or slider; Data provides keyboard row linking</p>}
       </>}
@@ -108,6 +109,7 @@ export default function ScientificChart({result,dataset,onLink=()=>{},onShowShee
       {tab==='Methods'&&<div className="space-y-3" aria-label="F18 methods and provenance">
         <p>Method: {spec.method.name} · implementation v{spec.method.implementationVersion} · registry v{spec.registryVersion}</p>
         {spec.method.notes.map((note,i)=><p key={i} className="prism-chart-caption">{note}</p>)}
+        {spec.modelContext&&<dl className="prism-f18-provenance">{Object.entries(spec.modelContext).map(([key,value])=><div key={key}><dt>{key}</dt><dd>{Array.isArray(value)?value.map(String).join(', '):String(value??'Not accessed')}</dd></div>)}</dl>}
         <dl className="prism-f18-provenance"><dt>Source</dt><dd>{spec.source.name}</dd><dt>Dataset version</dt><dd>{spec.source.datasetVersion||'Imported source'}</dd><dt>Dataset SHA-256</dt><dd>{spec.source.datasetDigest}</dd><dt>Population SHA-256</dt><dd>{spec.source.scopeDigest}</dd>
           <dt>Pipeline SHA-256</dt><dd>{spec.source.pipelineDigest||'Not a pipeline chart'}</dd><dt>Selection provenance</dt><dd>{spec.source.selectionDigest||'No explicit selection'}</dd></dl>
         <pre className="prism-code-block" tabIndex={0}>{JSON.stringify(spec.evidence.stats,null,2)}</pre>
