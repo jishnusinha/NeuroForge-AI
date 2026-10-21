@@ -7,6 +7,7 @@ import EdaMissingnessView from './eda/EdaMissingnessView.jsx';
 import EdaQualityView from './eda/EdaQualityView.jsx';
 import EdaCorrelationView from './eda/EdaCorrelationView.jsx';
 import EdaRowExplorer from './eda/EdaRowExplorer.jsx';
+import DataSheet from './datasheet/DataSheet.jsx';
 import EdaReportPanel from './eda/EdaReportPanel.jsx';
 import DatasetInvestigation from './DatasetInvestigation.jsx';
 import AlgorithmInsights from './AlgorithmInsights.jsx';
@@ -70,7 +71,7 @@ export default function DataScienceWorkbench({ dataset, name, onCreateSubset }) 
   </div>;
 
   const active = report.columns.find(column=>column.name===selectedColumn) ?? report.columns[0];
-  const tabs = [{id:'overview',name:'Overview'}, {id:'distributions',name:'Distributions'}, {id:'relationships',name:'Relationships'}, {id:'balance',name:'Class balance'}, {id:'outliers',name:'Outliers & quality'}, {id:'algorithms',name:'Algorithms'}, {id:'correlations',name:'Correlations'}, {id:'missingness',name:'Missingness'}, {id:'quality-pro',name:'Quality Pro'}, {id:'rows',name:'Row Explorer'}, {id:'evidence',name:'Evidence & export'}, {id:'preview',name:'Row preview'}];
+  const tabs = [{id:'overview',name:'Overview'}, {id:'distributions',name:'Distributions'}, {id:'relationships',name:'Relationships'}, {id:'balance',name:'Class balance'}, {id:'outliers',name:'Outliers & quality'}, {id:'algorithms',name:'Algorithms'}, {id:'correlations',name:'Correlations'}, {id:'missingness',name:'Missingness'}, {id:'quality-pro',name:'Quality Pro'}, {id:'datasheet',name:'DataSheet'}, {id:'rows',name:'Row Explorer'}, {id:'evidence',name:'Evidence & export'}, {id:'preview',name:'Row preview'}];
   return <section role="region" aria-label="Dataset profile dashboard" className="prism-lab space-y-5 rounded-2xl border border-white/10 bg-surface-dark p-3 sm:p-5">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div className="min-w-0">
@@ -137,6 +138,8 @@ export default function DataScienceWorkbench({ dataset, name, onCreateSubset }) 
     {tab==='correlations' && <EdaCorrelationView dataset={analyzedDataset} onInspectRow={inspectRow}/>}
     {tab==='missingness' && <EdaMissingnessView dataset={analyzedDataset} onInspectRow={inspectRow}/>}
     {tab==='quality-pro' && <EdaQualityView dataset={analyzedDataset} onInspectRow={inspectRow}/>}
+    {tab==='datasheet' && <DataSheet dataset={analyzedDataset} selectedRowId={selectedRowId}
+      onSelectRow={setSelectedRowId} onInspectRow={inspectRow}/>}
     {tab==='rows' && <EdaRowExplorer dataset={analyzedDataset} selectedRowId={selectedRowId} onSelectRow={setSelectedRowId}/>}
     {tab==='evidence' && <EdaReportPanel source={dataset} filteredRows={analyzedDataset.rows}
       filters={filters} sourceName={name || 'Imported CSV'} onCreateSubset={onCreateSubset}/>}
