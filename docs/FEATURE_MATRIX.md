@@ -52,6 +52,10 @@ F15 adds N-feature softmax, classification/regression CART and bounded random fo
 
 The first PRISM visual release adds a theme-aware scientific histogram inside F10's numeric Distribution view, using unchanged F10 counted bins. Each chart exposes Chart/Data/Python views, copyable Matplotlib/Seaborn code, summary-only CSV/JSON/script exports and a chart-scope SHA-256 fingerprint. F17 Excel-style DataSheet and F18–F20 expanded visualization remain planned, not implemented. See [F16 PRISM documentation](DS_F16_PRISM_FOUNDATION.md).
 
+## DS-F17.0 PRISM DataSheet Foundation
+
+Read-only Excel-like DataSheet in F10 Dataset Explorer: theme-aware spreadsheet with virtualized 2,000×20 source observations, frozen row/column headers, column resizing, keyboard navigation, missing-value indicators, formula-style inspector, and stable source-ID handoff to legacy Row Explorer. Existing F10 filters control visible data. **Search, range copying, editing, undo/redo and dataset version commits remain planned F17.1–F17.3 work.** See [F17 DataSheet documentation](DS_F17_PRISM_DATASHEET.md).
+
 ## Important limits
 - Current visual labs intentionally require two numerical feature columns; only supported binary targets and their valid stratified partitions are accepted.
 - Standalone PCA and optimizer landscape tools are educational computations, not automatically applied fitted transforms or real neural model telemetry.
