@@ -143,11 +143,26 @@ export default function ScientificHistogram({dataset,column,binCount=8,sourceNam
     </div>
     <div className="prism-chart-body">
       {view==='chart'&&<div className="space-y-2">
-        {spec.bins.length?
-          <HistogramPlot spec={spec} zoom={zoom}/>:
-          <div role="status" className="prism-empty">No observed finite numeric values in this filter scope.</div>}
+        <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(220px,0.35fr)]">
+          {spec.bins.length?
+            <HistogramPlot spec={spec} zoom={zoom}/>:
+            <div role="status" className="prism-empty">No observed finite numeric values in this filter scope.</div>}
+          <div role="region" aria-label="Distribution values" tabIndex={0}
+            className="prism-table-scroll">
+            <table className="prism-data-table prism-compact-table">
+              <caption>Measured distribution values</caption>
+              <thead><tr><th scope="col">Group</th><th scope="col">Range</th><th scope="col">Rows</th></tr></thead>
+              <tbody>{spec.bins.map(bin=><tr key={bin.index}>
+                <th scope="row">{bin.index}</th>
+                <td>{display(bin.from)} to {display(bin.to)}</td>
+                <td>{bin.count}</td>
+              </tr>)}</tbody>
+              <tfoot><tr><th scope="row" colSpan={2}>Total</th><td>{spec.population.observedCount}</td></tr></tfoot>
+            </table>
+          </div>
+        </div>
         <p className="prism-chart-caption">
-          Hover any bar for its exact count. X-axis labels are bin numbers; view <strong>Data</strong> for exact numeric boundaries. The bar heights are exact observed counts.
+          Hover any bar for its exact count. X-axis labels are bin numbers; the adjacent table retains the measured distribution values. Open <strong>Data</strong> for the full numerical table.
         </p>
       </div>}
       {view==='data'&&<div role="region" aria-label="PRISM histogram data table" tabIndex={0} className="prism-table-scroll">

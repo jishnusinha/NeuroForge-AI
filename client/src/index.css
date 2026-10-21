@@ -365,6 +365,11 @@
 .prism-data-table thead { position: sticky; top: 0; background: rgb(var(--nf-elevated-rgb)); }
 .prism-data-table tbody tr:hover { background: rgb(var(--nf-accent-rgb) / .06); }
 .prism-data-table tfoot { background: rgb(var(--nf-accent-rgb) / .075); font-weight: 700; }
+.prism-compact-table { min-width: 0; font-size: 11px; }
+.prism-compact-table th,
+.prism-compact-table td { padding: 8px 7px; }
+.prism-compact-table td:nth-child(2) { overflow-wrap: anywhere; }
+
 .prism-code-block {
   max-height: 385px;
   overflow: auto;
