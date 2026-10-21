@@ -201,6 +201,7 @@ export default function F14RunRegistry(){
       <p className="text-xs text-text-muted">Final test: {active.finalTest.accessHistory.length?
         'Access recorded at '+active.finalTest.accessHistory[0].accessedAt+'; not used for candidate ranking.':
         'No access recorded in this saved receipt.'}</p>
+      {active.selectionEvidence&&<p className="text-xs text-text-muted">F15 model selection: {active.selectionEvidence.folds} inner folds · {active.selectionEvidence.metric} mean {metricFormat(active.selectionEvidence.selectedMean)} ± {metricFormat(active.selectionEvidence.selectedSampleSd)} · {active.selectionEvidence.trials.length} configurations. Test excluded.</p>}
       <p className="text-xs text-text-muted">F13 attached explanations: {active.explanations.length}.
         {active.explanations.map((item,i)=><span key={i} className="block">Evidence {i+1}: {item.createdAt} · permutation: {item.permutation?.status??'Not recorded'} · PDP: {item.dependence?'Recorded':'Not recorded'}.</span>)}
       </p>

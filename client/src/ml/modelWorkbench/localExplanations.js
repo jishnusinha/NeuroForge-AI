@@ -1,5 +1,6 @@
 import { validateExplanationContext } from './explainabilityContracts.js';
 import { predictWorkbenchModel } from './models.js';
+import { cartPath, traverseCart } from './cart.js';
 
 const sigmoid = value => 1/(1+Math.exp(-Math.max(-35,Math.min(35,value))));
 const close = (a,b) => Math.abs(a-b) <= 1e-8*Math.max(1,Math.abs(b));
@@ -42,6 +43,43 @@ export function explainLocalPrediction(matrix, model, rowId) {
         :'Intercept plus contributions exactly reconstruct log-odds; sigmoid maps them to class probability. Contributions are not additive probabilities.',
     };
   }
+  if(model.algorithm==='softmax'){
+    const index=model.classes.indexOf(prediction.predicted);
+    const {weights,standardizer}=model.parameters;
+    const w=weights[index];
+    const intercept=w[0];
+    const contributions=matrix.features.map((name,j)=>({
+      feature:name,contribution:w[j+1]*(row.values[j]-standardizer.mean[j])/standardizer.scale[j],
+      preparedValue:row.values[j],
+    }));
+    const total=intercept+contributions.reduce((sum,item)=>sum+item.contribution,0);
+    if(!Number.isFinite(total))throw new Error('F15_INVALID_SOFTMAX_EXPLANATION');
+    return {...base,method:'exact-class-logit',
+      scale:'logit-for-class-'+String(prediction.predicted),intercept,contributions,total,
+      reconstructed:total,
+      explanation:'Prepared-feature contributions add to one class logit. Softmax probabilities depend on every class logit; these are not additive probabilities.',
+    };
+  }
+  if(model.algorithm==='cart'){
+    const {decisions,leaf}=cartPath(model.parameters.root,row.values);
+    return {...base,method:'tree-decision-path',contributions:[],
+      decisions:decisions.map(step=>({...step,feature:matrix.features[step.featureIndex]})),
+      support:leaf.samples,
+      explanation:'An exact path through the fitted tree, using prepared numerical features. Split paths do not establish causation.',
+    };
+  }
+  if(model.algorithm==='forest'){
+    const trees=model.parameters.trees;
+    const leaves=trees.map(tree=>traverseCart(tree.root,row.values));
+    const summary=model.task==='regression'
+      ?{meanPrediction:leaves.reduce((sum,leaf)=>sum+leaf.value,0)/leaves.length}
+      :{votes:model.classes.map((name,index)=>({name,
+        count:leaves.filter(leaf=>leaf.probabilities.indexOf(Math.max(...leaf.probabilities))===index).length}))};
+    return {...base,method:'forest-tree-aggregation',contributions:[],treeCount:trees.length,
+      ...summary,
+      explanation:'Forest output aggregates fitted tree leaves. Tree votes and aggregate values describe model behavior, not causal effects.',
+    };
+  }
   if (model.algorithm==='knn') {
     const {standardizer,training,k}=model.parameters;
     const vector=row.values.map((value,i)=>(value-standardizer.mean[i])/standardizer.scale[i]);
@@ -58,5 +96,6 @@ export function explainLocalPrediction(matrix, model, rowId) {
       explanation:'Distances and class votes from the training set. Neighbor identities and raw training values are withheld; proximity is not a causal explanation.',
     };
   }
-  throw new Error('F13_UNSUPPORTED_LOCAL_METHOD');
+  return {...base,status:'unavailable',method:'unavailable',contributions:[],
+    explanation:'No faithful local explanation method is registered for this model family.'};
 }

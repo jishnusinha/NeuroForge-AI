@@ -153,7 +153,7 @@ export function transformStudioArtifact(artifact, sourceRows) {
   return rows;
 }
 
-export function executeStudioPipeline(dataset, config) {
+export function executeStudioPipeline(dataset, config, { membershipOverride = null } = {}) {
   const recipe=validateStudioRecipe(dataset,config);
   const raw=dataset.rows.map(row=>({...row}));
   const targets=raw.map(row=>row[recipe.targetColumn]);
@@ -164,12 +164,31 @@ export function executeStudioPipeline(dataset, config) {
   } else if(labels.some(missing)||labels.length<2||labels.length>12) {
     throw new Error('F11_TARGET: Select an observed categorical target with 2–12 classes.');
   }
-  const split=recipe.taskType==='regression'
-    ?createRegressionSplit(raw,{...SPLIT_PRESETS[recipe.splitPreset],seed:recipe.seed})
-    :createStratifiedSplit(raw,recipe.targetColumn,{...SPLIT_PRESETS[recipe.splitPreset],seed:recipe.seed});
-  const membership={
-    train:split.train.map(row=>row.id),validation:split.validation.map(row=>row.id),test:split.test.map(row=>row.id),
-  };
+  // F15 CV supplies exact inner-fold membership *only* for its isolated
+  // original-training subset. No default splitter may run on fold data.
+  let membership,protocol;
+  if(membershipOverride!==null) {
+    const partitions=['train','validation','test'];
+    if(typeof membershipOverride!=='object'||!partitions.every(name=>Array.isArray(membershipOverride[name])) ||
+       membershipOverride.train.length<4||membershipOverride.validation.length<1||
+       membershipOverride.test.length!==0)
+      throw new Error('F15_INVALID_INNER_FOLD');
+    const ids=partitions.flatMap(name=>membershipOverride[name]);
+    if(ids.length!==raw.length||new Set(ids).size!==ids.length ||
+       ids.some(id=>!raw.some(row=>row.id===id)))
+      throw new Error('F15_FOLD_MEMBERSHIP_MISMATCH');
+    membership=Object.fromEntries(partitions.map(name=>[name,[...membershipOverride[name]]]));
+    protocol={schemaVersion:4,strategy:'f15-inner-fold',seed:recipe.seed,
+      counts:{train:membership.train.length,validation:membership.validation.length,
+        test:0,total:raw.length},testAccessHistory:[]};
+  }else{
+    const split=recipe.taskType==='regression'
+      ?createRegressionSplit(raw,{...SPLIT_PRESETS[recipe.splitPreset],seed:recipe.seed})
+      :createStratifiedSplit(raw,recipe.targetColumn,{...SPLIT_PRESETS[recipe.splitPreset],seed:recipe.seed});
+    membership={train:split.train.map(row=>row.id),
+      validation:split.validation.map(row=>row.id),test:split.test.map(row=>row.id)};
+    protocol=split.protocol;
+  }
   const trainIds=new Set(membership.train);
   const partitions=new Map(Object.entries(membership).flatMap(([partition,ids])=>ids.map(id=>[id,partition])));
   let working=raw;
@@ -209,7 +228,7 @@ export function executeStudioPipeline(dataset, config) {
   };
   return {
     recipe, artifact, outputFeatures:featureNames, rows:working, raw,
-    counts:split.protocol.counts,membership,protocol:split.protocol,stageEvidence,
+    counts:protocol.counts,membership,protocol,stageEvidence,
     previews:working.slice(0,8).map((row,index)=>({
       id:row.id,partition:partitions.get(row.id),
       original:Object.fromEntries(recipe.featureColumns.map(name=>[name,raw[index][name]])),
