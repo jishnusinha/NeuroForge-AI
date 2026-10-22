@@ -86,6 +86,8 @@ Navigate to `http://localhost:5173` in your browser.
 
 ## Verification
 
+PRISM now includes a shared product design system, guided data/model/research journeys and chart reproduction ZIP bundles. See the [F21 implementation, visual review workflow and curated walkthroughs](docs/DS_F21_PRODUCT_EXPERIENCE.md). Run `npm run audit:f21` after building to capture all route/theme/viewport combinations; use `npm run review:f21` with a preserved baseline for before/after review.
+
 Run `npm run check` for numerical/storage tests, strict client lint, real MongoDB integration, and desktop/mobile Chromium smoke tests against the production build. Run `npm run test:e2e:memory` to verify the same browser journeys in temporary-memory mode, followed by `npm run baseline:summary` to collect the measured results.
 
 Browser tests require `npx playwright install chromium`. Database tests use an installed `mongod`, `NEUROFORGE_MONGOD_BINARY`, or `NEUROFORGE_TEST_MONGODB_URI`. Every run uses isolated test data. See [Phase 0 contracts](docs/PHASE_0_CONTRACTS.md) for limits, recovery expectations, commands, and artifact locations.

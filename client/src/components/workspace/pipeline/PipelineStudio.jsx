@@ -178,7 +178,7 @@ export default function PipelineStudio({ dataset, onLaunch }) {
       await onLaunch(result.plan,workspace);
     }catch(reason){setError(reason.message);}
   };
-  return <details className="rounded-xl border border-plasma-cyan/25 bg-surface-dark p-3 sm:p-4">
+  return <details id="prism-preprocessing" className="rounded-xl border border-plasma-cyan/25 bg-surface-dark p-3 sm:p-4">
     <summary className="cursor-pointer text-lg font-semibold text-text-primary">Advanced Pipeline Studio (F11) <span className="block text-xs font-normal text-text-muted">Build real, ordered, reproducible transformations; open the editor</span></summary>
     <div role="region" aria-label="F11 Pipeline Studio" className="mt-4 space-y-4">
       <p className="text-sm text-text-muted">Raw imported rows remain unchanged. Split membership is established before fitting. F12 accepts all prepared features for classification or regression; legacy Playground and Studio still require two numeric inputs with 0/1 labels.</p>

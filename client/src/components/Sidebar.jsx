@@ -25,7 +25,7 @@ export default function Sidebar() {
     { name: 'Experiment Arena', path: '/app/arena', icon: Scale, badge: 'Flagship' },
     { name: 'Academy', path: '/app/learn', icon: BookOpen },
     { name: 'Dataset Explorer', path: '/app/datasets', icon: Database },
-    { name: 'My Experiments', path: '/app/experiments', icon: FolderGit2 },
+    { name: 'My Experiments', path: '/app/experiments', icon: FolderGit2, description:'Research Intelligence' },
     { name: 'Showcase', path: '/showcase', icon: Sparkles, mobileOnly: true },
   ];
 
@@ -91,7 +91,7 @@ export default function Sidebar() {
               <span className="lg:hidden text-[10px] font-medium leading-tight text-center whitespace-nowrap">{item.name === 'Experiment Arena' ? 'Arena' : item.name === 'ML Playground' ? 'Playground' : item.name === 'Mission Control' ? 'Home' : item.name === 'Dataset Explorer' ? 'Datasets' : item.name === 'My Experiments' ? 'Runs' : item.name === 'Neural Studio' ? 'Studio' : item.name}</span>
               {sidebarExpanded && (
                 <div className="hidden lg:flex items-center justify-between flex-1 overflow-hidden">
-                  <span className="truncate">{item.name}</span>
+                  <span className="min-w-0"><span className="block truncate">{item.name}</span>{item.description&&<span className="block text-[10px] font-normal truncate">{item.description}</span>}</span>
                   {item.badge && (
                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-neural-violet border border-neural-violet/20 uppercase font-mono">
                       {item.badge}

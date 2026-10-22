@@ -1,3 +1,9 @@
+@import './design/tokens/semantic.css';
+@import './design/tokens/typography.css';
+@import './design/tokens/spacing.css';
+@import './design/tokens/surfaces.css';
+@import './design/tokens/motion.css';
+@import './design/workspaces.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

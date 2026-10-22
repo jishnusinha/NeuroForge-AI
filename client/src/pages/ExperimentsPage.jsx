@@ -36,7 +36,7 @@ export default function ExperimentsPage() {
 
   return (
     <div className="p-6 sm:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-200">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
+      <div className="prism-ui-page-head flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
         <div>
           <span className="text-xs font-mono uppercase tracking-wider text-neural-violet">Local-first research archive</span>
           <h2 className="text-2xl font-display font-bold text-white mt-1">My Experiments & Run Archive</h2>
@@ -55,11 +55,11 @@ export default function ExperimentsPage() {
       </div>
 
       <F14RunRegistry />
-      {!loading && <ResearchNotebook experiments={experiments} />}
+      <ResearchNotebook experiments={experiments} loadingRuns={loading}/>
 
       {loading ? (
         <div className="py-12 flex justify-center text-xs font-mono text-plasma-cyan">
-          Loading persistent runs from database...
+          Loading recorded experiments…
         </div>
       ) : experiments.length === 0 ? (
         <div className="p-12 text-center rounded-2xl bg-obsidian border border-white/10 space-y-3">

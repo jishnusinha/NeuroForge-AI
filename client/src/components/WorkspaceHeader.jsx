@@ -20,6 +20,7 @@ import { createExperiment, createShare } from '../services/api';
 import ViewModeToggle from './workspace/ViewModeToggle';
 import ThemePicker from './ThemePicker.jsx';
 import DraftRecoveryModal from './workspace/DraftRecoveryModal';
+import {workspaceInfo} from '../design/uiContracts.js';
 
 export default function WorkspaceHeader() {
   const cloudSyncState=useLabStore(state=>state.cloudSyncState);
@@ -78,7 +79,7 @@ export default function WorkspaceHeader() {
     }
   };
 
-  const { section, title } = getRouteInfo(location.pathname);
+  const { section, title } = location.pathname.startsWith('/app/experiments/')||location.pathname.startsWith('/report/')?workspaceInfo(location.pathname):getRouteInfo(location.pathname);
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -146,20 +147,15 @@ export default function WorkspaceHeader() {
   };
 
   return (
-    <header className="min-h-16 py-2 px-3 sm:px-6 bg-deep-space/90 backdrop-blur-md border-b border-white/10 flex flex-wrap gap-2  items-center justify-between sticky top-0 z-30">
+    <header data-lab={editable} className="prism-workspace-header min-h-16 py-2 px-3 sm:px-6 bg-deep-space/90 backdrop-blur-md border-b border-white/10 flex flex-wrap gap-2  items-center justify-between sticky top-0 z-30">
       {/* Breadcrumbs and Context */}
       <div className="flex min-w-0 flex-wrap items-center gap-3">
-        <div className="hidden xl:flex items-center gap-2 text-xs font-mono text-text-muted">
-          <span>NeuroForge</span>
-          <span>/</span>
-          <span className="text-plasma-cyan font-medium">{section}</span>
-          <span>/</span>
-        </div>
+        <nav className="prism-breadcrumbs" aria-label="Breadcrumb"><Link to="/app">NeuroForge</Link><span aria-hidden="true">/</span><span>{section}</span></nav>
         <h1 className="text-base font-semibold text-white tracking-tight flex items-center gap-3">
           {title}
         </h1>
         {location.pathname.startsWith('/app/') && (
-          <div className="flex flex-wrap items-center gap-2 pl-3 border-l border-white/10">
+          <div className="prism-header-session flex flex-wrap items-center gap-2 pl-3 border-l border-white/10">
             {editable && <input aria-label="Experiment name" value={currentExperiment.name} onChange={e => setExperimentName(e.target.value)} className="text-xs bg-transparent text-text-muted max-w-[180px]" />}
             {getStatusBadge(currentExperiment.status)}
             {draftStorageState === 'saved_local' && (

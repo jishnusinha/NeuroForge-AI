@@ -1,4 +1,5 @@
 import ChallengeHub from '../components/workspace/ChallengeHub.jsx';
+import ResearchPageHeader from '../design/patterns/ResearchPageHeader.jsx';
 import { summarizeLearningTracks, readAcademyProgress, writeAcademyProgress } from '../ml/learningPaths.js';
 import { useLabStore } from '../store/useLabStore.js';
 import { isFeatureEnabled } from '../services/productionConfig.js';
@@ -101,13 +102,7 @@ export default function AcademyPage() {
 
   return (
     <div className="p-6 sm:p-8 max-w-5xl mx-auto space-y-6 animate-in fade-in duration-200">
-      <div className="border-b border-white/10 pb-5">
-        <span className="text-xs font-mono uppercase tracking-wider text-quantum-mint">Predict-Before-Reveal Pedagogy</span>
-        <h2 className="text-2xl font-display font-bold text-white mt-1">NeuroForge Academy</h2>
-        <p className="text-xs text-text-muted mt-0.5">
-          Formulate a hypothesis before revealing the underlying mathematical proof, then jump directly into working lab experiments.
-        </p>
-      </div>
+      <ResearchPageHeader eyebrow="Learning / Predict before reveal" title="NeuroForge Academy" description="Form a hypothesis, reveal the mathematical explanation, and connect it to a working experiment. Checkpoints reflect your recorded answers."/>
 
       <div className="space-y-6">
         <p className="text-sm text-quantum-mint">Checkpoints completed: {lessons.filter(lesson => progress[lesson.id]===true).length} / {lessons.length}</p>

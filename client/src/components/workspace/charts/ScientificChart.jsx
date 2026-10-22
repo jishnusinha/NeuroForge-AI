@@ -7,6 +7,7 @@ import {chartCsv,portableChart,sourceCsv,sourceJson,downloadText} from '../../..
 import {generatePython} from '../../../visualization/codegen/pythonCodegen.js';
 import {generateJavaScript} from '../../../visualization/codegen/javascriptCodegen.js';
 import ChartInspector from './ChartInspector.jsx';
+import {PrismTabs} from '../../../design/components/Prism.jsx';
 
 const display=value=>value==null?'Unavailable':typeof value==='number'?String(Number(value.toPrecision(12))):String(value);
 const populationLabel={source:'Source',filtered_source:'Filtered View',selection:'Selection',working_copy:'Working Copy',prepared_pipeline:'Prepared Pipeline Output',model_validation:'Recorded Model Validation',model_test:'Final Held-out Test (already accessed)',model_train:'Training Only (recorded iterations)'};
@@ -72,9 +73,7 @@ export default function ScientificChart({result,dataset,onLink=()=>{},onShowShee
       <p className="prism-eyebrow">PRISM / REPRODUCIBLE VISUAL EVIDENCE</p><h5 className="prism-chart-title">{spec.title}</h5>
       <p className="prism-subtitle">Population: <strong>{populationLabel[spec.source.population]||spec.source.name}</strong> · {spec.source.rowCount} {spec.source.unit||'observations'} · {spec.evidence.rows.length} measured plot records</p>
     </div><button className="prism-action" onClick={()=>action(async()=>{if(document.fullscreenElement)await document.exitFullscreen();else await root.current.requestFullscreen();})}>Fullscreen chart</button></header>
-    <div className="prism-chart-toolbar"><div className="prism-chart-tabs" role="group" aria-label="F18 chart views">
-      {['Chart','Data','Python','JavaScript','Methods'].map(value=><button key={value} className={'prism-chart-tab '+(tab===value?'prism-chart-tab-active':'')} aria-pressed={tab===value} onClick={()=>changeTab(value)}>{value}</button>)}
-    </div></div>
+    <div className="prism-chart-toolbar"><PrismTabs buttons label="F18 chart views" value={tab} onChange={changeTab} items={['Chart','Data','Python','JavaScript','Methods'].map(value=>({value}))}/></div>
     <div className="prism-chart-body">
       {spec.evidence.warnings.map((warning,i)=><p className="prism-chart-caption" key={i} role="note">{warning}</p>)}
       {tab==='Chart'&&<>
@@ -117,7 +116,8 @@ export default function ScientificChart({result,dataset,onLink=()=>{},onShowShee
         <p className="prism-chart-caption">{spec.researchContext?'Research exports reproduce recorded aggregate plot data only. Saved receipts do not restore source observations, fitted preprocessing, models or training environments.':'Analysis reproduction requires explicitly exporting original observations and implementing these documented definitions. The supplied scripts only reproduce plotted evidence. No raw row IDs are included in portable exports.'}</p>
       </div>}
     </div>
-    <footer className="prism-chart-footer"><div className="prism-sheet-tools">
+    <footer className="prism-chart-footer"><p className="prism-export-guide">Reproduction package: keep the chart JSON, exact plotted CSV and generated code together. The bundle includes these files and method guidance. Observation-level evidence requires the consent below.</p><div className="prism-sheet-tools">
+      <button disabled={!exportAllowed} onClick={()=>action(async()=>{const {downloadReproductionBundle}=await import('../../../visualization/chartBundle.js');downloadReproductionBundle(spec,{consent});setMessage('Reproduction bundle exported');})}>Download reproduction bundle (.zip)</button>
       <button onClick={()=>action(()=>{downloadText('neuroforge-chart.json',JSON.stringify(portableChart(spec,{consent}),null,2),'application/json');setMessage(exportAllowed?'Exact chart evidence exported':'Metadata exported; observation-level evidence withheld');})}>Download chart JSON</button>
       <button disabled={!exportAllowed} onClick={()=>action(()=>downloadText('neuroforge-chart-data.csv',chartCsv(spec,{consent}),'text/csv'))}>Download plotted CSV</button>
       <button onClick={()=>downloadText('neuroforge-chart.py',python,'text/x-python')}>Download .py</button>

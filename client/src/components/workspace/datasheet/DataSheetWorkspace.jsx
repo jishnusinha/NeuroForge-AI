@@ -103,6 +103,7 @@ export default function DataSheetWorkspace({ dataset, filters, name, selectedRow
   }, [editing, changes.length, saved, current]);
 
   return <div className="space-y-3" aria-label="DataSheet workspace">
+    <div className="prism-scope-bar" aria-label="DataSheet context"><strong>{changes.length?'Working copy':'Original source view'}</strong><span>{view.rows.length} visible / {dataset.rows.length} source rows</span><span>{cells.length} selected rows</span><span>{changes.length} changed cells</span><span>{saved===current?'Draft saved in this browser':changes.length?'Draft changes need saving':'Source preserved'}</span></div>
     <div className="prism-sheet-tools">
       <label>Search values or columns<input aria-label="Search DataSheet" value={search} onChange={e => setSearch(e.target.value)} /></label>
       <button onClick={() => { setEditing(true); setStatus('Working copy · source preserved'); }} disabled={editing}>Create working copy</button>

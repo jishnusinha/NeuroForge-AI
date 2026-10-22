@@ -1,6 +1,7 @@
 import { syncOutbox } from '../services/syncManager.js';
 import { isFeatureEnabled } from '../services/productionConfig.js';
-import React, { useEffect, useState, lazy, Suspense } from 'react';
+import React, { useEffect, useRef,useState, lazy, Suspense } from 'react';
+import {useDialogFocus} from '../design/useDialogFocus.js';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import WorkspaceHeader from './WorkspaceHeader';
@@ -11,6 +12,7 @@ const ActivityDrawer = lazy(() => import('./workspace/ActivityDrawer'));
 import { useLabStore } from '../store/useLabStore';
 
 import { draftManager } from '../services/draftManager';
+import {isEditingTarget,workspaceInfo} from '../design/uiContracts.js';
 
 let recoveryChecked = false;
 export default function AppShell() {
@@ -20,6 +22,7 @@ export default function AppShell() {
   const [recovery, setRecovery] = useState(undefined);
   const [checked,setChecked]=useState(recoveryChecked);
   const isLab=['/app/playground','/app/studio'].includes(location.pathname);
+  const recoveryRef=useRef(null);useDialogFocus(recoveryRef,Boolean(isLab&&recovery));
   const loadRun = useLabStore(state => state.loadRun);
   const {
     sidebarExpanded,
@@ -45,6 +48,7 @@ export default function AppShell() {
   useEffect(() => {
     if (!isFeatureEnabled('workspace_system')) return;
     const handleKeyDown = (e) => {
+      if(e.defaultPrevented||e.isComposing||isEditingTarget(e.target)||e.target?.closest?.('[role="dialog"]'))return;
       if (e.altKey && (e.key === 'f' || e.key === 'F')) {
         e.preventDefault();
         toggleFocusMode();
@@ -82,6 +86,7 @@ export default function AppShell() {
   }, [setDraftStorageState, setDraftConflict, showToast, isLab, location.pathname]);
 
 
+  useEffect(()=>{document.title=workspaceInfo(location.pathname).title+' · NeuroForge PRISM';document.getElementById('main-content')?.focus({preventScroll:true});},[location.pathname]);
   const restore = async () => {
     const draft = recovery.draft;
     loadRun({ ...draft.configuration, workspace: draft.workspace, _draftId: draft.id, _draftRevision: draft.revision });
@@ -90,7 +95,7 @@ export default function AppShell() {
     if (recovery.wasInterrupted) showToast('Draft restored. Previous training was interrupted; start a new run.', 'info');
   };
   if (isLab && (recovery === undefined || !checked)) return <p role="status" className="p-8">Checking saved drafts?</p>;
-  if (isLab && recovery) return <div role="dialog" aria-modal="true" aria-label="Recover draft" className="p-8 bg-deep-space min-h-screen text-white space-y-4"><h2>Recover your last draft</h2><p>{recovery.legacyIncomplete ? 'The older draft stored settings but omitted dataset rows. Restoring creates a copy with those settings and newly generated default data; the original record is retained.' : recovery.wasInterrupted ? 'Training was interrupted. Configuration is available; completed metrics will not be invented.' : 'A saved draft is available on this device.'}</p><button autoFocus className="p-3 bg-cyan-800 rounded" onClick={() => restore().catch(error => showToast(error.message,'error'))}>Restore draft</button><button className="p-3" onClick={() => draftManager.dismissRecovery().then(() => setRecovery(null)).catch(error => showToast(error.message,'error'))}>Start fresh</button></div>;
+  if (isLab && recovery) return <div ref={recoveryRef} role="dialog" aria-modal="true" aria-label="Recover draft" className="prism-workspace p-8 bg-deep-space min-h-screen text-white space-y-4"><h2>Recover your last draft</h2><p>{recovery.legacyIncomplete ? 'The older draft stored settings but omitted dataset rows. Restoring creates a copy with those settings and newly generated default data; the original record is retained.' : recovery.wasInterrupted ? 'Training was interrupted. Configuration is available; completed metrics will not be invented.' : 'A saved draft is available on this device.'}</p><button autoFocus className="p-3 bg-cyan-800 rounded" onClick={() => restore().catch(error => showToast(error.message,'error'))}>Restore draft</button><button className="p-3" onClick={() => draftManager.dismissRecovery().then(() => setRecovery(null)).catch(error => showToast(error.message,'error'))}>Start fresh</button></div>;
 
   // Landing page has its own standalone public layout
   if (isLandingPage) {
@@ -105,7 +110,7 @@ export default function AppShell() {
   }
 
   return (
-    <div className="min-h-screen bg-deep-space text-text-primary flex flex-col font-sans">
+    <div className="prism-workspace min-h-screen bg-deep-space text-text-primary flex flex-col font-sans">
       <button
         type="button"
         onClick={() => document.getElementById('main-content')?.focus()}
@@ -135,7 +140,7 @@ export default function AppShell() {
 
         {/* Workspace Canvas / Viewport */}
         <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col overflow-x-hidden bg-deep-space">
-          <Outlet key={location.key} />
+          <Outlet key={location.pathname} />
         </main>
       </div>
     </div>

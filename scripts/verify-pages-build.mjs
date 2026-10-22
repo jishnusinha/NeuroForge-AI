@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import { readFile, access } from 'node:fs/promises';
+import {resolve,sep} from 'node:path';
+import {pathToFileURL} from 'node:url';
 
-const dist = new URL('../client/dist/', import.meta.url);
+const dist = process.argv[2]?pathToFileURL(resolve(process.argv[2])+sep):new URL('../client/dist/', import.meta.url);
 const html = await readFile(new URL('index.html', dist), 'utf8');
 const prefix = '/NeuroForge-AI/';
 const refs = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map(match => match[1]);

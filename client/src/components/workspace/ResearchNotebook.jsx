@@ -6,7 +6,7 @@ import { buildRunComparison, notebookRunId, NOTEBOOK_METRICS } from '../../ml/re
 const NOTEBOOK_ID='research-notebook-v1';
 const metricString = value => Number.isFinite(value)?Number(value.toFixed(4)).toLocaleString():'Not recorded';
 
-export default function ResearchNotebook({ experiments = [] }) {
+export default function ResearchNotebook({ experiments = [],loadingRuns=false }) {
   const [title,setTitle] = useState('Experiment Research Notes');
   const [observations,setObservations] = useState('');
   const [limitations,setLimitations] = useState('');
@@ -84,7 +84,7 @@ export default function ResearchNotebook({ experiments = [] }) {
     </label>
     <fieldset className="space-y-2 rounded-xl border border-white/10 bg-obsidian p-3">
       <legend className="px-2 text-xs font-semibold text-white">Include saved runs ({included.length})</legend>
-      {experiments.length===0?<p className="text-sm text-text-muted">No saved runs yet. Train and save an experiment in Playground or Studio to link it here.</p>:
+      {loadingRuns?<p role="status" className="text-sm text-text-muted">Loading recorded runs for the notebook…</p>:experiments.length===0?<p className="text-sm text-text-muted">No saved runs yet. Train and save an experiment in Playground or Studio to link it here.</p>:
         <div className="grid max-h-36 gap-2 overflow-y-auto sm:grid-cols-2">
           {experiments.slice(0,60).map(run=>{
             const id=notebookRunId(run);

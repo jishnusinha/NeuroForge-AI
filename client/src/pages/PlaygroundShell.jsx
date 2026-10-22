@@ -1,4 +1,5 @@
 import ErrorExplorer from '../components/workspace/ErrorExplorer.jsx';
+import LabContext from '../design/patterns/LabContext.jsx';
 import WhatIfExplorer from '../components/workspace/WhatIfExplorer.jsx';
 import ReliabilityLab from '../components/workspace/ReliabilityLab.jsx';
 import { isFeatureEnabled, validateExecutionBudget } from '../services/productionConfig.js';
@@ -318,8 +319,9 @@ export default function PlaygroundShell() {
 
   return (
     <div className="lab-workspace min-w-0 flex-1 flex flex-col min-h-[calc(100vh-64px)]">
+      <LabContext dataset={selectedPreset}/>
       {/* Upper 3-Panel Grid */}
-      <div className="flex min-w-0 min-h-[620px] overflow-hidden">
+      <div className="prism-lab-grid flex min-w-0 min-h-[620px] overflow-hidden">
 
         {/* Left: Dataset Setup Panel */}
         <aside className="w-[260px] bg-obsidian border-r border-white/10 flex flex-col p-4 overflow-y-auto space-y-4 flex-shrink-0">

@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import {useSearchParams} from 'react-router-dom';
 import { deleteF14Run, listF14Runs, saveF14Run } from '../../../services/modelRegistryRepository.js';
 import { reviseRunMetadata } from '../../../ml/modelRegistry/runLifecycle.js';
 import { compareRunReceipts, REGISTRY_METRICS } from '../../../ml/modelRegistry/comparability.js';
@@ -19,6 +20,7 @@ function exportText(text,filename,mime){
 }
 
 export default function F14RunRegistry(){
+  const [params]=useSearchParams(),requestedRun=params.get('run');
   const [runs,setRuns]=useState([]);
   const [loading,setLoading]=useState(true);
   const [query,setQuery]=useState('');
@@ -54,7 +56,7 @@ export default function F14RunRegistry(){
     listF14Runs().then(items=>{
       if(!active)return;
       setRuns(items);
-      setActiveId(items[0]?.runId??'');
+      setActiveId(items.find(item=>item.runId===requestedRun)?.runId??items[0]?.runId??'');
       setLoading(false);
     }).catch(reason=>{
       if(!active)return;
@@ -62,7 +64,7 @@ export default function F14RunRegistry(){
       setLoading(false);
     });
     return ()=>{active=false;};
-  },[]);
+  },[requestedRun]);
   const active=runs.find(item=>item.runId===activeId);
   useEffect(()=>{const refresh=()=>{void load();};window.addEventListener('focus',refresh);window.addEventListener('storage',refresh);window.addEventListener('f14-archive-change',refresh);const channel=typeof BroadcastChannel==='function'?new BroadcastChannel('neuroforge-f14'):null;if(channel)channel.onmessage=refresh;return ()=>{window.removeEventListener('focus',refresh);window.removeEventListener('storage',refresh);window.removeEventListener('f14-archive-change',refresh);channel?.close();};},[]);
   const visible=useMemo(()=>runs.filter(run=>
@@ -164,8 +166,8 @@ export default function F14RunRegistry(){
         </select>
       </label>
     </div>
-    {!loading && runs.length===0&&<p className="rounded-xl border border-white/10 p-4 text-sm text-text-muted">
-      No saved F14 research runs. Train a model in Dataset Explorer → F11 Pipeline Studio → F12 Workbench, then choose Save F14 research run.
+    {runs.length===0&&<p className="min-h-32 rounded-xl border border-white/10 p-4 text-sm text-text-muted">
+      {loading?'Loading saved research evidence and provenance…':'No saved F14 research runs. Train a model in Dataset Explorer → F11 Pipeline Studio → F12 Workbench, then choose Save F14 research run.'}
     </p>}
     <div role="region" aria-label="F14 saved run list" tabIndex={0} className="max-h-72 space-y-2 overflow-auto">
       {visible.map(run=><div key={run.runId} className={'flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3 '+(activeId===run.runId?'border-plasma-cyan/40 bg-plasma-cyan/5':'border-white/10 bg-obsidian')}>

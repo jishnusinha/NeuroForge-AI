@@ -15,12 +15,14 @@ import {
 } from 'lucide-react';
 import { useLabStore } from '../store/useLabStore';
 import { generateXOR, generateGaussianBlobs } from '../ml/datasets';
+import {isEditingTarget} from '../design/uiContracts.js';
 
 export default function CommandPalette() {
   const { commandPaletteOpen, setCommandPaletteOpen } = useLabStore();
   useEffect(() => {
     const handleKeyDown = (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        if(event.isComposing||(!commandPaletteOpen&&(isEditingTarget(event.target)||event.target?.closest?.('[role="dialog"]'))))return;
         event.preventDefault();
         setCommandPaletteOpen(!commandPaletteOpen);
       }
@@ -42,6 +44,8 @@ function CommandDialog() {
   const navigate = useNavigate();
 
   const commands = [
+    {category:'Research',id:'nav-research',title:'Research Intelligence',desc:'Compare saved validation evidence, archived cross-validation, provenance and research reports',icon:Scale,action:()=>navigate('/app/experiments?view=research')},
+    {category:'Data',id:'nav-model-workbench',title:'Model Workbench',desc:'Prepare a dataset, fit preprocessing and evaluate models using protected data splits',icon:Database,action:()=>navigate('/app/datasets?stage=modeling')},
     {
       category: 'Workspaces',
       id: 'ws-playground',

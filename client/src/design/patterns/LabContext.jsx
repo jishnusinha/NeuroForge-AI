@@ -1,0 +1,3 @@
+import {useLabStore} from '../../store/useLabStore.js';
+import {draftLabel} from '../uiContracts.js';
+export default function LabContext({dataset}){const status=useLabStore(s=>s.currentExperiment.status),draft=useLabStore(s=>s.draftStorageState);return <section className="prism-scope-bar m-3" aria-label="Experiment context"><strong>{dataset}</strong><span>{status}</span><span>{draftLabel(draft)}</span><details><summary>Investigation guidance</summary><p className="max-w-xl py-2">Configure the data and model, train explicitly, then inspect recorded evidence. Editing inputs marks previous fitted results as stale. Save a draft before leaving if storage has not confirmed a local save.</p></details></section>;}

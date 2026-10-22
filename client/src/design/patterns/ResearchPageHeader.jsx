@@ -1,0 +1,1 @@
+export default function ResearchPageHeader({eyebrow,title,description,actions}){return <header className="prism-ui-page-head"><div>{eyebrow&&<p className="prism-ui-eyebrow">{eyebrow}</p>}<h2>{title}</h2>{description&&<p className="prism-ui-description">{description}</p>}</div>{actions&&<div className="prism-ui-page-actions">{actions}</div>}</header>;}

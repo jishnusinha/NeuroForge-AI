@@ -1,0 +1,3 @@
+:root { --prism-space-1:.25rem; --prism-space-2:.5rem; --prism-space-3:.75rem; --prism-space-4:1rem; --prism-space-6:1.5rem; --prism-space-8:2rem; --prism-radius:.85rem; --prism-panel-padding:1.5rem; }
+[data-density=compact] { --prism-panel-padding:.85rem; --prism-cell-padding:.5rem .75rem; }
+[data-density=comfortable] { --prism-cell-padding:.8rem 1rem; }

@@ -34,5 +34,13 @@
 
 **Do not report the AWS deployment as completed** based only on this checklist. A real AWS environment, secrets, hosting and operational verification require separate authorization and evidence.
 
+## F21 product experience gate
+
+- Run the seven F21 browser suites in both storage modes alongside existing scientific regression suites.
+- Run `npm run audit:f21`; inspect all themes and widths, then generate `npm run review:f21` using the preserved pre-change baseline. Retain the reviewed manifest with the images; do not automatically approve changed pixels.
+- Check normal text contrast ≥4.5:1 and applicable focus/control boundaries ≥3:1 separately from screenshots. Complete manual screen-reader, physical zoom and touch checks before claiming accessibility compliance.
+- Inspect initial-route JavaScript against the 361,337-byte F21 budget; confirm chart families and reproduction bundles stay lazy. Record the actual performance profile and representative interactions, not a field percentile inferred from local tests.
+- Follow all three [F21 research walkthroughs](DS_F21_PRODUCT_EXPERIENCE.md) on the published Pages revision. Record deployment commit, CI run and any remaining limitations.
+
 ## Deferred product roadmap
 A first slice for an epic is not the entire epic: further work includes arbitrary-dimensional/categorical preprocessing, multiclass and clustering algorithms, deeper neural CNN/attention/gradient visualizations, rich research notebook organization, full accessibility and performance audits, and production cloud identity/synchronization. Report these gaps explicitly rather than claiming feature completeness.

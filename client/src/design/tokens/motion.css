@@ -1,0 +1,3 @@
+:root {--prism-motion-fast:120ms;--prism-motion-standard:180ms;}
+.prism-ui-button {transition:background-color var(--prism-motion-fast),border-color var(--prism-motion-fast);}
+@media(prefers-reduced-motion:reduce){:root{--prism-motion-fast:0ms;--prism-motion-standard:0ms;}html{scroll-behavior:auto!important}.prism-workspace *,.prism-public *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}}

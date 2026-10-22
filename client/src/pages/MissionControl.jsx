@@ -1,6 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { lazy,Suspense,useEffect, useState } from 'react';
+import ResearchPageHeader from '../design/patterns/ResearchPageHeader.jsx';
+import ResearchJourneys from '../design/patterns/ResearchJourneys.jsx';
+import {PrismCard,PrismStatus} from '../design/components/Prism.jsx';
+import {listF14Runs} from '../services/modelRegistryRepository.js';
+const DesignGallery=lazy(()=>import('../design/components/DesignGallery.jsx'));
 import { fetchExperiments } from '../services/api';
-import { Link } from 'react-router-dom';
+import { Link,useLocation } from 'react-router-dom';
 import { 
   Sliders, 
   Network, 
@@ -13,16 +18,19 @@ import {
 import { useLabStore } from '../store/useLabStore';
 
 export default function MissionControl() {
+  const location=useLocation();
   const { setCommandPaletteOpen } = useLabStore();
 
   const stats = [
-    { label: 'Available Algorithms', value: '5 Real Models', change: 'Classical + Deep Learning', color: 'text-plasma-cyan' },
+    { label: 'Scientific Workflows', value: 'Data · Models · Research', change: 'Explore, evaluate and compare', color: 'text-plasma-cyan' },
     { label: 'Standard Datasets', value: '6 Presets', change: 'Moons, XOR, Spiral, Blobs...', color: 'text-neural-violet' },
-    { label: 'Evaluation Protocol', value: 'Train / Test Split', change: 'Generalization validation', color: 'text-quantum-mint' },
-    { label: 'Engine Runtime', value: 'TensorFlow.js', change: 'Browser GPU/WebGL Accelerated', color: 'text-signal-amber' },
+    { label: 'Evaluation Protocol', value: 'Protected Splits', change: 'Training, validation and final test stay distinct', color: 'text-quantum-mint' },
+    { label: 'Engine Runtime', value: 'Browser computation', change: 'CPU / WebGL where available', color: 'text-signal-amber' },
   ];
 
   const [recentExperiments,setRecentExperiments] = useState([]);
+  const [localRuns,setLocalRuns]=useState([]),[localError,setLocalError]=useState('');
+  useEffect(()=>{let alive=true;const load=()=>listF14Runs().then(runs=>{if(alive){setLocalRuns(runs.slice(0,3));setLocalError('');}}).catch(()=>{if(alive){setLocalRuns([]);setLocalError('Local research archive is unavailable. Open My Experiments to inspect storage recovery.');}});void load();window.addEventListener('focus',load);window.addEventListener('f14-archive-change',load);return ()=>{alive=false;window.removeEventListener('focus',load);window.removeEventListener('f14-archive-change',load);};},[]);
   useEffect(() => {
     let alive = true;
     fetchExperiments().then(runs => { if (alive) setRecentExperiments(runs.slice(0,3).map(run => ({
@@ -35,6 +43,9 @@ export default function MissionControl() {
 
   return (
     <div className="p-6 sm:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-200">
+      <ResearchPageHeader eyebrow="NeuroForge / PRISM" title="Your scientific workspace" description="Start with data, understand a fitted model, or continue a recorded investigation. Every conclusion should lead back to measured evidence."/>
+      <ResearchJourneys/>
+      <PrismCard aria-label="Recent local research"><h3 className="font-semibold mb-3">Recent local research</h3>{localError?<PrismStatus tone="warning">{localError}</PrismStatus>:localRuns.length?<ul className="space-y-3">{localRuns.map(run=><li key={run.runId}><Link className="underline underline-offset-4" to={'/app/experiments?view=research&run='+encodeURIComponent(run.runId)}>{run.title}</Link><p className="text-xs text-text-muted">{run.model.algorithm} · {run.validation.count} validation observations · Local receipt revision {run.revision}</p></li>)}</ul>:<p className="text-sm text-text-muted">No local research receipts yet. Prepare a dataset, evaluate a model and save its research run to continue here.</p>}</PrismCard>
       {/* Welcome Banner / Challenge Callout */}
       <div className="relative rounded-2xl border border-white/10 bg-gradient-to-r from-obsidian via-obsidian to-surface-elevated p-6 sm:p-8 overflow-hidden shadow-xl">
         <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-plasma-cyan/10 to-transparent pointer-events-none" />
@@ -206,6 +217,7 @@ export default function MissionControl() {
           ))}
         </div>
       </div>
+      {new URLSearchParams(location.search).get('design')==='gallery'&&<Suspense fallback={<p role="status">Loading design reference…</p>}><DesignGallery/></Suspense>}
     </div>
   );
 }

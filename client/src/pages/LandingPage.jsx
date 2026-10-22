@@ -21,6 +21,7 @@ import Toast from '../components/Toast';
 export default function LandingPage() {
   const { setCommandPaletteOpen } = useLabStore();
   const canvasRef = useRef(null);
+  const exampleButtonRef = useRef(null);
   const [activeNodeInfo, setActiveNodeInfo] = useState(null);
 
   // Ambient Interactive Neural Network Canvas
@@ -29,6 +30,8 @@ export default function LandingPage() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let animationFrameId;
+    let inViewport=true;
+    const visible=()=>inViewport&&!document.hidden;
     const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     let width = (canvas.width = canvas.parentElement.clientWidth);
@@ -55,6 +58,7 @@ export default function LandingPage() {
       const x = (layerIdx + 1) * layerSpacing;
       const ySpacing = height / (count + 1);
       for (let i = 0; i < count; i++) {
+        const example = salt => (((layerIdx + 1) * 11 + (i + 1) * 7 + salt) % 31) / 30;
         nodes.push({
           id: `${layerIdx}-${i}`,
           layer: layerIdx,
@@ -63,10 +67,10 @@ export default function LandingPage() {
           y: (i + 1) * ySpacing,
           radius: 8,
           baseRadius: 8,
-          activation: Math.random(),
-          pulse: Math.random() * Math.PI,
-          bias: (Math.random() * 2 - 1).toFixed(2),
-          weight: (Math.random() * 2 - 1).toFixed(2),
+          activation: example(0),
+          pulse: example(5) * Math.PI,
+          bias: (example(9) * 2 - 1).toFixed(2),
+          weight: (example(13) * 2 - 1).toFixed(2),
         });
       }
     });
@@ -85,6 +89,7 @@ export default function LandingPage() {
 
     // Render loop
     const render = () => {
+      if(!visible())return;
       ctx.clearRect(0, 0, width, height);
 
       // Draw Connections
@@ -153,6 +158,9 @@ export default function LandingPage() {
     render();
     const handleMotionChange = () => { cancelAnimationFrame(animationFrameId); render(); };
     motionPreference.addEventListener('change', handleMotionChange);
+    const visibilityChange=()=>{cancelAnimationFrame(animationFrameId);render();};
+    document.addEventListener('visibilitychange',visibilityChange);
+    const observer=new IntersectionObserver(entries=>{inViewport=entries[0].isIntersecting;visibilityChange();});observer.observe(canvas);
 
     const handleClick = () => {
       // Find closest node to mouse
@@ -184,11 +192,12 @@ export default function LandingPage() {
       canvas.removeEventListener('click', handleClick);
       cancelAnimationFrame(animationFrameId);
       motionPreference.removeEventListener('change', handleMotionChange);
+      observer.disconnect();document.removeEventListener('visibilitychange',visibilityChange);
     };
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-deep-space text-text-primary overflow-x-hidden">
+    <div className="prism-public relative min-h-screen bg-deep-space text-text-primary overflow-x-hidden">
       <CommandPalette />
       <Toast />
       {/* Top Navigation */}
@@ -238,12 +247,12 @@ export default function LandingPage() {
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] border border-white/10 text-xs font-mono text-plasma-cyan mb-6">
           <Activity className="w-3.5 h-3.5 text-quantum-mint" />
-          <span>Interactive Machine Learning & Deep Learning Universe</span>
+          <span>PRISM · Scientific learning and research</span>
         </div>
 
         {/* Main Headline */}
         <h1 className="font-display font-extrabold text-4xl sm:text-6xl md:text-7xl tracking-tight max-w-4xl text-white">
-          See how <span className="bg-gradient-to-r from-plasma-cyan via-neural-violet to-quantum-mint bg-clip-text text-transparent">intelligence</span> learns.
+          See how <span className="text-plasma-cyan">intelligence</span> learns.
         </h1>
 
         <p className="mt-6 text-base sm:text-lg md:text-xl text-text-muted max-w-2xl font-normal leading-relaxed">
@@ -272,27 +281,28 @@ export default function LandingPage() {
         <p className="mt-3 text-xs text-text-muted/70 font-mono">
           ✓ Real browser-based ML computation • No login required for instant guest experimentation
         </p>
+        <div className="prism-public-proof" aria-label="Product capabilities"><span>Explore & prepare data</span><span>Inspect fitted models</span><span>Compare recorded evidence</span><span>Export plots, data & code</span></div>
 
         {/* Interactive Neural Canvas Hero Frame */}
         <div className="mt-14 w-full max-w-5xl relative rounded-2xl border border-white/10 bg-surface-dark/90 shadow-2xl overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-obsidian/70 text-xs font-mono text-text-muted">
+          <div className="flex flex-wrap gap-3 items-center justify-between px-4 py-3 border-b border-white/10 bg-obsidian/70 text-xs font-mono text-text-muted">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
               <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
               <span className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
-              <span className="ml-2 text-white font-medium">live_network_visualization.tfjs</span>
+              <span className="ml-2 text-white font-medium">network_concept.preview</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-quantum-mint flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-quantum-mint animate-pulse" />
-                Forward-Pass Active
+                Illustrative network
               </span>
-              <span>Click any node to inspect math</span>
+              <button ref={exampleButtonRef} type="button" className="underline p-2" onClick={()=>setActiveNodeInfo({layer:'Example hidden layer',neuron:'Illustration node',activation:'0.5000',bias:'0.10',weight:'0.20'})}>Inspect example values</button>
             </div>
           </div>
 
           <div className="relative h-[360px] sm:h-[420px] w-full">
-            <canvas ref={canvasRef} className="w-full h-full cursor-crosshair" />
+            <canvas ref={canvasRef} aria-hidden="true" className="w-full h-full cursor-crosshair" />
 
             {/* Floating Node Inspector Modal if clicked */}
             {activeNodeInfo && (
@@ -300,7 +310,8 @@ export default function LandingPage() {
                 <div className="flex items-center justify-between border-b border-white/10 pb-2 mb-2">
                   <span className="font-mono text-xs text-plasma-cyan font-semibold">{activeNodeInfo.layer}</span>
                   <button 
-                    onClick={() => setActiveNodeInfo(null)}
+                    aria-label="Close example inspector"
+                    onClick={() => {setActiveNodeInfo(null);exampleButtonRef.current?.focus();}}
                     className="text-xs text-text-muted hover:text-white"
                   >
                     ✕
@@ -308,12 +319,12 @@ export default function LandingPage() {
                 </div>
                 <div className="text-xs space-y-1.5 font-mono text-text-primary">
                   <div><span className="text-text-muted">Identifier:</span> {activeNodeInfo.neuron}</div>
-                  <div><span className="text-text-muted">Activation (a):</span> <span className="text-quantum-mint">{activeNodeInfo.activation}</span></div>
-                  <div><span className="text-text-muted">Learned Bias (b):</span> {activeNodeInfo.bias}</div>
-                  <div><span className="text-text-muted">Weight (w_avg):</span> {activeNodeInfo.weight}</div>
+                  <div><span className="text-text-muted">Example activation:</span> <span className="text-quantum-mint">{activeNodeInfo.activation}</span></div>
+                  <div><span className="text-text-muted">Example bias:</span> {activeNodeInfo.bias}</div>
+                  <div><span className="text-text-muted">Example weight:</span> {activeNodeInfo.weight}</div>
                 </div>
                 <div className="mt-3 pt-2 border-t border-white/10 text-[11px] text-text-muted">
-                  Formula: <code className="text-neural-violet">a = ReLU(Σ w_i·x_i + b)</code>
+                  Illustrative parameters, not fitted measurements. Formula: <code className="text-neural-violet">a = ReLU(Σ w_i·x_i + b)</code>
                 </div>
               </div>
             )}
@@ -445,7 +456,7 @@ export default function LandingPage() {
               <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-red-400/80 -rotate-45 transform origin-center shadow-sm" />
             </div>
             <div className="text-[10px] text-center font-mono text-text-muted">
-              Accuracy: 50% (Random guess)
+              Concept sketch: a straight line cannot separate XOR.
             </div>
           </div>
         </div>
@@ -456,10 +467,10 @@ export default function LandingPage() {
         <div className="max-w-2xl mb-12">
           <span className="text-xs font-mono uppercase tracking-widest text-plasma-cyan">Technical Architecture</span>
           <h2 className="mt-2 text-2xl sm:text-3xl font-display font-bold text-white">
-            Engineered for Deep Interview Technical Discussions
+            Scientific methods you can inspect
           </h2>
           <p className="mt-2 text-sm text-text-muted">
-            Every screen demonstrates deliberate architectural choices rather than naive frontend mocks.
+            Inspect preprocessing fits, measured evaluation and reproducible plots alongside their methods and source provenance.
           </p>
         </div>
 

@@ -1,4 +1,5 @@
 import { lazy,Suspense,useMemo, useState } from 'react';
+import {PrismMetric,PrismTabs} from '../../design/components/Prism.jsx';
 import { profileDataset } from '../../ml/datasetProfiling.js';
 import ScientificHistogram from './charts/ScientificHistogram.jsx';
 import { applyEdaFilters } from '../../ml/edaFilters.js';
@@ -18,10 +19,7 @@ const format = value => Number.isFinite(value)
   : 'Not available';
 
 function Metric({ label, value }) {
-  return <div className="rounded-xl border border-white/10 bg-obsidian p-3">
-    <dt className="text-xs text-text-muted">{label}</dt>
-    <dd className="mt-1 text-xl font-semibold text-white tabular-nums">{value}</dd>
-  </div>;
+  return <PrismMetric label={label} value={value} formatted/>;
 }
 
 function CategoricalDistribution({ column }) {
@@ -77,7 +75,7 @@ export default function DataScienceWorkbench({ dataset, name, onCreateSubset, on
 
   const active = report.columns.find(column=>column.name===selectedColumn) ?? report.columns[0];
   const tabs = [{id:'overview',name:'Overview'}, {id:'distributions',name:'Distributions'}, {id:'chart-studio',name:'Chart Studio'}, {id:'relationships',name:'Relationships'}, {id:'balance',name:'Class balance'}, {id:'outliers',name:'Outliers & quality'}, {id:'algorithms',name:'Algorithms'}, {id:'correlations',name:'Correlations'}, {id:'missingness',name:'Missingness'}, {id:'quality-pro',name:'Quality Pro'}, {id:'datasheet',name:'DataSheet'}, {id:'rows',name:'Row Explorer'}, {id:'evidence',name:'Evidence & export'}, {id:'preview',name:'Row preview'}];
-  return <section role="region" aria-label="Dataset profile dashboard" className="prism-lab space-y-5 rounded-2xl border border-white/10 bg-surface-dark p-3 sm:p-5">
+  return <section id="prism-analysis" role="region" aria-label="Dataset profile dashboard" className="prism-lab space-y-5 rounded-2xl border border-white/10 bg-surface-dark p-3 sm:p-5">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div className="min-w-0">
         <div className="prism-eyebrow mb-2">NEUROFORGE / PRISM RESEARCH CANVAS</div>
@@ -92,14 +90,10 @@ export default function DataScienceWorkbench({ dataset, name, onCreateSubset, on
       <Metric label="Missing cells" value={report.missingCells} />
       <Metric label="Duplicate rows" value={report.duplicateRows} />
     </dl>
+    <div className="prism-scope-bar" aria-label="Active analysis population"><strong>{analysisIds?'Selected observations':filters.length?'Filtered view':'Original source'}</strong><span>{report.rowCount} analyzed of {filtered.sourceCount} source rows</span><span>Source version: {dataset.provenance?.versionId||'Imported source'}</span></div>
     {analysisIds&&<button type="button" onClick={()=>setAnalysisIds(null)}>Clear DataSheet analysis scope ({analysisIds.length} selected observations)</button>}
     <EdaFilterToolbar headers={dataset.headers} filters={filters} onChange={setFilters} sourceCount={filtered.sourceCount} visibleCount={filtered.visibleCount} />
-    <div role="group" aria-label="Workbench views" className="prism-workbench-nav flex gap-2 overflow-x-auto pb-2">
-      {tabs.map(item => <button key={item.id} type="button" aria-pressed={tab===item.id} onClick={()=>{if(item.id==='chart-studio')setStudioOpened(true);setTab(item.id);}}
-        className={`min-h-10 rounded-lg border px-3 py-2 text-sm font-medium ${tab===item.id ? 'border-cyan-400 bg-cyan-400/15 text-cyan-200' : 'border-white/10 bg-obsidian text-text-muted hover:text-white'}`}>
-        {item.name}
-      </button>)}
-    </div>
+    <PrismTabs buttons label="Workbench views" value={tab} items={tabs.map(t=>({value:t.id,label:t.name}))} onChange={value=>{if(value==='chart-studio')setStudioOpened(true);setTab(value);}}/>
     {tab==='overview' && <div className="space-y-3">
       <p className="text-xs text-text-muted">Numeric summaries use only observed finite values. Missingness counts exclude empty, null and NaN fields.</p>
       <div role="region" aria-label="Column quality profile" tabIndex={0} className="max-w-full overflow-x-auto rounded-xl border border-white/10">

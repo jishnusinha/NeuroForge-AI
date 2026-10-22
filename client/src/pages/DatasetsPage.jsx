@@ -4,11 +4,14 @@ import DataScienceWorkbench from '../components/workspace/DataScienceWorkbench.j
 import { parseAndValidateCSV } from '../ml/datasetImport.js';
 import { isFeatureEnabled } from '../services/productionConfig.js';
 import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,useSearchParams } from 'react-router-dom';
+import ResearchPageHeader from '../design/patterns/ResearchPageHeader.jsx';
+import DatasetStages from '../design/patterns/DatasetStages.jsx';
 import { generateTwoMoons, generateXOR, generateGaussianBlobs, generateLinearTrend, generateConcentricCircles, generateSpiral, trainTestSplit } from '../ml/datasets';
 import { useLabStore } from '../store/useLabStore';
 const presets = { 'Two Moons': generateTwoMoons, 'XOR Problem': generateXOR, 'Gaussian Blobs': generateGaussianBlobs, 'Linear Trend': generateLinearTrend, 'Concentric Circles': generateConcentricCircles, Spiral: generateSpiral };
 export default function DatasetsPage() {
+  const [params]=useSearchParams();
   const [name, setName] = useState('Two Moons');
   const [exploredFile, setExploredFile] = useState(null);
   const [datasetRevision, setDatasetRevision] = useState(0);
@@ -36,7 +39,8 @@ export default function DatasetsPage() {
     setExperimentName(`${name} investigation`); navigate('/app/playground');
   };
   return <div className="p-6 space-y-5 max-w-6xl mx-auto w-full">
-    <h2 className="text-2xl font-bold">Dataset Explorer & Microscope</h2>
+    <ResearchPageHeader eyebrow="Data / Investigation" title="Dataset Explorer & Microscope" description="Follow the evidence from original values through exploration, working copies, fitted preprocessing and model evaluation."/>
+    <DatasetStages dataset={exploredFile?.data} name={exploredFile?.name} modeling={params.get('stage')==='modeling'}/>
     {isFeatureEnabled('anti_leakage_prep') && (
       <section aria-label="Data Science Workbench" className="space-y-4 rounded-2xl border border-cyan-400/20 bg-surface-dark p-3 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -49,7 +53,7 @@ export default function DatasetsPage() {
             Try sample dataset
           </button>
         </div>
-        <DataSheetRecovery onRecover={record=>{
+        <div id="prism-import"><DataSheetRecovery onRecover={record=>{
           setExploredFile(record.version?{data:record.version,name:record.name+' · committed version'}:{data:record.source,name:record.name,recovery:record});
           setDatasetRevision(previous=>previous+1);
         }}/>
@@ -57,7 +61,7 @@ export default function DatasetsPage() {
           onParsed={(data, fileName) => {
             setExploredFile(data ? { data, name: fileName } : null);
             setDatasetRevision(previous => previous + 1);
-          }} />
+          }} /></div>
         <DataScienceWorkbench key={'workbench-'+datasetRevision} dataset={exploredFile?.data} name={exploredFile?.name}
           recovery={exploredFile?.recovery}
           onCommitVersion={(data,fileName)=>{setExploredFile({data,name:fileName});setDatasetRevision(previous=>previous+1);}}

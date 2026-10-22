@@ -209,6 +209,7 @@ export default function ModelWorkbench({ plan }) {
       <span className="mt-1 block text-xs font-normal text-text-muted">Train real N-feature models using the prepared F11 matrix; inspect validation evidence and release final test once</span>
     </summary>
     <div role="region" aria-label="F12 Model Workbench" className="mt-4 space-y-4">
+      <div className="prism-scope-bar" aria-label="Model investigation context"><strong>{selected?'Fitted candidate: '+selected.algorithm:'Configure a model'}</strong><span>Target: {matrix.task.targetColumn}</span><span>{matrix.features.length} prepared features</span><span>{matrix.membership.validation.length} fixed validation observations</span><span>{testResult?'Final test access recorded':'Final test protected'}</span></div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[['Task',matrix.task.type.replaceAll('_',' ')],['Features',matrix.features.length],['Training',matrix.membership.train.length],['Validation',matrix.membership.validation.length]].map(([label,value])=>
           <div key={label} className="rounded-lg border border-white/10 bg-surface-dark p-3"><div className="text-xs text-text-muted">{label}</div><div className="font-semibold capitalize">{value}</div></div>)}

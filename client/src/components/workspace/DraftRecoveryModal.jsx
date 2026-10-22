@@ -1,4 +1,5 @@
-import React from 'react';
+import React,{useRef} from 'react';
+import {useDialogFocus} from '../../design/useDialogFocus.js';
 import { AlertTriangle, RefreshCw, Copy, CheckCircle2 } from 'lucide-react';
 
 export default function DraftRecoveryModal({
@@ -9,10 +10,12 @@ export default function DraftRecoveryModal({
   onDuplicate,
   onDismiss,
 }) {
+  const dialogRef=useRef(null);useDialogFocus(dialogRef,isOpen);
   if (!isOpen) return null;
 
   return (
     <div 
+      ref={dialogRef}
       className="fixed inset-0 z-50 overflow-hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn"
       role="dialog"
       aria-modal="true"

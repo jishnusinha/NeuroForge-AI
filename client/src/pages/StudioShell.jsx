@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import LabContext from '../design/patterns/LabContext.jsx';
 import {
   Play,
   Pause,
@@ -371,8 +372,9 @@ export default function StudioShell() {
 
   return (
     <div className="lab-workspace min-w-0 flex-1 flex flex-col min-h-[calc(100vh-64px)]">
+      <LabContext dataset={selectedDatasetName}/>
       {/* Upper 3-Panel Grid */}
-      <div className="flex min-w-0 min-h-[620px] overflow-hidden">
+      <div className="prism-lab-grid flex min-w-0 min-h-[620px] overflow-hidden">
 
         {/* Left: Architecture Presets & Layer Library (260px) */}
         <aside className="w-[260px] bg-obsidian border-r border-white/10 flex flex-col p-4 overflow-y-auto space-y-4 flex-shrink-0">

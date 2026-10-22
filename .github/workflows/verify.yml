@@ -5,7 +5,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-24.04 # Stable image; host kernel still needs Mongo compatibility checks
-    timeout-minutes: 50
+    timeout-minutes: 70
     services:
       mongo:
         image: mongo:7.0
@@ -42,6 +42,13 @@ jobs:
       - run: python scripts/verify-python-charts.py
       - run: npm run check
       - run: npm run test:e2e:memory
+      - run: npm run audit:f21
+      - name: Build isolated F21 static demo
+        run: npm --prefix client run build -- --outDir ../.artifacts/f21/pages-build
+        env:
+          GITHUB_PAGES: 'true'
+          VITE_STATIC_DEMO: 'true'
+      - run: npm run verify:pages:f21
       - run: npm run baseline:summary
         if: always()
       - uses: actions/upload-artifact@v4
@@ -50,3 +57,4 @@ jobs:
           name: verification-artifacts
           path: .artifacts/
           include-hidden-files: true
+          retention-days: 30

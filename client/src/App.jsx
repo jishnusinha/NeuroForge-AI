@@ -4,6 +4,7 @@ import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router
 import AppShell from './components/AppShell';
 import { ThemeProvider } from './theme/ThemeProvider.jsx';
 import LandingPage from './pages/LandingPage';
+import {PrismSkeleton} from './design/components/Prism.jsx';
 const AccountPage = lazy(() => import('./pages/AccountPage'));
 const MissionControl = lazy(() => import('./pages/MissionControl'));
 const PlaygroundShell = lazy(() => import('./pages/PlaygroundShell'));
@@ -21,7 +22,7 @@ const Router = import.meta.env?.VITE_STATIC_DEMO === 'true' ? HashRouter : Brows
 export default function App() {
   return (
     <ThemeProvider><Router>
-      <Suspense fallback={<p role="status" className="p-8 text-slate-300">Loading workspace...</p>}><Routes>
+      <Suspense fallback={<PrismSkeleton label="Loading workspace"/>}><Routes>
         {/* Standalone Landing Page */}
         <Route path="/" element={<LandingPage />} />
 

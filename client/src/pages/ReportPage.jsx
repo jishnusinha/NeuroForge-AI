@@ -95,7 +95,7 @@ export default function ReportPage() {
   return (
     <div className="p-6 sm:p-10 max-w-5xl mx-auto space-y-8 animate-in fade-in duration-200">
       {/* Header & Back Button */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+      <div className="prism-ui-page-head flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
         <div>
           <button
             onClick={() => navigate(-1)}

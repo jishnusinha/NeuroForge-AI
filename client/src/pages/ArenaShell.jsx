@@ -1,4 +1,6 @@
 import SweepManager from '../components/workspace/SweepManager.jsx';
+import ResearchPageHeader from '../design/patterns/ResearchPageHeader.jsx';
+import {PrismEmptyState,PrismButton} from '../design/components/Prism.jsx';
 import { executeSweep, stopSweep } from '../ml/sweepExecutor.js';
 import { getSnapshotLocal } from '../services/localRepository.js';
 import { isFeatureEnabled } from '../services/productionConfig.js';
@@ -53,9 +55,9 @@ export default function ArenaShell() {
     navigate(`/app/${run.workspace === 'studio' ? 'studio' : 'playground'}`);
   };
   if (loading) return <p className="p-8" role="status">Loading recorded runs...</p>;
-  if (!runs.length) return <div className="p-8 space-y-4"><h2 className="text-xl font-bold">Experiment Arena</h2><p>Run and save two experiments to compare their recorded results.</p><Link className="text-cyan-300 underline" to="/app/playground">Open Playground</Link></div>;
+  if (!runs.length) return <div className="p-8 space-y-4"><ResearchPageHeader eyebrow="Research / Comparison" title="Experiment Arena"/><PrismEmptyState title="Build a comparison from measured evidence" action={<PrismButton as={Link} to="/app/playground">Open Playground</PrismButton>}>Run and save two experiments to compare their recorded results.</PrismEmptyState></div>;
   return <div className="p-4 lg:p-6 space-y-5 overflow-auto">
-    <h2 className="text-xl font-bold">Experiment Arena</h2>
+    <ResearchPageHeader eyebrow="Research / Comparison" title="Experiment Arena" description="Compare recorded measurements only when source and evaluation populations are compatible. Missing evidence remains unavailable."/>
     <div className="grid md:grid-cols-2 gap-4">
       {[['Baseline', baselineId, setBaselineId], ['Variant', variantId, setVariantId]].map(([label, id, setter]) => <label key={label} className="space-y-2 text-sm">{label}<select aria-label={label} value={id} onChange={e => setter(e.target.value)} className="block w-full p-3 rounded-xl bg-obsidian border border-white/10"><option value="">Select a run</option>{runs.map(run => <option key={run._id} value={run._id}>{run.name}</option>)}</select></label>)}
     </div>

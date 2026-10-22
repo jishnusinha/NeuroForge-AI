@@ -9,6 +9,11 @@ export default {
     extend: {
       // Alpha-aware CSS variables let existing Tailwind classes update instantly on theme changes.
       colors: {
+        'prism-content': 'var(--prism-content-primary)',
+        'prism-muted': 'var(--prism-content-secondary)',
+        'prism-surface': 'var(--prism-surface)',
+        'prism-boundary': 'var(--prism-boundary)',
+        'prism-focus': 'var(--prism-focus)',
         'deep-space': 'rgb(var(--nf-bg-rgb) / <alpha-value>)',
         'obsidian': 'rgb(var(--nf-surface-rgb) / <alpha-value>)',
         'surface-elevated': 'rgb(var(--nf-elevated-rgb) / <alpha-value>)',

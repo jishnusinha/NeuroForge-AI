@@ -66,7 +66,15 @@ Twenty-five EDA and fitted-pipeline views, Chart/Data/Python/JavaScript/Methods 
 
 ## DS-F19 Model Evaluation and Visual Explainability
 
-Candidate-specific regression/classification diagnostics, recorded-probability ROC/PR/calibration/confidence, faithful F13 explanation visuals, and genuine logistic/softmax training traces. Shared PRISM exports and provenance preserve the explicit final-test gate. Prediction-level chart sessions remain temporary; F14 receipts do not restore them. See [F19 documentation](DS_F19_MODEL_VISUALIZATION.md). These source capabilities do not certify deployment; F20 research comparison dashboards remain future work.
+Candidate-specific regression/classification diagnostics, recorded-probability ROC/PR/calibration/confidence, faithful F13 explanation visuals, and genuine logistic/softmax training traces. Shared PRISM exports and provenance preserve the explicit final-test gate. Prediction-level chart sessions remain temporary; F14 receipts do not restore them. See [F19 documentation](DS_F19_MODEL_VISUALIZATION.md). These source capabilities do not certify deployment.
+
+## DS-F20 PRISM experiment intelligence
+
+Saved-run Research Intelligence and live/archived search analytics compare recorded validation evidence, disclose population compatibility and export reproducible charts and research reports. Final-test evidence never tunes rankings. See [F20 documentation](DS_F20_RESEARCH_INTELLIGENCE.md).
+
+## DS-F21 PRISM product experience
+
+Shared semantic tokens and controls, workflow stages and population context, research/model navigation, recent local receipts, report previews, accessible keyboard tabs and dialogs, reproduction ZIP bundles, and a managed visual audit/review workflow. See [F21 implementation and walkthroughs](DS_F21_PRODUCT_EXPERIENCE.md) for measured gates and release limitations.
 
 ## Important limits
 - Legacy Playground/TF.js launch adapters require two numerical feature columns and compatible targets. F12 uses the full prepared matrix for regression and binary/multiclass classification.
