@@ -51,3 +51,28 @@ export function compareRunReceipts(a,b,metric) {
     ],
   };
 }
+
+/** Collection ranking is allowed only when every pair shares the F14 contract. */
+export function compareRunCollection(runs,metric){
+  const definition=REGISTRY_METRICS[metric];
+  if(!definition)throw new Error('F20_UNKNOWN_METRIC');
+  if(!Array.isArray(runs)||runs.length<2||runs.length>10)throw new Error('F20_COMPARISON_LIMIT');
+  const reasons=[],notes=[];let invalid=false;
+  for(const run of runs){try{validateRunReceipt(run);}catch{invalid=true;}}
+  if(new Set(runs.map(r=>r?.runId)).size!==runs.length)invalid=true;
+  if(invalid)return {status:'unavailable',metric,direction:definition.direction,reasons:['A receipt is invalid or a run was selected more than once.'],notes:[],rankings:[],leaders:[]};
+  let unavailable=false;
+  for(let i=0;i<runs.length;i++)for(let j=i+1;j<runs.length;j++){
+    const pair=compareRunReceipts(runs[i],runs[j],metric);
+    reasons.push(...pair.reasons);notes.push(...pair.notes);
+    unavailable ||= pair.status==='unavailable';
+    if(runs[i].validation.count!==runs[j].validation.count)reasons.push('Recorded validation counts differ.');
+  }
+  const status=unavailable?'unavailable':reasons.length?'contextual':'comparable';
+  const sorted=status==='comparable'?[...runs].sort((a,b)=>{
+    const delta=a.validation.metrics[metric]-b.validation.metrics[metric];
+    return (definition.direction==='minimize'?delta:-delta)||a.runId.localeCompare(b.runId);
+  }):[];
+  const rankings=sorted.map((r,i)=>({runId:r.runId,score:r.validation.metrics[metric],rank:sorted.findIndex(s=>s.validation.metrics[metric]===r.validation.metrics[metric])+1,index:i}));
+  return {status,metric,direction:definition.direction,reasons:[...new Set(reasons)],notes:[...new Set(notes)],rankings,leaders:rankings.filter(r=>r.rank===1).map(r=>r.runId)};
+}

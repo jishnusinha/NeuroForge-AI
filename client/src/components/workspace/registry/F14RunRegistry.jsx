@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { deleteF14Run, listF14Runs, saveF14Run } from '../../../services/modelRegistryRepository.js';
 import { reviseRunMetadata } from '../../../ml/modelRegistry/runLifecycle.js';
 import { compareRunReceipts, REGISTRY_METRICS } from '../../../ml/modelRegistry/comparability.js';
 import { replaySavedModel, verifySavedRun } from '../../../ml/modelRegistry/artifactValidator.js';
 import { createRunResearchReport } from '../../../ml/modelRegistry/reports.js';
+const ResearchDashboard=lazy(()=>import('./ResearchDashboard.jsx'));
 
 const field='min-h-10 w-full rounded-lg border border-white/20 bg-obsidian px-3 py-2 text-sm text-text-primary';
 const button='min-h-10 rounded-lg border border-white/20 bg-obsidian px-3 py-2 text-sm text-text-primary disabled:opacity-40';
@@ -45,7 +46,7 @@ export default function F14RunRegistry(){
       setRuns(items);
       setActiveId(previous=>items.some(item=>item.runId===previous)?previous:(items[0]?.runId??''));
       setCompareIds(previous=>previous.filter(id=>items.some(item=>item.runId===id)));
-    }catch(reason){setError('Local F14 archive could not be opened: '+reason.message);}
+    }catch(reason){setRuns([]);setError('Local F14 archive could not be opened: '+reason.message);}
     finally{setLoading(false);}
   };
   useEffect(()=>{
@@ -63,6 +64,7 @@ export default function F14RunRegistry(){
     return ()=>{active=false;};
   },[]);
   const active=runs.find(item=>item.runId===activeId);
+  useEffect(()=>{const refresh=()=>{void load();};window.addEventListener('focus',refresh);window.addEventListener('storage',refresh);window.addEventListener('f14-archive-change',refresh);const channel=typeof BroadcastChannel==='function'?new BroadcastChannel('neuroforge-f14'):null;if(channel)channel.onmessage=refresh;return ()=>{window.removeEventListener('focus',refresh);window.removeEventListener('storage',refresh);window.removeEventListener('f14-archive-change',refresh);channel?.close();};},[]);
   const visible=useMemo(()=>runs.filter(run=>
     (taskFilter==='all'||run.task.type===taskFilter) &&
     (run.title+' '+run.model.algorithm+' '+run.tags.join(' ')).toLowerCase()
@@ -143,6 +145,7 @@ export default function F14RunRegistry(){
   };
 
   return <section aria-label="F14 research run archive" className="space-y-4 rounded-2xl border border-plasma-cyan/25 bg-surface-dark p-4 sm:p-5">
+    <Suspense fallback={<p>Loading research intelligence…</p>}><ResearchDashboard runs={runs} onOpen={chooseRun}/></Suspense>
     <div className="flex flex-wrap items-start justify-between gap-2">
       <div><h3 className="text-lg font-semibold">F14 — Reproducible Run Registry</h3>
         <p className="text-xs text-text-muted">Owner-scoped, browser-local F12/F13 research evidence. No cloud upload or automatic storage of source data.</p></div>

@@ -1,5 +1,9 @@
 # NeuroForge feature and deployment boundaries
 
+## F20 implementation
+
+Research Intelligence is implemented in My Experiments: 2–10 saved-run comparison, six registry charts, seven live/archived F15 charts, exact evidence/code/image exports and validated research reports. It preserves F14 v1 receipts and owner limits. No training, source restoration, final-test tuning or cloud tracking is implied. See [F20 contract and verification](DS_F20_RESEARCH_INTELLIGENCE.md). Deployment remains subject to the release gates below.
+
 ## Product surfaces
 - Public browser demo: https://jishnusinha.github.io/NeuroForge-AI/
 - GitHub source: https://github.com/jishnusinha/NeuroForge-AI

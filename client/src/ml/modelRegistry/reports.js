@@ -1,4 +1,25 @@
 import { validateRunReceipt } from './runContracts.js';
+import {analyzeResearchRuns} from './researchAnalytics.js';
+import {digest} from '../../../../shared/domain.mjs';
+const escapeReport=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replaceAll('|','\\|').replaceAll('`','\\`').replaceAll('[','\\[').replaceAll(']','\\]').replace(/[\r\n]/g,' ');
+function researchReportData(runs,{metric='accuracy',observations='',limitations=''}={}){
+  if(typeof observations!=='string'||observations.length>4000||typeof limitations!=='string'||limitations.length>4000)throw new Error('F20_REPORT_INVALID');
+  const analysis=analyzeResearchRuns(runs,metric);
+  return {kind:'neuroforge-f20-research-report',schemaVersion:1,...analysis,observations,limitations,reproduction:'Recorded aggregate evidence only; no training data, fitted pipeline or model restoration.',validity:['Inner CV, fixed validation and final test remain distinct.','Final-test timestamps are a local workflow audit, not tamper-proof provenance.','Fold sample SD is descriptive, not a confidence interval.']};
+}
+export async function createResearchComparisonSnapshot(runs,options){const report=researchReportData(runs,options);return {...report,snapshotDigest:await digest(report)};}
+export function createResearchComparisonReport(runs,options){
+  const report=researchReportData(runs,options),lines=['# PRISM Research Comparison','',`Comparison: ${report.comparison.status} · ${report.comparison.metric} (${report.comparison.direction})`,'',...report.comparison.reasons.map(escapeReport),...report.comparison.notes.map(escapeReport),''];
+  lines.push('| Run | Validation metric | Recorded score | Comparable rank |','| --- | --- | ---: | ---: |');
+  for(const run of report.runs)lines.push('| '+escapeReport(run.title)+' | '+report.comparison.metric+' | '+(run.validation.metrics[report.comparison.metric]??'Unavailable')+' | '+(report.comparison.rankings.find(r=>r.runId===run.runId)?.rank??'Unavailable')+' |');
+  for(const run of report.runs){
+    lines.push('','## '+escapeReport(run.title),'','Revision: '+run.revision+' · Algorithm: '+run.model.algorithm,'','| Configuration parameter | Recorded value |','| --- | ---: |',...Object.entries(run.model.configuration).map(([k,v])=>'| '+k+' | '+v+' |'));
+    if(!Object.keys(run.model.configuration).length)lines.push('| Preset defaults | No explicit overrides recorded |');
+    if(run.selection){lines.push('','### Recorded inner-CV trials','','| Trial | Status | Configuration | Fold scores | Fold counts | Mean | Sample SD |','| ---: | --- | --- | --- | --- | ---: | ---: |');for(const trial of run.selection.trials)lines.push('| '+(trial.configIndex+1)+' | '+trial.status+' | '+JSON.stringify(trial.configuration)+' | '+trial.foldScores.join(', ')+' | '+(trial.foldCounts.length?trial.foldCounts.join(', '):'Not recorded')+' | '+(trial.mean??'Unavailable')+' | '+(trial.sampleSd??'Unavailable')+' |');}
+    lines.push('','Final-test audit: '+(run.finalTestAudit.length?run.finalTestAudit.map(a=>escapeReport(a.accessedAt)+' ('+a.count+' observations)').join('; '):'No access recorded.')+' Scores are excluded from comparison.','','### Exact aggregate evidence and provenance','','```json',JSON.stringify(run,null,2).replace(/</g,'\\u003c').replace(/>/g,'\\u003e'),'```','');
+  }
+  lines.push('## Research notes','',escapeReport(report.observations),'','## Validity limitations','',escapeReport(report.limitations),'',...report.validity.map(v=>'- '+v),'',report.reproduction);return lines.join('\n');
+}
 const clean = text => String(text??'').replace(/\|/g,'\\|').replace(/[\r\n]/g,' ');
 const fmt = x => x===null||!Number.isFinite(x)?'Unavailable':Number(x).toFixed(5);
 export function createRunResearchReport(runs,{title='NeuroForge research record',observations='',limitations=''}={}) {

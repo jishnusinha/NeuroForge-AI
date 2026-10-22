@@ -2,7 +2,7 @@ import {validateChartSpec} from '../chartSpecV2.js';
 import {restoreModelRenderers} from '../modelRenderPrimitives.js';
 export function generateJavaScript(spec){
   validateChartSpec(spec);
-  const rendering=['horizontal_error','waterfall'].includes(spec.plot.kind)
+  const rendering=['horizontal_error','waterfall','fold_scores'].includes(spec.plot.kind)
     ?`const restoreModelRenderers = ${restoreModelRenderers.toString()};\nchart.setOption(restoreModelRenderers(spec, spec.renderOption));`
     :'chart.setOption(spec.renderOption);';
   return `// NeuroForge PRISM: exact plot-data reproduction, never a preprocessing refit.

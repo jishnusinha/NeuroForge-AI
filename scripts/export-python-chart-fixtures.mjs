@@ -9,6 +9,9 @@ import {partialDependence} from '../client/src/ml/modelWorkbench/partialDependen
 import {permutationImportance} from '../client/src/ml/modelWorkbench/permutationImportance.js';
 import {subgroupDiagnostics} from '../client/src/ml/modelWorkbench/subgroupDiagnostics.js';
 import {sourceWhatIf,sourceFeatureControls} from '../client/src/ml/modelWorkbench/whatIfDiagnostics.js';
+import {runFixtures,archivedFixture} from '../tests/helpers/researchFixtures.mjs';
+import {RESEARCH_CHARTS} from '../client/src/visualization/chartRegistry.js';
+import {createResearchChartSpec} from '../client/src/visualization/researchChartSpec.js';
 const root='.artifacts/python-charts';
 async function save(spec){const dir=root+'/'+spec.chartType;await mkdir(dir,{recursive:true});await Promise.all([
   writeFile(dir+'/neuroforge-chart.json',JSON.stringify(portableChart(spec,{consent:true}))),writeFile(dir+'/neuroforge-chart-data.csv',chartCsv(spec,{consent:true})),writeFile(dir+'/neuroforge-chart.py',generatePython(spec))]);}
@@ -25,4 +28,6 @@ for(const [type,result] of [
 const tree=fixture('classification','cart');await save((await createModelChartSpec({...tree,config:{type:'model_model_specific'},explanation:envelope(tree.candidate,explainLocalPrediction(tree.matrix,tree.candidate.model,tree.matrix.membership.validation[0]))})).spec);
 // Retain coverage of shared F18 reproduction branches too.
 for(const type of ['histogram','kde','box','violin','ecdf','count','scatter','scatter_matrix','hexbin','trend','correlation','missingness'])await save((await createChartSpec({dataset:ctx.plan.raw?{headers:['x','y','target'],rows:ctx.plan.raw}:null,config:{type,x:'x',y:'y',columns:['x','y']}})).spec);
+const researchRuns=await runFixtures(2),archived=await archivedFixture();
+for(const def of RESEARCH_CHARTS)await save((await createResearchChartSpec({source:def.family==='research_registry'?{kind:'f14-archive',receipts:researchRuns}:{kind:'f15-archived',receipt:archived},chartType:def.id,metric:'accuracy',secondaryMetric:'precision',...(def.id==='cv_response'?{parameter:'maxDepth'}:{})})).spec);
 console.log('Exported executable chart fixtures to '+root);

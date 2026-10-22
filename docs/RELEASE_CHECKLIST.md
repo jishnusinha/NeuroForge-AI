@@ -1,5 +1,16 @@
 # Release checklist — browser demo and full-stack cloud
 
+## F20 research acceptance
+
+- Verify saved archive filters, selection limits, all six research charts and archived seven-view F15 explorer after refresh.
+- Verify exact source/split/task/metric compatibility, lower-is-better RMSE, higher-is-better F1, tied leaders, contextual collections and unavailable scores.
+- Verify incomplete live trials have no mean/rank and cancellation prevents promotion.
+- Verify chart record selection requires the existing explicit training action; final-test access remains protected.
+- Verify Markdown/JSON reports and CSV/JSON/Python/JavaScript/SVG/PNG chart exports preserve recorded evidence without observations, fitted weights or final-test scores.
+- Run unit tests, strict lint, production build, MongoDB integration and desktop/mobile browser suites in database and memory modes.
+- Execute the 42 generated Python plotting programs in CI. Local fixture generation alone does not certify Python rendering.
+- Confirm F14/F15 workflows and F16–F19 chart behavior remain covered. Record actual CI and deployment evidence before declaring release.
+
 ## GitHub Pages (already deployed; verify each merge)
 1. The PR targets `master`, the required verification workflow is green (Node tests, strict client lint, MongoDB integration, Playwright Chromium desktop/mobile in database and memory mode).
 2. Numerical invariants, source/seed/split provenance, stale-result warnings, and absence of invented measurements have been reviewed.

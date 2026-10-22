@@ -14,6 +14,7 @@ const unwrap=record=>{
   void unusedOwner;
   return validateRunReceipt({...receipt,id:F14_RUN_PREFIX+receipt.runId});
 };
+function notifyArchive(){if(typeof window!=='undefined')window.dispatchEvent(new Event('f14-archive-change'));if(typeof window!=='undefined'&&typeof BroadcastChannel==='function'){const channel=new BroadcastChannel('neuroforge-f14');channel.postMessage('changed');channel.close();}}
 
 export async function saveF14Run(receipt,expectedRevision=0) {
   validateRunReceipt(receipt);
@@ -23,7 +24,7 @@ export async function saveF14Run(receipt,expectedRevision=0) {
     throw new Error('F14_REVISION_MISMATCH');
   const result=await saveVersionedSnapshotLocal(receipt,expectedRevision,
     {maxItems:F14_MAX_RUNS,maxBytes:F14_MAX_RECEIPT_BYTES+256});
-  return validateRunReceipt({...receipt,revision:result.revision,updatedAt:result.updatedAt});
+  const saved=validateRunReceipt({...receipt,revision:result.revision,updatedAt:result.updatedAt});notifyArchive();return saved;
 }
 
 export async function getF14Run(runId) {
@@ -40,5 +41,6 @@ export async function listF14Runs() {
 
 export async function deleteF14Run(runId,expectedRevision) {
   await deleteVersionedSnapshotLocal(F14_RUN_PREFIX+runId,expectedRevision);
+  notifyArchive();
   return {success:true,runId};
 }

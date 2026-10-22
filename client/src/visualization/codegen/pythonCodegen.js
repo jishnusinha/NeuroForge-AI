@@ -50,9 +50,18 @@ if spec["visual"]["palette"] == "publication":
 if kind == "heatmap":
     xs, ys = list(df["x"].unique()), list(df["y"].unique())
     values = df.pivot(index="y", columns="x", values="value").reindex(index=ys, columns=xs)
-    sns.heatmap(values, mask=values.isna(), vmin=-1 if spec["plot"].get("correlation") else 0,
-                vmax=spec["plot"].get("scaleMax", 1), cmap="vlag" if spec["plot"].get("correlation") else "YlGnBu",
+    sns.heatmap(values, mask=values.isna(), vmin=spec["plot"].get("scaleMin", -1 if spec["plot"].get("correlation") else 0),
+                vmax=spec["plot"].get("scaleMax", 1), cmap="vlag" if spec["plot"].get("correlation") or spec["plot"].get("diverging") else "YlGnBu",
                 annot=spec["visual"]["showLabels"] and len(xs) <= 8 and len(ys) <= 12, ax=ax)
+elif kind == "fold_scores":
+    categories = list(df["x"].unique())
+    folds = df[df["point_kind"] == "fold"]
+    means = df[df["point_kind"] == "mean"]
+    ax.scatter([categories.index(x) for x in folds["x"]], folds["y"], label="Recorded fold scores", color=palette[0])
+    ax.errorbar([categories.index(x) for x in means["x"]], means["y"], yerr=means["sd"],
+                fmt="D", capsize=5, color=palette[1], ecolor="gray", label="Mean ± sample SD (not CI)")
+    ax.set_xticks(range(len(categories)), categories, rotation=30, ha="right")
+    ax.legend()
 elif kind == "horizontal_error":
     ax.barh(df["x"], df["y"], color=palette[0])
     ax.errorbar(df["y"], df["x"], xerr=df["sd"], fmt="none", ecolor="gray", capsize=4)
@@ -114,7 +123,7 @@ else:
     categories = list(df["x"].unique()) if categorical else []
     for i, name in enumerate(groups):
         part = df[df["series"] == name] if "series" in df else df
-        xx = np.array([categories.index(v) for v in part["x"]]) if categorical else part["x"].to_numpy()
+        xx = np.array([categories.index(v) for v in part["x"]]) if categorical else pd.to_datetime(part["x"], unit="ms", utc=True).to_numpy() if spec["plot"].get("timeAxis") else part["x"].to_numpy()
         yy = part["y"].to_numpy()
         color = palette[i % len(palette)]
         if kind == "line" or (spec["plot"].get("trend") and name == "OLS fit"):

@@ -19,10 +19,15 @@ export function chartOptions(spec,{dark=false,compact=false}={}){
   if(kind==='heatmap'){
     const xs=unique(rows.map(r=>String(r.x))),ys=unique(rows.map(r=>String(r.y)));
     base.xAxis={...base.xAxis,type:'category',data:xs,axisLabel:{color:text,hideOverlap:true,rotate:compact?35:0}};base.yAxis={...base.yAxis,type:'category',data:ys,inverse:true};
-    base.visualMap={min:spec.plot.correlation?-1:0,max:spec.plot.scaleMax??1,calculable:false,orient:'horizontal',left:'center',bottom:38,inRange:{color:spec.plot.correlation?['#386aa6','#f0f1ed','#b84a4a']:['#365c6c','#e3ad62']},textStyle:{color:text}};
+    base.visualMap={min:spec.plot.scaleMin??(spec.plot.correlation?-1:0),max:spec.plot.scaleMax??1,calculable:false,orient:'horizontal',left:'center',bottom:38,inRange:{color:spec.plot.correlation||spec.plot.diverging?['#386aa6','#f0f1ed','#b84a4a']:['#365c6c','#e3ad62']},textStyle:{color:text}};
     base.series=[{name:spec.plot.scaleName||(spec.plot.correlation?'Correlation':'Missing (1) / observed (0)'),type:'heatmap',progressive:0,
       label:{show:spec.visual.showLabels&&xs.length<=8&&ys.length<=12,color:text,formatter:'{@[2]}'},
       data:rows.flatMap((r,i)=>r.value==null?[]:[item([xs.indexOf(String(r.x)),ys.indexOf(String(r.y)),r.value],i)])}];
+  }else if(kind==='fold_scores'){
+    const categories=unique(rows.map(r=>r.x));base.xAxis={...base.xAxis,type:'category',data:categories,axisLabel:{color:text,hideOverlap:true,rotate:30}};base.grid.bottom=100;base.xAxis.nameGap=55;
+    base.series=[{name:'Recorded fold scores',type:'scatter',symbolSize:7,data:rows.flatMap((r,i)=>r.point_kind==='fold'?[item([categories.indexOf(r.x),r.y],i)]:[])},
+      {name:'Complete-trial mean',type:'scatter',symbol:'diamond',symbolSize:11,data:rows.flatMap((r,i)=>r.point_kind==='mean'?[item([categories.indexOf(r.x),r.y],i)]:[])},
+      {name:'Sample SD (not CI)',type:'custom',encode:{x:0,y:[1,2]},data:rows.flatMap((r,i)=>r.point_kind==='mean'?[item([categories.indexOf(r.x),r.low,r.high],i)]:[])}];
   }else if(kind==='horizontal_error'){
     base.yAxis={...base.yAxis,type:'category',data:rows.map(r=>r.x),inverse:true};
     base.xAxis={...base.xAxis,name:spec.plot.xLabel};base.yAxis.name='';delete base.dataZoom;
@@ -81,6 +86,7 @@ export function chartOptions(spec,{dark=false,compact=false}={}){
     }
     if(kind==='hexbin')base.visualMap={min:0,max:Math.max(1,...rows.map(r=>r.count)),dimension:2,inRange:{color:['#d7e8e8','#237f88']},show:true,right:0,textStyle:{color:text}};
   }
+  if(spec.plot.timeAxis){base.useUTC=true;base.xAxis={...base.xAxis,type:'time'};}
   if(spec.plot.reference&&kind!=='horizontal_error'&&base.series.length){
     if(spec.plot.reference==='zero')base.series[0].markLine={silent:true,symbol:'none',data:[{yAxis:0}],lineStyle:{type:'dashed',color:text}};
     if(spec.plot.reference==='identity'){

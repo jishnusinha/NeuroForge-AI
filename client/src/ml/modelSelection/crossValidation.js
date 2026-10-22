@@ -55,7 +55,7 @@ export async function runModelSearch(plan,outerMatrix,{
       }finally{
         completed++;
         onProgress({completed,total:request.configs.length*folds,
-          configIndex,foldIndex:matrix.lineage.foldIndex});
+          configIndex,foldIndex:matrix.lineage.foldIndex,snapshot:{kind:'neuroforge-f15-search',schemaVersion:1,scope:'original-training-inner-cv',algorithm,task:outerMatrix.task.type,metric:request.metric,direction:request.direction,folds,seed,foldMembershipDigest:foldDigest,sourceTrainingCount:raw.length,status:'running',selectedIndex:null,results:[...results.map(r=>structuredClone(r)),{configIndex,configuration:{...config},status:'incomplete',foldScores:[...foldScores],foldCounts:[...foldCounts],mean:null,sampleSd:null,reason:null}]}});
       }
     }
     results.push({

@@ -30,7 +30,7 @@ export default function ScientificChart({result,dataset,onLink=()=>{},onShowShee
     if(tab!=='Chart'||!host.current||spec.evidence.status!=='ok')return;
     let cancelled=false,instance,observer;
     const start=performance.now(),family=chartDefinition(spec.chartType).family;
-    const loader=['evaluation','explanation'].includes(family)?import('../../../visualization/renderers/model.js'):family==='distribution'?import('../../../visualization/renderers/distribution.js'):
+    const loader=family.startsWith('research_')?import('../../../visualization/renderers/research.js'):['evaluation','explanation'].includes(family)?import('../../../visualization/renderers/model.js'):family==='distribution'?import('../../../visualization/renderers/distribution.js'):
       family==='relationship'?import('../../../visualization/renderers/relationship.js'):
       family==='quality'?import('../../../visualization/renderers/quality.js'):import('../../../visualization/renderers/pipeline.js');
     loader.then(({echarts})=>{
@@ -67,10 +67,10 @@ export default function ScientificChart({result,dataset,onLink=()=>{},onShowShee
   const exportAllowed=!spec.privacy.observationLevel||consent;
   const changeTab=value=>{setTab(value);setError('');setMessage('');};
   const maxPage=Math.max(0,Math.ceil(spec.evidence.rows.length/100)-1),currentPage=Math.min(page,maxPage);
-  return <section ref={root} className="prism-chart-card prism-f18-chart" aria-label={spec.modelContext?'F19 scientific chart':'F18 scientific chart'}>
+  return <section ref={root} className="prism-chart-card prism-f18-chart" aria-label={spec.researchContext?'F20 scientific chart':spec.modelContext?'F19 scientific chart':'F18 scientific chart'}>
     <header className="prism-chart-head"><div>
       <p className="prism-eyebrow">PRISM / REPRODUCIBLE VISUAL EVIDENCE</p><h5 className="prism-chart-title">{spec.title}</h5>
-      <p className="prism-subtitle">Population: <strong>{populationLabel[spec.source.population]}</strong> · {spec.source.rowCount} observations · {spec.evidence.rows.length} measured plot records</p>
+      <p className="prism-subtitle">Population: <strong>{populationLabel[spec.source.population]||spec.source.name}</strong> · {spec.source.rowCount} {spec.source.unit||'observations'} · {spec.evidence.rows.length} measured plot records</p>
     </div><button className="prism-action" onClick={()=>action(async()=>{if(document.fullscreenElement)await document.exitFullscreen();else await root.current.requestFullscreen();})}>Fullscreen chart</button></header>
     <div className="prism-chart-toolbar"><div className="prism-chart-tabs" role="group" aria-label="F18 chart views">
       {['Chart','Data','Python','JavaScript','Methods'].map(value=><button key={value} className={'prism-chart-tab '+(tab===value?'prism-chart-tab-active':'')} aria-pressed={tab===value} onClick={()=>changeTab(value)}>{value}</button>)}
@@ -80,19 +80,19 @@ export default function ScientificChart({result,dataset,onLink=()=>{},onShowShee
       {tab==='Chart'&&<>
         <div className="prism-sheet-tools">
           <label>Renderer<select aria-label="F18 renderer" value={renderer} onChange={e=>setRenderer(e.target.value)}><option value="svg">SVG</option><option value="canvas">Canvas</option></select></label>
-          {links.some(ids=>ids.length)&&<><button onClick={()=>chart.current?.dispatchAction({type:'takeGlobalCursor',key:'brush',brushOption:{brushType:'rect',brushMode:'single'}})}>Brush observations</button>
+          {!spec.researchContext&&links.some(ids=>ids.length)&&<><button onClick={()=>chart.current?.dispatchAction({type:'takeGlobalCursor',key:'brush',brushOption:{brushType:'rect',brushMode:'single'}})}>Brush observations</button>
             <button onClick={()=>{chart.current?.dispatchAction({type:'brush',areas:[]});onLink([]);}}>Clear chart selection</button></>}
           {onShowSheet&&<button onClick={onShowSheet}>Show linked DataSheet</button>}
         </div>
-        {spec.modelContext&&<p className="prism-chart-caption">Scroll horizontally on narrow screens to inspect the full chart; Data provides every exact plotted value.</p>}
-        <div className="prism-f18-plot-layout"><div className="min-w-0 overflow-x-auto" role={spec.modelContext?'region':undefined} aria-label={spec.modelContext?'Scrollable model chart canvas':undefined} tabIndex={spec.modelContext?0:undefined}>{spec.evidence.status==='ok'?<div ref={host} className="prism-f18-canvas" style={spec.plot.kind==='matrix'?{minWidth:600}:spec.modelContext?{minWidth:480}:undefined} role="img" aria-label={spec.title+' measured chart; equivalent exact values in Data view'} data-renderer={renderer}/>:
+        {(spec.modelContext||spec.researchContext)&&<p className="prism-chart-caption">Scroll horizontally on narrow screens to inspect the full chart; Data provides every exact plotted value.</p>}
+        <div className="prism-f18-plot-layout"><div className="min-w-0 overflow-x-auto" role={spec.modelContext||spec.researchContext?'region':undefined} aria-label={spec.researchContext?'Scrollable research chart canvas':spec.modelContext?'Scrollable model chart canvas':undefined} tabIndex={spec.modelContext||spec.researchContext?0:undefined}>{spec.evidence.status==='ok'?<div ref={host} className="prism-f18-canvas" style={spec.plot.kind==='matrix'||spec.researchContext?{minWidth:600}:spec.modelContext?{minWidth:480}:undefined} role="img" aria-label={spec.title+' measured chart; equivalent exact values in Data view'} data-renderer={renderer}/>:
           <p role="status" className="prism-empty">No defined measured evidence for this chart and population. Adjust the variables or inspect Methods.</p>}</div><ChartInspector spec={spec}/></div>
         {benchmark&&<p className="prism-chart-caption" data-testid="f18-render-benchmark">{benchmark.renderer.toUpperCase()} ready in {benchmark.initMs} ms · {benchmark.evidenceRows} evidence records · zoom by wheel/pinch or slider; Data provides keyboard row linking</p>}
       </>}
       {tab==='Data'&&<div className="space-y-3">
         <div className="prism-table-scroll" role="region" tabIndex={0} aria-label="F18 exact plotted data">
           <table className="prism-data-table"><caption>Exact plotted evidence · records {spec.evidence.rows.length?currentPage*100+1:0}–{Math.min((currentPage+1)*100,spec.evidence.rows.length)} of {spec.evidence.rows.length}</caption>
-            <thead><tr>{spec.evidence.columns.map(c=><th scope="col" key={c.key}>{c.key}</th>)}{links.length>0&&<th scope="col">Linked observations</th>}</tr></thead>
+            <thead><tr>{spec.evidence.columns.map(c=><th scope="col" key={c.key}>{c.key}</th>)}{links.length>0&&<th scope="col">{spec.researchContext?'Linked research records':'Linked observations'}</th>}</tr></thead>
             <tbody>{spec.evidence.rows.slice(currentPage*100,(currentPage+1)*100).map((row,index)=><tr key={index}>
               {spec.evidence.columns.map(c=><td key={c.key}>{display(row[c.key])}</td>)}
               {links.length>0&&<td><button disabled={!links[currentPage*100+index]?.length} onClick={()=>onLink(linkedRows(links,[currentPage*100+index]))}>Link plotted row {currentPage*100+index+1}</button></td>}
@@ -109,11 +109,12 @@ export default function ScientificChart({result,dataset,onLink=()=>{},onShowShee
       {tab==='Methods'&&<div className="space-y-3" aria-label="F18 methods and provenance">
         <p>Method: {spec.method.name} · implementation v{spec.method.implementationVersion} · registry v{spec.registryVersion}</p>
         {spec.method.notes.map((note,i)=><p key={i} className="prism-chart-caption">{note}</p>)}
+        {spec.researchContext&&<pre className="prism-code-block" tabIndex={0}>{JSON.stringify(spec.researchContext,null,2)}</pre>}
         {spec.modelContext&&<dl className="prism-f18-provenance">{Object.entries(spec.modelContext).map(([key,value])=><div key={key}><dt>{key}</dt><dd>{Array.isArray(value)?value.map(String).join(', '):String(value??'Not accessed')}</dd></div>)}</dl>}
-        <dl className="prism-f18-provenance"><dt>Source</dt><dd>{spec.source.name}</dd><dt>Dataset version</dt><dd>{spec.source.datasetVersion||'Imported source'}</dd><dt>Dataset SHA-256</dt><dd>{spec.source.datasetDigest}</dd><dt>Population SHA-256</dt><dd>{spec.source.scopeDigest}</dd>
+        <dl className="prism-f18-provenance"><dt>Source</dt><dd>{spec.source.name}</dd><dt>{spec.researchContext?'Saved evidence':'Dataset version'}</dt><dd>{spec.researchContext?'Aggregate snapshot; no dataset restoration':spec.source.datasetVersion||'Imported source'}</dd><dt>{spec.researchContext?'Collection SHA-256':'Dataset SHA-256'}</dt><dd>{spec.source.collectionDigest||spec.source.datasetDigest}</dd><dt>{spec.researchContext?'Chart scope SHA-256':'Population SHA-256'}</dt><dd>{spec.source.scopeDigest}</dd>
           <dt>Pipeline SHA-256</dt><dd>{spec.source.pipelineDigest||'Not a pipeline chart'}</dd><dt>Selection provenance</dt><dd>{spec.source.selectionDigest||'No explicit selection'}</dd></dl>
         <pre className="prism-code-block" tabIndex={0}>{JSON.stringify(spec.evidence.stats,null,2)}</pre>
-        <p className="prism-chart-caption">Analysis reproduction requires explicitly exporting original observations and implementing these documented definitions. The supplied scripts only reproduce plotted evidence. No raw row IDs are included in portable exports.</p>
+        <p className="prism-chart-caption">{spec.researchContext?'Research exports reproduce recorded aggregate plot data only. Saved receipts do not restore source observations, fitted preprocessing, models or training environments.':'Analysis reproduction requires explicitly exporting original observations and implementing these documented definitions. The supplied scripts only reproduce plotted evidence. No raw row IDs are included in portable exports.'}</p>
       </div>}
     </div>
     <footer className="prism-chart-footer"><div className="prism-sheet-tools">
@@ -124,11 +125,11 @@ export default function ScientificChart({result,dataset,onLink=()=>{},onShowShee
       <button disabled={!exportAllowed||tab!=='Chart'||spec.evidence.status!=='ok'||benchmark?.renderer!==renderer} onClick={()=>action(()=>{if(!exportRef.current)throw new Error('Renderer is not ready for export.');return exportRef.current('svg');})}>Export SVG</button>
       <button disabled={!exportAllowed||tab!=='Chart'||spec.evidence.status!=='ok'||benchmark?.renderer!==renderer} onClick={()=>action(()=>{if(!exportRef.current)throw new Error('Renderer is not ready for export.');return exportRef.current('png');})}>Export PNG</button>
     </div></footer>
-    <div className="prism-f18-consent"><label><input type="checkbox" aria-label="Allow observation-level chart exports" checked={consent} onChange={e=>setConsent(e.target.checked)}/> I allow observation-level coordinates, ordered values, missingness patterns and source data to be exported from this population.</label>
+    {!spec.researchContext&&<div className="prism-f18-consent"><label><input type="checkbox" aria-label="Allow observation-level chart exports" checked={consent} onChange={e=>setConsent(e.target.checked)}/> I allow observation-level coordinates, ordered values, missingness patterns and source data to be exported from this population.</label>
       {consent&&dataset&&<button className="prism-action" onClick={()=>action(()=>downloadText('neuroforge-source-observations.csv',sourceCsv(dataset,{consent}),'text/csv'))}>Export source observations CSV</button>}
       {consent&&dataset&&<button className="prism-action" onClick={()=>action(()=>downloadText('neuroforge-source-observations.json',JSON.stringify(sourceJson(dataset,{consent}),null,2),'application/json'))}>Export typed source observations JSON</button>}
       {spec.privacy.observationLevel&&!consent&&<p className="prism-chart-caption">This plot contains observation-level values. CSV/image exports require consent; JSON is metadata-only until consent is granted.</p>}
-    </div>
+    </div>}
     {message&&<p role="status" className="prism-feedback">{message}</p>}{error&&<p role="alert" className="prism-feedback">{error}</p>}
   </section>;
 }

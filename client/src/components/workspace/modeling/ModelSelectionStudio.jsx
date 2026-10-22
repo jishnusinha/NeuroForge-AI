@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { MODEL_DEFINITIONS } from '../../../ml/modelWorkbench/models.js';
 import { F15_GRID } from '../../../ml/modelSelection/searchManifest.js';
+const SearchVisualization=lazy(()=>import('../charts/SearchVisualization.jsx'));
 
 const control='mt-1 min-h-10 w-full rounded-lg border border-white/20 bg-surface-dark px-2 py-2 text-sm text-text-primary';
 const action='min-h-10 rounded-lg border border-white/20 bg-obsidian px-3 py-2 text-sm text-text-primary disabled:opacity-40';
@@ -13,6 +14,7 @@ export default function ModelSelectionStudio({ plan, matrix, onPromote, disabled
   const [folds,setFolds]=useState(3);
   const [metric,setMetric]=useState(metricOptions(matrix.task.type)[0]);
   const [search,setSearch]=useState(null);
+  const [partial,setPartial]=useState(null);
   const [progress,setProgress]=useState({completed:0,total:0});
   const [running,setRunning]=useState(false);
   const [error,setError]=useState('');
@@ -25,22 +27,23 @@ export default function ModelSelectionStudio({ plan, matrix, onPromote, disabled
   const cancel=()=>{
     if(workerRef.current){workerRef.current.terminate();workerRef.current=null;}
     requestRef.current++;
+    setPartial(null);
     setRunning(false);
     setMessage('Search cancelled. Incomplete trials were not treated as valid model-selection evidence.');
   };
   const start=()=>{
     if(disabled||running)return;
     if(workerRef.current)workerRef.current.terminate();
-    setRunning(true);setSearch(null);setSelectedIndex(null);setError('');setMessage('');
+    setRunning(true);setSearch(null);setPartial(null);setSelectedIndex(null);setError('');setMessage('');
     setProgress({completed:0,total:F15_GRID[chosen].length*folds});
     const worker=new Worker(new URL('../../../ml/modelSelection/searchWorker.js',import.meta.url),{type:'module'});
     const id=++requestRef.current;
     workerRef.current=worker;
     worker.onmessage=event=>{
       if(workerRef.current!==worker||event.data?.requestId!==id)return;
-      if(event.data.type==='progress')setProgress({
+      if(event.data.type==='progress'){setPartial(event.data.progress.snapshot??null);setProgress({
         completed:event.data.progress.completed,total:event.data.progress.total,
-      });
+      });}
       else{
         worker.terminate();workerRef.current=null;setRunning(false);
         if(event.data.type==='result'){
@@ -127,6 +130,7 @@ export default function ModelSelectionStudio({ plan, matrix, onPromote, disabled
         {running&&<button type="button" onClick={cancel} className={action}>Cancel F15 search</button>}
       </div>
       {running&&<p role="status" className="text-xs text-text-muted">Completed {progress.completed} of {progress.total} inner-fold fits. Worker can be cancelled.</p>}
+      {(search||running&&partial)&&<Suspense fallback={<p>Loading search analytics…</p>}><SearchVisualization search={search||partial} onSelect={setSelectedIndex} disabled={running||disabled}/></Suspense>}
       {search&&<section aria-label="F15 cross-validation results" className="space-y-3">
         <h5 className="font-semibold">Inner CV leaderboard · {search.metric} ({search.direction})</h5>
         <p className="text-xs text-text-muted">{search.sourceTrainingCount} original training observations · {search.folds} folds · seed {search.seed} · fold digest {search.foldMembershipDigest.slice(0,16)}…</p>
