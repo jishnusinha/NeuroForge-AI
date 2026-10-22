@@ -5,6 +5,7 @@ import { MODEL_DEFINITIONS, fitWorkbenchModel, predictWorkbenchModel } from '../
 import { evaluateWorkbenchPredictions } from '../../../ml/modelWorkbench/metrics.js';
 import ExplainabilityStudio from './ExplainabilityStudio.jsx';
 import ModelVisualization from './ModelVisualization.jsx';
+import CodeCompanionEntry from '../../../design/components/CodeCompanionEntry.jsx';
 import ModelSelectionStudio from './ModelSelectionStudio.jsx';
 import { createRunReceipt } from '../../../ml/modelRegistry/runContracts.js';
 import { attachExplanationToRun } from '../../../ml/modelRegistry/runLifecycle.js';
@@ -324,6 +325,7 @@ export default function ModelWorkbench({ plan }) {
       <button type="button" onClick={exportEvidence} disabled={!candidates.length} className={buttonClass}>
         Export F12 evidence JSON
       </button>
+      <CodeCompanionEntry context={{workspace:'workbench',algorithm,task:matrix.task.type,features:matrix.features.length,classCount:matrix.task.classes.length||2,epochs,lambda,learningRate:.25,seed:42}} evidence={{trainingRows:matrix.membership.train.length,validationRows:matrix.membership.validation.length}}/>
       {message&&<p role="status" className="text-sm text-quantum-mint">{message}</p>}
       {error&&<p role="alert" className="text-sm text-signal-amber">{error}</p>}
       <p className="text-xs text-text-muted">Standard F12 evidence exports contain only metadata and measured metrics. F14 can store a research receipt locally; fitted model parameters are saved only with explicit opt-in, never for kNN. Full source-data restoration and N-dimensional Arena integration remain future work.</p>

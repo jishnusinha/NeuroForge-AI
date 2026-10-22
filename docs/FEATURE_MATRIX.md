@@ -77,6 +77,8 @@ Saved-run Research Intelligence and live/archived search analytics compare recor
 Shared semantic tokens and controls, workflow stages and population context, research/model navigation, recent local receipts, report previews, accessible keyboard tabs and dialogs, reproduction ZIP bundles, and a managed visual audit/review workflow. See [F21 implementation and walkthroughs](DS_F21_PRODUCT_EXPERIENCE.md) for measured gates and release limitations.
 
 ## Important limits
+
+F22.0 adds reviewed synthetic learning-code examples in Playground, Neural Studio, and F12. See [F22 scope and verification](DS_F22_OPTIMIZATION_CODE_LAB.md). F22.1–F22.5 (including the new optimizer engine and 3D atlas) remain pending.
 - Legacy Playground/TF.js launch adapters require two numerical feature columns and compatible targets. F12 uses the full prepared matrix for regression and binary/multiclass classification.
 - Standalone PCA and optimizer landscape tools are educational computations, not automatically applied fitted transforms or real neural model telemetry.
 - A successful counterfactual search does not prove real-world causal intervention.

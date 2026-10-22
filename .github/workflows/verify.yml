@@ -40,6 +40,10 @@ jobs:
       - run: python -m pip install pandas==2.2.3 numpy==2.2.6 matplotlib==3.10.3 seaborn==0.13.2
       - run: node scripts/export-python-chart-fixtures.mjs
       - run: python scripts/verify-python-charts.py
+      - name: Install pinned CPU PyTorch for reviewed learning examples
+        run: python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+      - run: node scripts/export-learning-code-fixtures-f22.mjs
+      - run: python scripts/verify-learning-code-f22.py
       - run: npm run check
       - run: npm run test:e2e:memory
       - run: npm run audit:f21
@@ -49,6 +53,7 @@ jobs:
           GITHUB_PAGES: 'true'
           VITE_STATIC_DEMO: 'true'
       - run: npm run verify:pages:f21
+      - run: node scripts/verify-learning-pages-f22.mjs .artifacts/f21/pages-build
       - run: npm run baseline:summary
         if: always()
       - uses: actions/upload-artifact@v4

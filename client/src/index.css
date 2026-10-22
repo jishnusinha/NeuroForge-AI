@@ -4,6 +4,7 @@
 @import './design/tokens/surfaces.css';
 @import './design/tokens/motion.css';
 @import './design/workspaces.css';
+@import './design/tokens/codeCompanion.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

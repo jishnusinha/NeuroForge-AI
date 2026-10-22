@@ -1,0 +1,8 @@
+.prism-code-companion-entry>summary{cursor:pointer;font-weight:650;min-height:32px;}
+.prism-learning-companion label{display:grid;gap:.35rem;font-size:.85rem;}
+.prism-learning-companion select{padding:.5rem;border:1px solid var(--prism-boundary);border-radius:.5rem;background:var(--prism-inset);color:var(--prism-content-primary);}
+.prism-learning-source{max-height:30rem;max-width:100%;overflow:auto;padding:.85rem;border:1px solid var(--prism-boundary);border-radius:.6rem;background:var(--prism-inset);color:var(--prism-content-primary);font-size:.75rem;line-height:1.6;tab-size:4;}
+.prism-learning-source:focus-visible{outline:2px solid var(--prism-focus);outline-offset:3px;}
+.prism-learning-line{display:block;min-width:max-content;}
+.prism-learning-line-number{display:inline-block;width:3.25em;margin-right:1em;text-align:right;color:var(--prism-content-secondary);user-select:none;}
+@media(max-width:767px){.prism-learning-companion .prism-ui-toolbar>*{max-width:100%;}.prism-learning-source{max-height:24rem;}}

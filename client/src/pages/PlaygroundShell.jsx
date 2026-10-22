@@ -1,5 +1,6 @@
 import ErrorExplorer from '../components/workspace/ErrorExplorer.jsx';
 import LabContext from '../design/patterns/LabContext.jsx';
+import CodeCompanionEntry from '../design/components/CodeCompanionEntry.jsx';
 import WhatIfExplorer from '../components/workspace/WhatIfExplorer.jsx';
 import ReliabilityLab from '../components/workspace/ReliabilityLab.jsx';
 import { isFeatureEnabled, validateExecutionBudget } from '../services/productionConfig.js';
@@ -540,6 +541,7 @@ export default function PlaygroundShell() {
           <div className="space-y-1">
             <label className="text-xs text-text-muted font-medium">Selected Algorithm</label>
             <select
+              aria-label="Algorithm"
               value={selectedAlgorithm}
               onChange={(e) => {
                 setSelectedAlgorithm(e.target.value);
@@ -934,6 +936,7 @@ export default function PlaygroundShell() {
           </div>
         ))}
       </footer>
+      <section className="p-4"><CodeCompanionEntry context={{workspace:'playground',algorithm:selectedAlgorithm,method:regressionMethod,learningRate,lambda:regularization,threshold,features:2,epochs:90,seed:42}} evidence={{trainingRows:trainPoints.length,validationRows:testPoints.length,mse:!isStale?modelResult?.mse:undefined,validationAccuracy:!isStale?modelResult?.testAccuracy:undefined}}/></section>
       {!isStale && modelResult?.predictProbability && isFeatureEnabled('error_explorer') && <section className="p-4"><ErrorExplorer baselineRunId={currentRunId} samples={testPoints.map(p=>({id:p.id,split:'validation',actual:p.label,predictedProb:modelResult.predictProbability(p.x,p.y),features:{x:p.x,y:p.y}}))} onSelectSample={sample=>setSelectedContext({type:'sample',data:sample})} /></section>}
       {!isStale && modelResult?.predictProbability && ['Logistic Regression', 'K-Nearest Neighbors (KNN)'].includes(selectedAlgorithm) &&
         <section className="p-4">

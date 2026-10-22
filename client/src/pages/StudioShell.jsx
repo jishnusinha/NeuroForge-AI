@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import LabContext from '../design/patterns/LabContext.jsx';
+import CodeCompanionEntry from '../design/components/CodeCompanionEntry.jsx';
 import {
   Play,
   Pause,
@@ -769,6 +770,7 @@ export default function StudioShell() {
         )}
 
       </footer>
+      <section className="p-4"><CodeCompanionEntry context={{workspace:'studio',layers,learningRate,epochs:totalEpochs,optimizer,batchSize,seed:modelSeed}} evidence={{trainingRows:trainPoints.length,validationRows:valPoints.length,completedEpochs:lossHistory.at(-1)?.epoch,trainingLoss:lossHistory.at(-1)?.loss,validationLoss:lossHistory.at(-1)?.valLoss}}/></section>
       <section className="p-4">
         <OptimizerLandscapeLab />
       </section>

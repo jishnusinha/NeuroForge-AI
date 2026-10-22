@@ -10,6 +10,7 @@
     "baseline:summary": "node scripts/summarize-verification.mjs",
     "audit:f21": "node scripts/prism-audit-f21.mjs candidate --full",
     "review:f21": "node scripts/prism-visual-review-f21.mjs",
+    "fixtures:f22": "node scripts/export-learning-code-fixtures-f22.mjs",
     "verify:pages:f21": "node scripts/verify-pages-build.mjs .artifacts/f21/pages-build && node scripts/verify-prism-pages-f21.mjs",
     "lint": "npm --prefix client run lint -- --deny-warnings",
     "check": "npm test && npm run lint && npm run test:integration && npm run test:e2e",
