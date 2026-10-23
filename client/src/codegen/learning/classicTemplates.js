@@ -45,12 +45,12 @@ export function classicExample(C){
  return {mode:'synthetic_example_only',metric:C.task==='regression'?'validation_mse':'validation_accuracy',value,prediction,actual:validationTargets,features:C.features,updates};
 }
 export const classicKernelSource=()=>classicKernelSourceValue;
-export function classicJavascript(c){return `// NeuroForge F22 synthetic example, Node.js 24, no dependencies.
+export function classicJavascript(c){return `// NeuroForge  synthetic example, Node.js 24, no dependencies.
 // Imported observations, feature names and saved weights are absent. This is not browser-run replay.
 const classicExample = (${classicKernelSource()});
 console.log(JSON.stringify(classicExample(${JSON.stringify(c,null,2)})));
 `;}
-export function classicPython(c,framework=false){return `# NeuroForge F22 synthetic example only, Python 3.12, numpy==2.2.6
+export function classicPython(c,framework=false){return `# NeuroForge  synthetic example only, Python 3.12, numpy==2.2.6
 # ${framework?'Framework: scikit-learn==1.7.2 (PyTorch 2.5.1 for softmax). Framework conventions may differ from browser engines.':'From-scratch NumPy implementation of the configured algorithm.'}
 import json
 import numpy as np

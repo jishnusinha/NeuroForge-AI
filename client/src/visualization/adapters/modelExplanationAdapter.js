@@ -1,7 +1,7 @@
 import {col,evidence} from '../chartEvidence.js';
 import {classLabels} from './modelEvaluationAdapter.js';
 export function compute({config,explanation,classes}){
-  const type=config.type,result=explanation.result,rows=[],notes=[...(result.limitations||[]),result.explanation||'Uses completed F13 evidence. Descriptive model behavior; not causal, SHAP, fairness, or uncertainty evidence.'];
+  const type=config.type,result=explanation.result,rows=[],notes=[...(result.limitations||[]),result.explanation||'Uses completed explanation evidence. Descriptive model behavior; not causal, SHAP, fairness, or uncertainty evidence.'];
   let columns=[col('x','text'),col('y'),col('series','text')],plot={kind:'bar',xLabel:'Evidence',yLabel:'Measured value'},observationLevel=false;
   let stats={method:result.method,sampleCount:result.sampleCount??null,sourceCount:result.sourceCount??null};
   if(type==='model_importance'){

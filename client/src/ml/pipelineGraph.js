@@ -27,14 +27,15 @@ export function classifyPipelineColumns(dataset) {
 
 export function defaultStudioRecipe(dataset) {
   const headers = dataset?.headers ?? [];
-  const target = headers.find(name => /^(label|target|class|outcome)$/i.test(name)) ??
+  const target = dataset?.academy?.targetColumn ?? headers.find(name => /^(label|target|class|outcome)$/i.test(name)) ??
     headers.at(-1) ?? '';
   const kinds = classifyPipelineColumns(dataset);
   const eligible = headers.filter(name => name !== target);
   const numeric = eligible.filter(name => kinds[name] === 'numeric');
-  const featureColumns = (numeric.length ? numeric : eligible).slice(0, 2);
+  const prescribed=dataset?.academy?.featureColumns?.filter(name=>eligible.includes(name));
+  const featureColumns = (prescribed?.length ? prescribed : numeric.length ? numeric : eligible).slice(0, STUDIO_MAX_FEATURES);
   return {
-    schemaVersion: STUDIO_SCHEMA_VERSION, taskType: 'classification',
+    schemaVersion: STUDIO_SCHEMA_VERSION, taskType: dataset?.academy?.taskType ?? 'classification',
     featureColumns, targetColumn: target, splitPreset: '70/15/15', seed: 42,
     nodes: numeric.length ? [
       { id: 'numeric-imputation', type: 'numeric.impute', columns: [...featureColumns], enabled: true, options: { strategy: 'mean' } },

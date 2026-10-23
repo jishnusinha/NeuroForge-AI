@@ -51,13 +51,13 @@ export default function ModelSelectionStudio({ plan, matrix, onPromote, disabled
           setSearch(event.data.result);
           setSelectedIndex(event.data.result.selectedIndex);
           setMessage('Inner cross-validation completed. The fixed outer validation and test partitions were not included.');
-        }else setError(event.data.message??'F15 search failed.');
+        }else setError(event.data.message??' search failed.');
       }
     };
     worker.onerror=()=>{
       if(workerRef.current!==worker)return;
       worker.terminate();workerRef.current=null;setRunning(false);
-      setError('F15 cross-validation worker could not run.');
+      setError(' cross-validation worker could not run.');
     };
     // Only RAW original-training rows are sent to the worker. Even the outer
     // validation/test labels are absent from its data payload.
@@ -91,51 +91,51 @@ export default function ModelSelectionStudio({ plan, matrix, onPromote, disabled
           })),
         },
       });
-      setMessage('Selected configuration sent to F12 for a fresh training-only refit and fixed validation evaluation.');
+      setMessage('Selected configuration sent to  for a fresh training-only refit and fixed validation evaluation.');
     }catch(reason){setError(reason.message);}
   };
   return <details className="rounded-xl border border-plasma-cyan/30 bg-surface-dark p-3 sm:p-4">
     <summary className="cursor-pointer text-base font-semibold">
-      F15 — Advanced Model Selection
+       — Advanced Model Selection
       <span className="mt-1 block text-xs font-normal text-text-muted">
-        Train fold-safe F11 preprocessing and N-feature models within the original training partition. Compare inner-CV scores without touching held-out labels.
+        Train fold-safe  preprocessing and N-feature models within the original training partition. Compare inner-CV scores without touching held-out labels.
       </span>
     </summary>
-    <section role="region" aria-label="F15 Model Selection Studio" className="mt-4 space-y-4">
+    <section role="region" aria-label=" Model Selection Studio" className="mt-4 space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
         <label className="text-xs font-semibold">Search algorithm
-          <select aria-label="F15 search algorithm" className={control} value={chosen}
+          <select aria-label=" search algorithm" className={control} value={chosen}
             disabled={running||disabled} onChange={event=>{setAlgorithm(event.target.value);setSearch(null);setSelectedIndex(null);}}>
             {available.map(item=><option value={item.id} key={item.id}>{item.label}</option>)}
           </select>
         </label>
         <label className="text-xs font-semibold">Inner CV folds
-          <select aria-label="F15 fold count" className={control} value={folds}
+          <select aria-label=" fold count" className={control} value={folds}
             disabled={running||disabled} onChange={event=>{setFolds(Number(event.target.value));setSearch(null);setSelectedIndex(null);}}>
             <option value={3}>3 folds</option><option value={5}>5 folds</option>
           </select>
         </label>
         <label className="text-xs font-semibold">Selection metric
-          <select aria-label="F15 selection metric" className={control} value={metric}
+          <select aria-label=" selection metric" className={control} value={metric}
             disabled={running||disabled} onChange={event=>{setMetric(event.target.value);setSearch(null);setSelectedIndex(null);}}>
             {metricOptions(matrix.task.type).map(item=><option key={item} value={item}>{item}</option>)}
           </select>
         </label>
       </div>
-      <p className="text-xs text-text-muted">{F15_GRID[chosen].length} preset configurations × {folds} inner folds = {F15_GRID[chosen].length*folds} model fits. The maximum supported search is 60 fits. F11 transformations are refitted separately on each fold's training records.</p>
+      <p className="text-xs text-text-muted">{F15_GRID[chosen].length} preset configurations × {folds} inner folds = {F15_GRID[chosen].length*folds} model fits. The maximum supported search is 60 fits.  transformations are refitted separately on each fold's training records.</p>
       <div className="flex flex-wrap gap-2">
         <button type="button" onClick={start} disabled={running||disabled}
           className="min-h-11 rounded-lg bg-plasma-cyan px-4 py-2 text-sm font-semibold text-ink-on-accent disabled:opacity-40">
-          {running?'Evaluating inner CV…':'Run F15 cross-validation search'}
+          {running?'Evaluating inner CV…':'Run  cross-validation search'}
         </button>
-        {running&&<button type="button" onClick={cancel} className={action}>Cancel F15 search</button>}
+        {running&&<button type="button" onClick={cancel} className={action}>Cancel  search</button>}
       </div>
       {running&&<p role="status" className="text-xs text-text-muted">Completed {progress.completed} of {progress.total} inner-fold fits. Worker can be cancelled.</p>}
       {(search||running&&partial)&&<Suspense fallback={<p>Loading search analytics…</p>}><SearchVisualization search={search||partial} onSelect={setSelectedIndex} disabled={running||disabled}/></Suspense>}
-      {search&&<section aria-label="F15 cross-validation results" className="space-y-3">
+      {search&&<section aria-label=" cross-validation results" className="space-y-3">
         <h5 className="font-semibold">Inner CV leaderboard · {search.metric} ({search.direction})</h5>
         <p className="text-xs text-text-muted">{search.sourceTrainingCount} original training observations · {search.folds} folds · seed {search.seed} · fold digest {search.foldMembershipDigest.slice(0,16)}…</p>
-        <div role="region" aria-label="F15 fold score table" tabIndex={0}
+        <div role="region" aria-label=" fold score table" tabIndex={0}
           className="max-h-80 overflow-auto rounded-lg border border-white/10">
           <table className="w-full min-w-[510px] text-left text-xs">
             <caption className="p-2 text-left text-text-muted">Mean and sample standard deviation summarize inner fold variation; these are not confidence intervals.</caption>
@@ -143,7 +143,7 @@ export default function ModelSelectionStudio({ plan, matrix, onPromote, disabled
               <th scope="col" className="p-2">Mean</th><th scope="col" className="p-2">Fold SD</th>
               <th scope="col" className="p-2">Scores / status</th></tr></thead>
             <tbody>{search.results.map(item=><tr key={item.configIndex} className="border-t border-white/10">
-              <td className="p-2"><input type="radio" name="f15-candidate" aria-label={'F15 configuration '+(item.configIndex+1)}
+              <td className="p-2"><input type="radio" name="f15-candidate" aria-label={' configuration '+(item.configIndex+1)}
                 checked={selectedIndex===item.configIndex} disabled={item.status!=='complete'||disabled}
                 onChange={()=>setSelectedIndex(item.configIndex)}/></td>
               <th scope="row" className="p-2 font-medium">{Object.entries(item.configuration).map(([key,value])=>key+': '+value).join(', ')||'Training-only baseline'}</th>
@@ -160,7 +160,7 @@ export default function ModelSelectionStudio({ plan, matrix, onPromote, disabled
       {error&&<p role="alert" className="text-sm text-signal-amber">{error}</p>}
       {message&&<p role="status" className="text-sm text-quantum-mint">{message}</p>}
       <p className="text-xs text-text-muted">Search configurations are predefined, bounded and executed locally in a cancellable worker. Final validation and test remain separate. Selecting a candidate does not reveal test scores.</p>
-      <CodeCompanionEntry summary="F22 — Fold-safe search code" search={{workspace:'workbench',algorithm:chosen,task:matrix.task.type,features:matrix.features.length,classCount:matrix.task.classes.length||2,folds,metric,seed:42}}/>
+      <CodeCompanionEntry summary=" — Fold-safe search code" search={{workspace:'workbench',algorithm:chosen,task:matrix.task.type,features:matrix.features.length,classCount:matrix.task.classes.length||2,folds,metric,seed:42}}/>
     </section>
   </details>;
 }

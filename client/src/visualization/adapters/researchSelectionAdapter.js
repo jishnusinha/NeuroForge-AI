@@ -37,7 +37,7 @@ export function compute({search,request,receipt=null}){
     const t=search.trials.find(t=>t.configIndex===search.selectedIndex);
     if(receipt&&t){add({x:'Inner CV mean',y:t.mean,stage:'original-training-inner-cv',configuration:config(t)},t);add({x:'Fixed outer validation',y:receipt.validation.metrics[metric]??null,stage:'fixed-validation',configuration:config(t)},t);}
     plot={kind:'bar',xLabel:'Distinct measurement stages — not a shared leaderboard',yLabel:metric};
-    notes.push('Requires a saved promoted F14 run. Inner-CV and outer-validation scores remain separate; their difference is not a validated generalization-gap estimate. Final-test scores are excluded.');
+    notes.push('Requires a saved promoted model run. Inner-CV and outer-validation scores remain separate; their difference is not a validated generalization-gap estimate. Final-test scores are excluded.');
   }else if(chartType==='cv_paired'){
     const selected=request.selectedTrialIndexes||ranked.slice(0,2).map(t=>t.configIndex),paired=pairedTrialDifferences(search,selected);
     columns=[col('x','text'),col('y'),col('first_trial'),col('second_trial'),col('fold')];

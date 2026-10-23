@@ -1,5 +1,5 @@
 const encoded=c=>JSON.stringify(c);
-export function pythonScratch(c){return `# NeuroForge F22.0 / synthetic example only / template v1
+export function pythonScratch(c){return `# NeuroForge synthetic example only / template v1
 # Dependencies: Python 3.12, numpy==2.2.6. Run: python neuroforge-example.py
 # No imported observations, source split, fitted preprocessing or model weights are included.
 import json
@@ -96,7 +96,7 @@ else:
 print(json.dumps({'mode':'synthetic_example_only', 'metric':metric, 'value':score, 'updates':updates, 'prediction':prediction[:, 0].tolist(), 'features':C['features']}, allow_nan=False))
 `;}
 
-export function pythonFramework(c){return `# NeuroForge F22.0 / PyTorch analog on deterministic example data / template v1
+export function pythonFramework(c){return `# NeuroForge PyTorch analog on deterministic example data / template v1
 # Dependencies: Python 3.12, torch==2.5.1. Run: python neuroforge-example.py
 # Framework initialization differs from NumPy/TF.js. This does not replay a saved browser model.
 import json

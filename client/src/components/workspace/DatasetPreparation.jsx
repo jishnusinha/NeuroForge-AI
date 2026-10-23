@@ -31,8 +31,25 @@ export default function DatasetPreparation({ initialData = null, onParsed, onSam
   const [encoding,setEncoding]=useState('utf-8');
   const [hasHeader,setHasHeader]=useState(true);
   const [decimalSeparator,setDecimalSeparator]=useState('.');
+  const [schemaOverrides,setSchemaOverrides]=useState(initialData?.sourceOptions?.schemaOverrides||{});
+  const [modelSampleSize,setModelSampleSize]=useState(1600);
+  const [importDiagnostics,setImportDiagnostics]=useState([]);
   const importAbort=useRef(null);
+  const reparseContext=useRef({data,sourceSummary,onParsed});
+  useEffect(()=>{reparseContext.current={data,sourceSummary,onParsed};},[data,sourceSummary,onParsed]);
   useEffect(()=>()=>importAbort.current?.abort(),[]);
+  useEffect(()=>{
+    const current=reparseContext.current,{data:currentData,sourceSummary:currentSummary,onParsed:notifyParsed}=current;
+    if(!currentData?.sourceFile||!currentSummary)return;
+    const previous=currentData.sourceOptions?.schemaOverrides||{};
+    if(JSON.stringify(previous)===JSON.stringify(schemaOverrides))return;
+    const controller=new AbortController();importAbort.current?.abort();importAbort.current=controller;
+    setModelSelected(false);setImportDiagnostics([]);setError('');setImportProgress({fileName:currentData.sourceFile.name,bytes:0,totalBytes:currentData.sourceFile.size,rows:0});
+    importCsvFile(currentData.sourceFile,{...currentData.sourceOptions,schemaOverrides,signal:controller.signal,onProgress:setImportProgress})
+      .then(summary=>{const parsed={...currentData,rows:summary.previewRows,rowCount:summary.previewRows.length,sourceSummary:summary,sourceRowCount:summary.sourceRows,sourceOptions:{...currentData.sourceOptions,schemaOverrides},modelSelection:null};setSourceSummary(summary);setData(parsed);setColumns(defaultPipelineColumns(parsed));notifyParsed?.(parsed,currentData.sourceFile.name);setImportProgress(null);})
+      .catch(reason=>{if(reason.name!=='AbortError'){setError(reason.message);setImportDiagnostics(reason.diagnostics||[]);}setImportProgress(null);});
+    return()=>controller.abort();
+  },[schemaOverrides]);
   const navigate = useNavigate();
   const loadRun = useLabStore(state => state.loadRun);
 
@@ -101,7 +118,7 @@ export default function DatasetPreparation({ initialData = null, onParsed, onSam
     loadRun({
       workspace, algorithm: 'Logistic Regression',
       dataset: {
-        name: 'Imported CSV (F11 prepared)',
+        name: 'Imported CSV ( prepared)',
         ...(data.provenance?{provenance:structuredClone(data.provenance)}:{}),
         points: plan.labPoints,
         preparation,
@@ -133,16 +150,16 @@ export default function DatasetPreparation({ initialData = null, onParsed, onSam
             const file = event.target.files[0];
             if (!file) return;
             importAbort.current?.abort();importAbort.current=new AbortController();
-            setError('');setImportProgress({fileName:file.name,bytes:0,totalBytes:file.size,rows:0});setModelSelected(false);
-            const summary=await importCsvFile(file,{signal:importAbort.current.signal,onProgress:setImportProgress,delimiter,quoteChar,encoding,hasHeader,decimalSeparator});
+            setError('');setImportDiagnostics([]);setImportProgress({fileName:file.name,bytes:0,totalBytes:file.size,rows:0});setModelSelected(false);
+            const summary=await importCsvFile(file,{signal:importAbort.current.signal,onProgress:setImportProgress,delimiter,quoteChar,encoding,hasHeader,decimalSeparator,schemaOverrides});
             const visibleHeaders=summary.headers;
             const visibleRows=summary.previewRows.map(row=>{const next=Object.create(null);next.id=row.id;for(const header of visibleHeaders)next[header]=row[header];return next;});
-            const parsed={headers:visibleHeaders,originalHeaders:summary.originalHeaders,rows:visibleRows,rowCount:summary.previewRows.length,sourceSummary:summary,sourceRowCount:summary.sourceRows,sourceFile:file,sourceOptions:{delimiter,quoteChar,encoding,hasHeader,decimalSeparator},sampling:{kind:'source_preview',method:'first_records',rowCount:summary.previewRows.length}};
+            const parsed={headers:visibleHeaders,originalHeaders:summary.originalHeaders,rows:visibleRows,rowCount:summary.previewRows.length,sourceSummary:summary,sourceRowCount:summary.sourceRows,sourceFile:file,sourceOptions:{delimiter,quoteChar,encoding,hasHeader,decimalSeparator,schemaOverrides},sampling:{kind:'source_preview',method:'first_records',rowCount:summary.previewRows.length}};
             setSourceSummary(summary);setData(parsed);setColumns(defaultPipelineColumns(parsed));
             onParsed?.(parsed,file.name);
             setError('');
             setImportProgress(null);
-          } catch (reason) { if(reason.name!=='AbortError')setError(reason.message);setImportProgress(null); }
+          } catch (reason) { if(reason.name!=='AbortError'){setError(reason.message);setImportDiagnostics(reason.diagnostics||[]);}setImportProgress(null); }
         }} />
     </label>
     <details className="max-w-xl rounded-xl border border-white/10 p-3"><summary className="cursor-pointer text-sm font-medium">Parsing preferences</summary><div className="mt-3 grid gap-3 sm:grid-cols-2"><label className="text-xs">Delimiter<select aria-label="CSV delimiter" value={delimiter} onChange={e=>setDelimiter(e.target.value)} className="mt-1 block min-h-10 w-full rounded border border-white/20 bg-surface-dark p-2"><option value="auto">Detect automatically</option><option value=",">Comma</option><option value=";">Semicolon</option><option value="tab">Tab</option></select></label><label className="text-xs">Quote character<select aria-label="CSV quote character" value={quoteChar} onChange={e=>setQuoteChar(e.target.value)} className="mt-1 block min-h-10 w-full rounded border border-white/20 bg-surface-dark p-2"><option value={'"'}>Double quote</option><option value="'">Single quote</option></select></label><label className="text-xs">Encoding<select aria-label="CSV encoding" value={encoding} onChange={e=>setEncoding(e.target.value)} className="mt-1 block min-h-10 w-full rounded border border-white/20 bg-surface-dark p-2"><option value="utf-8">UTF-8</option><option value="utf-16le">UTF-16 little endian</option><option value="utf-16be">UTF-16 big endian</option><option value="iso-8859-1">ISO-8859-1</option></select></label><label className="text-xs">Decimal separator<select aria-label="Decimal separator" value={decimalSeparator} onChange={e=>setDecimalSeparator(e.target.value)} className="mt-1 block min-h-10 w-full rounded border border-white/20 bg-surface-dark p-2"><option value=".">Period (1.25)</option><option value=",">Comma (1,25)</option></select></label><label className="flex min-h-10 items-center gap-2 text-xs sm:col-span-2"><input type="checkbox" checked={hasHeader} onChange={e=>setHasHeader(e.target.checked)}/>First row contains column names</label></div></details>
@@ -159,8 +176,10 @@ export default function DatasetPreparation({ initialData = null, onParsed, onSam
       <p className="text-sm text-text-muted">{sourceSummary.sourceRows.toLocaleString()} source rows · {sourceSummary.sourceColumns} columns · {(sourceSummary.fileBytes/1024/1024).toFixed(2)} MiB · {sourceSummary.delimiter==='tab'?'Tab separated':`“${sourceSummary.delimiter}” separated`}</p>
       <p className="text-xs text-text-muted">The sheet below shows the first 100 records and up to 100 columns. Numeric counts, missing values, minimum, maximum, mean and variance were computed across the complete source. Model preparation continues to use an explicit sample capped at 2,000 rows and 20 output features.</p>
       <div className="max-h-64 overflow-auto rounded-lg border border-white/10"><table className="w-full min-w-[560px] text-left text-xs"><caption className="p-2 text-left text-text-muted">Column profile · whole source stream</caption><thead><tr>{['Column','Inferred type','Observed','Missing','Minimum','Maximum','Mean'].map(x=><th scope="col" key={x} className="p-2">{x}</th>)}</tr></thead><tbody>{sourceSummary.profile.map(col=><tr key={col.name} className="border-t border-white/10"><th scope="row" className="p-2">{col.name}</th><td className="p-2">{col.type}</td><td className="p-2">{col.count.toLocaleString()}</td><td className="p-2">{col.missingCount.toLocaleString()}</td><td className="p-2">{display(col.min)}</td><td className="p-2">{display(col.max)}</td><td className="p-2">{display(col.mean)}</td></tr>)}</tbody></table></div>
+      <details className="rounded-lg border border-white/10 p-3"><summary className="cursor-pointer text-sm font-medium">Column type overrides</summary><p className="my-2 text-xs text-text-muted">Choose a type to rescan the local source. Dates must use ISO format. Invalid values stop the import and include a downloadable diagnostic record.</p><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{sourceSummary.headers.map((header,index)=><label key={header} className="text-xs">{header}<select aria-label={`Type override ${header}`} value={schemaOverrides[header]||'auto'} onChange={event=>setSchemaOverrides(previous=>{const next={...previous};if(event.target.value==='auto')delete next[header];else next[header]=event.target.value;return next;})} className="mt-1 block min-h-10 w-full rounded border border-white/20 bg-surface-dark p-2"><option value="auto">Inferred ({sourceSummary.profile[index]?.inferredType||sourceSummary.profile[index]?.type||'unknown'})</option><option value="numeric">Numeric</option><option value="text">Text</option><option value="boolean">Boolean</option><option value="date">Date (ISO)</option></select></label>)}</div></details>
+      <label className="block max-w-sm text-xs">Model sample rows: {Math.min(modelSampleSize,sourceSummary.sampleRows.length).toLocaleString()} of {sourceSummary.sourceRows.toLocaleString()}<input aria-label="Model sample size" type="range" min="100" max={Math.max(100,sourceSummary.sampleRows.length)} step="100" value={Math.min(modelSampleSize,Math.max(100,sourceSummary.sampleRows.length))} onChange={event=>setModelSampleSize(Number(event.target.value))} className="mt-2 block w-full"/><span className="text-text-muted">The seeded sample is capped at {sourceSummary.sampleRows.length.toLocaleString()} records.</span></label>
       <button type="button" disabled={Boolean(sourceEditError)} className="min-h-11 rounded-xl bg-cyan-700 px-4 py-2 font-semibold text-white" onClick={()=>{
-        const sampleRows=sourceSummary.sampleRows.slice(0,2000).map(row=>{const next=Object.create(null);next.id=row.id;for(const header of data.headers){const key=JSON.stringify([row.id,header]);next[header]=Object.hasOwn(sourceEdits,key)?sourceEdits[key]:row[header];}return next;});
+        const sampleRows=sourceSummary.sampleRows.slice(0,Math.min(modelSampleSize,sourceSummary.sampleRows.length)).map(row=>{const next=Object.create(null);next.id=row.id;for(const header of data.headers){const key=JSON.stringify([row.id,header]);next[header]=Object.hasOwn(sourceEdits,key)?sourceEdits[key]:row[header];}return next;});
         const selected={...data,rows:sampleRows,rowCount:sampleRows.length,sourceSummary,sourceRowCount:sourceSummary.sourceRows,modelSelection:{explicit:true,method:'seeded_reservoir_sample',seed:sourceSummary.chartSample.seed,sourceRows:sourceSummary.sourceRows,selectedRows:sampleRows.length}};
         setData(selected);setColumns(defaultPipelineColumns(selected));setModelSelected(true);setSampleEditRevision(sourceEditRevision);onSampleSelected?.(selected);setError('');
       }}>Use a reproducible sample for model preparation</button>
@@ -171,7 +190,8 @@ export default function DatasetPreparation({ initialData = null, onParsed, onSam
       {fullSourceOpened&&data?.sourceFile&&<Suspense fallback={<p role="status">Loading full-source modeling…</p>}><FullSourceModeling key={sourceSummary.sourceFingerprint.value} dataset={data}/></Suspense>}
     </section>}
 
-    {data && modelSelected && !sampleEditsChanged && !sourceEditError && <>
+    {data?.academy?.taskType==='clustering'&&<p role="note" className="rounded-lg border border-cyan-400/20 p-3 text-sm">This case is unsupervised and has no target column. Use the case’s K-means lesson to start clustering; supervised target and split controls are hidden here.</p>}
+    {data && data.academy?.taskType!=='clustering' && modelSelected && !sampleEditsChanged && !sourceEditError && <>
       <p className="text-sm text-text-muted">{data.modelSelection?`${data.modelSelection.selectedRows.toLocaleString()} explicitly sampled model rows of ${data.sourceRowCount.toLocaleString()} source rows`: `${data.rowCount} source rows`} · {data.headers.length} model-available columns · All data remains local</p>
       <div className="grid gap-3 sm:grid-cols-3" role="group" aria-label="Feature and target selection">
         {['x', 'y', 'target'].map(key => <label key={key} className="block text-xs font-semibold uppercase tracking-wide text-text-muted">
@@ -273,6 +293,6 @@ export default function DatasetPreparation({ initialData = null, onParsed, onSam
       </div>
       <PipelineStudio dataset={data} onLaunch={launchAdvanced}/>
     </>}
-    {error && <p role="alert" className="rounded-lg border border-red-400/20 bg-red-400/5 p-3 text-sm text-red-200">{error}</p>}
+    {error && <div role="alert" className="rounded-lg border border-red-400/20 bg-red-400/5 p-3 text-sm text-red-200"><p>{error}</p>{importDiagnostics.length>0&&<button type="button" className="mt-2 underline" onClick={()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({kind:'neuroforge-csv-parse-diagnostics',schemaVersion:1,items:importDiagnostics.slice(0,100)},null,2)],{type:'application/json'})),link=document.createElement('a');link.href=url;link.download='csv-parse-diagnostics.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}}>Download parse diagnostics</button>}</div>}
   </section>;
 }

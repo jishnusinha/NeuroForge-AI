@@ -2,7 +2,7 @@ import {learningContext} from './contracts.js';
 import {classicKernelSource} from './classicTemplates.js';
 import {validateSearchRequest} from '../../ml/modelSelection/searchManifest.js';
 export function searchExampleContext(input){const c=learningContext({...input,learningRate:input.learningRate??.25}),request=validateSearchRequest(c.task,c.algorithm,{folds:input.folds,seed:c.seed,metric:input.metric});return {context:c,request};}
-export function searchJavascript(input){const {context,request}=searchExampleContext(input);return `// F22 synthetic F15 protocol example; Node.js 24, no dependencies.
+export function searchJavascript(input){const {context,request}=searchExampleContext(input);return `//  synthetic  protocol example; Node.js 24, no dependencies.
 // Same configured algorithm, folds, configuration list and metric; different generated data and fold membership.
 // 120 LCG rows: first 96 for inner CV; last 24 reserved and NEVER accessed. No final-test data.
 // Classification uses balanced synthetic labels and deterministic stratified folds; regression uses round-robin folds.
@@ -12,7 +12,7 @@ const score=(result)=>{const y=result.actual,p=result.prediction,n=y.length;if(R
 const results=REQUEST.configs.map(options=>{const scores=Array.from({length:REQUEST.folds},(_,fold)=>score(classicExample({...C,...options,seed:C.seed,modelSeed:options.seed??C.seed,search:true,folds:REQUEST.folds,fold})));return {options,scores,mean:scores.reduce((a,b)=>a+b,0)/scores.length};});
 console.log(JSON.stringify({mode:'synthetic_example_only',protocol:REQUEST,results,holdoutAccess:false}));
 `;}
-export function searchPython(input){const {context,request}=searchExampleContext(input);return `# F22 synthetic F15 protocol analog; Python 3.12, numpy==2.2.6, scikit-learn==1.7.2
+export function searchPython(input){const {context,request}=searchExampleContext(input);return `#  synthetic  protocol analog; Python 3.12, numpy==2.2.6, scikit-learn==1.7.2
 # Exact configured candidate list and metric; generated data and framework conventions differ from browser engines.
 # Train-only standardization occurs INSIDE each fold. Reserved rows are never evaluated or used for selection.
 import json, numpy as np

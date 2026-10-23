@@ -147,7 +147,7 @@ export default function DataSheet({dataset,sourceCount=dataset.rows.length,selec
     rowIndex>=viewport.rowStart&&rowIndex<viewport.rowEnd&&
     columnIndex>=viewport.colStart&&columnIndex<viewport.colEnd;
 
-  return <section aria-label="F17 PRISM DataSheet" className="prism-sheet-shell">
+  return <section aria-label=" PRISM DataSheet" className="prism-sheet-shell">
     <div className="prism-sheet-toolbar">
       <div className="flex min-w-0 items-center gap-3">
         <div className="prism-sheet-icon"><Table2 size={20} aria-hidden="true"/></div>
@@ -263,7 +263,7 @@ export default function DataSheet({dataset,sourceCount=dataset.rows.length,selec
         </div>
       </div>
       {rows.length===0&&<div className="prism-sheet-empty" role="status">
-        No rows match the current F10 filters. Clear or adjust filters to view source cells.
+        No rows match the current  filters. Clear or adjust filters to view source cells.
       </div>}
     </div>
     <div role="region" className="prism-sheet-inspector" aria-label="DataSheet source inspector">

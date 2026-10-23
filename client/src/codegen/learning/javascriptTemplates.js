@@ -1,4 +1,4 @@
-export function javascriptScratch(c){return `// NeuroForge F22.0 / synthetic example only / template v1
+export function javascriptScratch(c){return `// NeuroForge synthetic example only / template v1
 // Dependencies: Node.js 24. Run: node neuroforge-example.mjs
 // No source observations, names, split membership or model weights are embedded.
 const C = ${JSON.stringify(c,null,2)};
@@ -64,7 +64,7 @@ console.log(JSON.stringify({mode:'synthetic_example_only',metric:C.task==='regre
 
 export function javascriptFramework(c){
  if(c.family==='baseline'||['ols','ridge'].includes(c.method))return javascriptScratch(c);
- return `// NeuroForge F22.0 / TF.js analog on deterministic example data / template v1
+ return `// NeuroForge TF.js analog on deterministic example data / template v1
 // npm install @tensorflow/tfjs@4.22.0 ; node neuroforge-example.mjs
 // Initializers/precision differ from PyTorch and NumPy. This does not replay a browser model.
 import * as tf from '@tensorflow/tfjs';

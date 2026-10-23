@@ -1,39 +1,35 @@
 import { test, expect } from '@playwright/test';
 
-test('workspace themes change real surface colors and persist across reloads', async ({ page }) => {
+test('all ten themes preserve readable workspace surfaces on desktop and mobile', async ({ page }, info) => {
   await page.goto('/app');
   const selector = page.getByRole('combobox', { name: 'Visual theme' });
   const workspace = page.locator('#main-content');
-  const sidebar = page.getByLabel('Workspace sidebar');
-  const heading = page.locator('header h1');
 
   await expect(selector).toBeVisible();
   await expect(workspace).toBeVisible();
 
-  const palettes = [
-    { id: 'midnight', canvas: 'rgb(8, 13, 24)', sidebar: 'rgb(13, 20, 34)' },
-    { id: 'slate', canvas: 'rgb(20, 27, 38)', sidebar: 'rgb(26, 37, 50)' },
-    { id: 'forest', canvas: 'rgb(16, 28, 27)', sidebar: 'rgb(20, 39, 35)' },
-    { id: 'paper', canvas: 'rgb(243, 245, 244)', sidebar: 'rgb(249, 251, 250)' },
-  ];
-
-  for (const { id, canvas, sidebar: panel } of palettes) {
+  const ids = ['midnight','slate','forest','paper','glacier','dusk','ocean','sand','rose','contrast'];
+  const measurements=[];
+  for (const id of ids) {
     await selector.selectOption(id);
     await expect(page.locator('html')).toHaveAttribute('data-theme', id);
-    await expect.poll(() => workspace.evaluate(el => getComputedStyle(el).backgroundColor)).toBe(canvas);
-    await expect.poll(() => sidebar.evaluate(el => getComputedStyle(el).backgroundColor)).toBe(panel);
+    const result=await page.evaluate(()=>{
+      const rgb=value=>value.match(/[\d.]+/g).slice(0,3).map(Number);
+      const linear=value=>{value/=255;return value<=.04045?value/12.92:((value+.055)/1.055)**2.4;};
+      const luminance=color=>{const [r,g,b]=rgb(color).map(linear);return .2126*r+.7152*g+.0722*b;};
+      const contrast=(foreground,background)=>{const a=luminance(foreground),b=luminance(background);return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);};
+      const root=getComputedStyle(document.documentElement),main=document.querySelector('#main-content'),side=document.querySelector('[aria-label="Workspace sidebar"]'),heading=document.querySelector('header h1');
+      const fg=getComputedStyle(heading).color,bg=getComputedStyle(main).backgroundColor;
+      return {background:bg,sidebar:getComputedStyle(side).backgroundColor,heading:fg,headingContrast:Number(contrast(fg,bg).toFixed(2)),scrollWidth:document.documentElement.scrollWidth,width:innerWidth,mode:root.colorScheme};
+    });
+    measurements.push({id,...result});
+    expect(result.headingContrast,`${id} heading contrast`).toBeGreaterThanOrEqual(4.5);
+    expect(result.scrollWidth,`${id} horizontal overflow`).toBeLessThanOrEqual(result.width);
   }
-
-  // Light mode also adapts semantic text, not just the background.
-  await expect.poll(() => heading.evaluate(el => getComputedStyle(el).color)).toBe('rgb(29, 48, 54)');
-  await expect.poll(() => page.evaluate(() => localStorage.getItem('neuroforge-theme-v1'))).toBe('paper');
-  await expect.poll(() => page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(false);
-
+  await info.attach('all-theme-workspace-contrast',{body:JSON.stringify(measurements,null,2),contentType:'application/json'});
+  await selector.selectOption('paper');
   await page.reload();
   await expect(selector).toHaveValue('paper');
-  await expect.poll(() => workspace.evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(243, 245, 244)');
-
-  await selector.selectOption('midnight');
-  await expect.poll(() => workspace.evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(8, 13, 24)');
-  await expect.poll(() => page.evaluate(() => document.documentElement.classList.contains('dark'))).toBe(true);
+  await expect(page.locator('html')).toHaveAttribute('data-theme','paper');
+  await expect.poll(() => page.evaluate(()=>getComputedStyle(document.querySelector('header h1')).color)).not.toBe('rgb(255, 255, 255)');
 });

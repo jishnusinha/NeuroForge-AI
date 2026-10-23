@@ -24,7 +24,7 @@ export function probabilityDiagnostics(report,classes,classIndex=classes.length-
     ece:sum(bins.filter(b=>b.count).map(b=>b.count/n*Math.abs(b.mean-b.observed)))};
 }
 export function compute({report,config,classes,trainingTrace=null,trainingCount=0}){
-  const type=config.type,rows=[],links=[],notes=['Uses the recorded F12 report; no predictions, fitting, splits, or test access are performed by this adapter.'],stats={...report.metrics,count:report.count};
+  const type=config.type,rows=[],links=[],notes=['Uses the recorded evaluation report; no predictions, fitting, splits, or test access are performed by this adapter.'],stats={...report.metrics,count:report.count};
   let plot={kind:'bar',xLabel:'Measured category',yLabel:'Value'},observationLevel=false,cols=columns;
   const add=(row,ids=[])=>{rows.push(row);links.push(ids);};
   const labels=classLabels(classes);

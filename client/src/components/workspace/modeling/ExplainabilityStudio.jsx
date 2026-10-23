@@ -41,17 +41,17 @@ function ExportButton({ matrix, model, candidate, importance, local, dependence,
         matrix,model,candidateId:candidate.id,importance,local,dependence,whatIf,subgroups,
       });
       await onArchive(receipt);
-      onError('');onMessage('Explanation evidence attached to the saved F14 run.');
-    }catch(reason){onError('Could not attach F13 evidence: '+reason.message);}
+      onError('');onMessage('Explanation evidence attached to the saved  run.');
+    }catch(reason){onError('Could not attach  evidence: '+reason.message);}
   };
   return <div className="flex flex-wrap gap-2">
     <button type="button" onClick={run} className={buttonClass}>Export explanation evidence JSON</button>
-    <button type="button" onClick={archive} disabled={!onArchive} className={buttonClass}>Attach F13 evidence to saved F14 run</button>
+    <button type="button" onClick={archive} disabled={!onArchive} className={buttonClass}>Attach  evidence to saved  run</button>
   </div>;
 }
 
 function ImportancePanel({ importance, job, onStart, onCancel }) {
-  return <section aria-label="F13 permutation importance" className="space-y-3">
+  return <section aria-label=" permutation importance" className="space-y-3">
     <h5 className="font-semibold">Repeated permutation importance</h5>
     <p className="text-xs text-text-muted">Measures score degradation after a seeded column shuffle within validation observations. Positive importance indicates worse scores after shuffling; negative results are possible. Correlated features may share importance.</p>
     <div className="flex flex-wrap gap-2">
@@ -82,7 +82,7 @@ function ImportancePanel({ importance, job, onStart, onCancel }) {
           </div>;
         })}
       </div>
-      <div role="region" aria-label="F13 importance evidence table" tabIndex={0} className="overflow-auto rounded-xl border border-white/10">
+      <div role="region" aria-label=" importance evidence table" tabIndex={0} className="overflow-auto rounded-xl border border-white/10">
         <table className="w-full min-w-[420px] text-left text-xs">
           <thead><tr><th scope="col" className="p-2">Prepared feature</th><th scope="col" className="p-2">Mean score degradation</th><th scope="col" className="p-2">Variation (SD)</th></tr></thead>
           <tbody>{importance.features.map(item=><tr key={item.name} className="border-t border-white/10">
@@ -99,7 +99,7 @@ function ImportancePanel({ importance, job, onStart, onCancel }) {
 
 function LocalPanel({ explanation }) {
   const linear=(explanation.contributions?.length??0)>0;
-  return <section aria-label="F13 local explanation" className="space-y-3">
+  return <section aria-label=" local explanation" className="space-y-3">
     <h5 className="font-semibold">Local model explanation</h5>
     <p className="text-sm">Prediction: <strong>{displayPrediction(explanation.modelOutput.predicted)}</strong>
       {explanation.modelOutput.probabilities&&
@@ -111,7 +111,7 @@ function LocalPanel({ explanation }) {
         <div className="rounded-lg bg-surface-dark p-3"><div className="text-xs text-text-muted">Intercept</div><div className="tabular-nums">{displayNumber(explanation.intercept)}</div></div>
         <div className="rounded-lg bg-surface-dark p-3"><div className="text-xs text-text-muted">Sum ({explanation.scale})</div><div className="tabular-nums">{displayNumber(explanation.total)}</div></div>
       </div>
-      <div role="region" aria-label="F13 local contribution evidence" tabIndex={0} className="overflow-auto rounded-lg border border-white/10">
+      <div role="region" aria-label=" local contribution evidence" tabIndex={0} className="overflow-auto rounded-lg border border-white/10">
         <table className="min-w-[370px] w-full text-left text-xs">
           <thead><tr><th scope="col" className="p-2">Prepared feature</th><th scope="col" className="p-2">Contribution</th></tr></thead>
           <tbody>{explanation.contributions.map(item=><tr key={item.feature} className="border-t border-white/10">
@@ -123,7 +123,7 @@ function LocalPanel({ explanation }) {
     </>}
     {explanation.votes&&<>
       <h6 className="text-sm font-semibold">{explanation.treeCount?'Forest tree votes':'Training-neighbor vote evidence'}</h6>
-      <div role="region" aria-label="F13 kNN class vote evidence" className="overflow-auto rounded-lg border border-white/10">
+      <div role="region" aria-label=" kNN class vote evidence" className="overflow-auto rounded-lg border border-white/10">
         <table className="w-full text-left text-xs">
           <thead><tr><th scope="col" className="p-2">Class</th><th scope="col" className="p-2">Votes</th></tr></thead>
           <tbody>{explanation.votes.map(item=><tr key={String(item.name)} className="border-t border-white/10">
@@ -156,17 +156,17 @@ function DependencePanel({ matrix, feature, setFeature, classIndex, setClassInde
     const y=height-16-(point.meanPrediction-minimum)/denominator*(height-32);
     return x+','+y;
   }).join(' ');
-  return <section aria-label="F13 partial dependence" className="space-y-3">
+  return <section aria-label=" partial dependence" className="space-y-3">
     <h5 className="font-semibold">Partial dependence and ICE</h5>
     <p className="text-xs text-text-muted">Prepared-feature sweeps across the training-data range, evaluated against bounded validation background rows. Hypothetical combinations may be unrealistic. Results are not causal.</p>
     <div className="grid gap-2 sm:grid-cols-2">
       <label className="text-xs font-semibold">Prepared feature
-        <select aria-label="F13 dependence feature" className={inputClass} value={feature} onChange={event=>setFeature(event.target.value)}>
+        <select aria-label=" dependence feature" className={inputClass} value={feature} onChange={event=>setFeature(event.target.value)}>
           {matrix.features.map(name=><option key={name} value={name}>{name}</option>)}
         </select>
       </label>
       {matrix.task.type!=='regression'&&<label className="text-xs font-semibold">Predicted class
-        <select aria-label="F13 dependence class" className={inputClass} value={classIndex} onChange={event=>setClassIndex(Number(event.target.value))}>
+        <select aria-label=" dependence class" className={inputClass} value={classIndex} onChange={event=>setClassIndex(Number(event.target.value))}>
           {matrix.task.classes.map((name,index)=><option key={index} value={index}>{String(name)}</option>)}
         </select>
       </label>}
@@ -178,7 +178,7 @@ function DependencePanel({ matrix, feature, setFeature, classIndex, setClassInde
         <line x1="18" y1={height-16} x2={width-18} y2={height-16} stroke="currentColor" opacity="0.35"/>
         <polyline points={points} fill="none" stroke="#5BD5E5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
-      <div role="region" aria-label="F13 partial dependence evidence" tabIndex={0} className="max-h-64 overflow-auto rounded-lg border border-white/10">
+      <div role="region" aria-label=" partial dependence evidence" tabIndex={0} className="max-h-64 overflow-auto rounded-lg border border-white/10">
         <table className="w-full text-left text-xs"><thead><tr><th scope="col" className="p-2">Prepared feature value</th><th scope="col" className="p-2">Mean prediction</th></tr></thead>
           <tbody>{result.points.map((point,index)=><tr key={index} className="border-t border-white/10">
             <td className="p-2 tabular-nums">{displayNumber(point.value)}</td>
@@ -194,12 +194,12 @@ function DependencePanel({ matrix, feature, setFeature, classIndex, setClassInde
 
 function WhatIfPanel({ controls, editFeature, setEditFeature, editValue, setEditValue, sourceValue, onRun, result }) {
   const choice=controls.find(item=>item.name===editFeature);
-  return <section aria-label="F13 source what-if" className="space-y-3">
+  return <section aria-label=" source what-if" className="space-y-3">
     <h5 className="font-semibold">Frozen-pipeline source what-if</h5>
-    <p className="text-xs text-text-muted">Change one original feature within its observed training range or allowed training category. The frozen F11 transformations replay without refitting. These are hypothetical model predictions, not real-world interventions.</p>
+    <p className="text-xs text-text-muted">Change one original feature within its observed training range or allowed training category. The frozen  transformations replay without refitting. These are hypothetical model predictions, not real-world interventions.</p>
     {controls.some(item=>item.editable)?<>
       <label className="block text-xs font-semibold">Original input feature
-        <select aria-label="F13 source edit feature" className={inputClass} value={editFeature}
+        <select aria-label=" source edit feature" className={inputClass} value={editFeature}
           onChange={event=>{setEditFeature(event.target.value);setEditValue('');}}>
           {controls.filter(item=>item.editable).map(item=><option key={item.name} value={item.name}>{item.name}</option>)}
         </select>
@@ -208,12 +208,12 @@ function WhatIfPanel({ controls, editFeature, setEditFeature, editValue, setEdit
         <p className="text-xs text-text-muted">Original observed value: {sourceValue===null||sourceValue===undefined?'Missing':String(sourceValue)}</p>
         {choice.type==='numeric'
           ?<label className="block text-xs font-semibold">Hypothetical numeric value ({choice.min} to {choice.max})
-            <input type="number" step="any" aria-label="F13 hypothetical numeric value" className={inputClass}
+            <input type="number" step="any" aria-label=" hypothetical numeric value" className={inputClass}
               min={choice.min} max={choice.max} value={editValue}
               placeholder="Within observed training range" onChange={event=>setEditValue(event.target.value)}/>
           </label>
           :<label className="block text-xs font-semibold">Hypothetical category
-            <select aria-label="F13 hypothetical category" className={inputClass} value={editValue||choice.choices[0]}
+            <select aria-label=" hypothetical category" className={inputClass} value={editValue||choice.choices[0]}
               onChange={event=>setEditValue(event.target.value)}>
               {choice.choices.map(value=><option key={value} value={value}>{value}</option>)}
             </select>
@@ -233,18 +233,18 @@ function WhatIfPanel({ controls, editFeature, setEditFeature, editValue, setEdit
 }
 
 function SubgroupsPanel({ feature, setFeature, matrix, result, onRun }) {
-  return <section aria-label="F13 subgroup diagnostics" className="space-y-3">
+  return <section aria-label=" subgroup diagnostics" className="space-y-3">
     <h5 className="font-semibold">Feature-range performance</h5>
     <p className="text-xs text-text-muted">Two groups divided at the TRAIN median, measured only on validation observations. Differences are descriptive; small groups cannot support a reliable estimate.</p>
     <label className="block max-w-sm text-xs font-semibold">Prepared grouping feature
-      <select aria-label="F13 subgroup feature" className={inputClass} value={feature} onChange={event=>setFeature(event.target.value)}>
+      <select aria-label=" subgroup feature" className={inputClass} value={feature} onChange={event=>setFeature(event.target.value)}>
         {matrix.features.map(name=><option key={name} value={name}>{name}</option>)}
       </select>
     </label>
     <button type="button" className={buttonClass} onClick={onRun}>Analyze validation subgroups</button>
     {result&&<div className="space-y-2">
       <p className="text-xs text-text-muted">Method: {result.method}; training median {displayNumber(result.boundary)}; metric {result.metric}.</p>
-      <div role="region" aria-label="F13 subgroup evidence" tabIndex={0} className="overflow-auto rounded-lg border border-white/10">
+      <div role="region" aria-label=" subgroup evidence" tabIndex={0} className="overflow-auto rounded-lg border border-white/10">
         <table className="w-full min-w-[400px] text-left text-xs">
           <thead><tr><th scope="col" className="p-2">Group</th><th scope="col" className="p-2">Support</th><th scope="col" className="p-2">{result.metric}</th></tr></thead>
           <tbody>{result.groups.map(item=><tr key={item.name} className="border-t border-white/10">
@@ -345,16 +345,16 @@ export default function ExplainabilityStudio({ matrix, candidate, plan, onArchiv
 
   return <details className="rounded-xl border border-quantum-mint/30 bg-surface-dark p-3 sm:p-4">
     <summary className="cursor-pointer text-base font-semibold">
-      F13 — Explainability & Diagnostics Studio
+       — Explainability & Diagnostics Studio
       <span className="mt-1 block text-xs font-normal text-text-muted">Explore the selected fitted candidate using only validation observations; the held-out test remains sealed</span>
     </summary>
-    <div role="region" aria-label="F13 Explainability Studio" className="mt-4 space-y-4">
+    <div role="region" aria-label=" Explainability Studio" className="mt-4 space-y-4">
       <div className="flex flex-wrap gap-2 text-xs">
         <span className="rounded-lg border border-white/10 bg-obsidian px-3 py-2">Algorithm: {model.algorithm}</span>
         <span className="rounded-lg border border-white/10 bg-obsidian px-3 py-2">{matrix.features.length} prepared inputs</span>
         <span className="rounded-lg border border-white/10 bg-obsidian px-3 py-2">Validation: {validRows.length} observations</span>
       </div>
-      <div role="group" aria-label="F13 diagnostic views" className="flex flex-wrap gap-2">
+      <div role="group" aria-label=" diagnostic views" className="flex flex-wrap gap-2">
         {views.map(view=><button key={view.id} type="button" aria-pressed={active===view.id}
           onClick={()=>{setActive(view.id);setError('');}}
           className={'min-h-10 rounded-lg border px-3 py-2 text-xs font-semibold '+
@@ -365,7 +365,7 @@ export default function ExplainabilityStudio({ matrix, candidate, plan, onArchiv
       {active==='importance'&&<ImportancePanel importance={importance} job={job} onStart={measure} onCancel={cancel}/>}
       {active==='local'&&<div className="space-y-3">
         <label className="block max-w-sm text-xs font-semibold">Validation observation
-          <select aria-label="F13 validation observation" value={rowId} className={inputClass}
+          <select aria-label=" validation observation" value={rowId} className={inputClass}
             onChange={event=>{setRowId(event.target.value);setWhatIf(null);}}>
             {validRows.slice(0,80).map(row=><option key={row.id} value={row.id}>{row.id}</option>)}
           </select>
@@ -378,7 +378,7 @@ export default function ExplainabilityStudio({ matrix, candidate, plan, onArchiv
         result={pdp} onCalculate={calculate}/>}
       {active==='whatif'&&<div className="space-y-3">
         <label className="block max-w-sm text-xs font-semibold">Validation observation
-          <select aria-label="F13 what-if observation" value={rowId} className={inputClass}
+          <select aria-label=" what-if observation" value={rowId} className={inputClass}
             onChange={event=>{setRowId(event.target.value);setWhatIf(null);}}>
             {validRows.slice(0,80).map(row=><option key={row.id} value={row.id}>{row.id}</option>)}
           </select>
@@ -391,8 +391,8 @@ export default function ExplainabilityStudio({ matrix, candidate, plan, onArchiv
         setFeature={value=>{setFeature(value);setPdp(null);setSubgroups(null);}}
         result={subgroups} onRun={inspectSubgroups}/>}
       <details className="prism-chart-card" onToggle={e=>setChartOpen(e.currentTarget.open)}>
-        <summary className="cursor-pointer p-3 font-semibold">F19 — Visual Explainability</summary>
-        {chartOpen&&(visualEnvelope?<ModelChart matrix={matrix} candidate={candidate} type={visualType} explanation={visualEnvelope}/>:<p role="status" className="p-3">Complete the selected F13 calculation to visualize its measured evidence.</p>)}
+        <summary className="cursor-pointer p-3 font-semibold"> — Visual Explainability</summary>
+        {chartOpen&&(visualEnvelope?<ModelChart matrix={matrix} candidate={candidate} type={visualType} explanation={visualEnvelope}/>:<p role="status" className="p-3">Complete the selected  calculation to visualize its measured evidence.</p>)}
       </details>
       {error&&<p role="alert" className="text-sm text-signal-amber">{error}</p>}
       {message&&<p role="status" className="text-sm text-quantum-mint">{message}</p>}

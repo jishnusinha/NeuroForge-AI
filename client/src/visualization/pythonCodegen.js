@@ -15,12 +15,12 @@ export function histogramChartCsv(spec){
 /**
  * Portable Python script. Column labels, source names and chart titles are
  * READ as data from the bundled JSON, never interpolated into Python source.
- * The exported CSV contains measured F10 bins: no new histogram calculation
+  * The exported CSV contains measured histogram bins: no new histogram calculation
  * or subtly different plotting-library defaults.
  */
 export function generateHistogramPython(spec){
   validatePrismChartSpec(spec);
-  return `# NeuroForge PRISM — reproducible F10 observed-value histogram
+  return `# NeuroForge PRISM — reproducible observed-value histogram
 # Keep ${PRISM_CHART_DATA_FILENAME} and ${PRISM_CHART_SPEC_FILENAME} beside this script.
 # Dependencies: pandas, matplotlib, seaborn
 import json
@@ -36,7 +36,7 @@ assert len(bins) == len(spec["bins"])
 assert bins["count"].sum() == spec["population"]["observedCount"]
 assert (bins["to"] >= bins["from"]).all()
 
-# Use F10's exact recorded bin boundaries and counts.
+# Use the exact recorded bin boundaries and counts.
 # Constant columns use a visible one-unit bar centered on the value.
 widths = (bins["to"] - bins["from"]).mask(
     (bins["to"] - bins["from"]) == 0, 1.0

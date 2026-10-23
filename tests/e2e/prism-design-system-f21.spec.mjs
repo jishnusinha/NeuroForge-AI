@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 import {gallery} from '../support/f21-browser.mjs';
 test('F21 component states preserve evidence semantics and keyboard tabs in every theme',async({page})=>{
  const panel=await gallery(page);
- for(const theme of ['midnight','slate','forest','paper']){
+ for(const theme of ['midnight','slate','forest','paper','glacier','dusk','ocean','sand','rose','contrast']){
   await page.getByRole('combobox',{name:'Visual theme'}).selectOption(theme);
   await panel.getByRole('tab',{name:'Controls',exact:true}).click();
   await expect(panel.getByRole('button',{name:'Disabled action'})).toBeDisabled();

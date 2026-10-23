@@ -11,10 +11,10 @@ export const SPLIT_PRESETS = Object.freeze({
 export function defaultPipelineColumns(data) {
   if (!data) return { x: '', y: '', target: '' };
   const numeric = profileDataset(data).columns.filter(column => column.type === 'numeric').map(column => column.name);
-  const target = data.headers.find(header => /^(label|target|class|outcome)$/i.test(header))
-    ?? data.headers.find(header => !numeric.slice(0, 2).includes(header))
-    ?? data.headers.at(-1) ?? '';
-  return { x: numeric[0] ?? '', y: numeric.find(name => name !== numeric[0] && name !== target) ?? numeric[1] ?? '', target };
+  const target = data.academy?.targetColumn ?? data.headers.find(header => /^(label|target|class|outcome)$/i.test(header)) ?? data.headers.at(-1) ?? '';
+  const preferred=data.academy?.featureColumns?.filter(name=>numeric.includes(name))||[];
+  const inputs=preferred.length>=2?preferred:numeric.filter(name=>name!==target);
+  return { x: inputs[0] ?? '', y: inputs.find(name => name !== inputs[0]) ?? '', target };
 }
 
 function finiteStat(values, selector) {

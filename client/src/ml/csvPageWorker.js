@@ -1,8 +1,9 @@
 import {scanCsv} from './csvStream.js';
 import {queryCsvSource} from './csvSourceQueries.js';
 import {validateSourceEdits} from './sourceEdits.js';
+import {safeSpreadsheetText} from './datasheet/transactions.js';
 
-const csvCell=value=>{const text=value==null?'':String(value);return /[\r\n",;]/.test(text)?`"${text.replaceAll('"','""')}"`:text;};
+const csvCell=value=>{const text=safeSpreadsheetText(value);return /[\r\n",;]/.test(text)?`"${text.replaceAll('"','""')}"`:text;};
 async function exportEdited(request,onProgress){
   let buffer='',headers=[];
   const emit=values=>{buffer+=values.map(csvCell).join(',')+'\r\n';if(buffer.length>=256*1024){self.postMessage({type:'chunk',id:request.id,text:buffer});buffer='';}};

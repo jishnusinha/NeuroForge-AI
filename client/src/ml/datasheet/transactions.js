@@ -76,14 +76,14 @@ export function rangeStats(cells) {
     numeric: numbers.length, sum, mean: numbers.length ? sum / numbers.length : null };
 }
 
-const safeText = v => {
+export const safeSpreadsheetText = v => {
   const text = isSheetMissing(v) ? '' : String(v);
   // eslint-disable-next-line no-control-regex
   return typeof v === 'string' && /^[\s\u0000-\u001f]*[=+@-]/.test(text) ? "'" + text : text;
 };
 export function delimitedExport(matrix, delimiter = ',') {
   return matrix.map(row => row.map(value => {
-    const text = safeText(value);
+    const text = safeSpreadsheetText(value);
     return text.includes(delimiter) || /["\r\n]/.test(text) ? '"' + text.replaceAll('"', '""') + '"' : text;
   }).join(delimiter)).join('\r\n');
 }

@@ -1,5 +1,5 @@
 import {useContext,useEffect,useRef,useState} from 'react';
-import {ThemeContext} from '../../../theme/themeConfig.js';
+import {ThemeContext,THEMES} from '../../../theme/themeConfig.js';
 import {chartDefinition} from '../../../visualization/chartRegistry.js';
 import {chartOptions} from '../../../visualization/chartOptions.js';
 import {brushEvidenceIndexes,linkedRows} from '../../../visualization/linkedSelection.js';
@@ -20,7 +20,7 @@ async function rasterize(url,background){
 }
 
 export default function ScientificChart({result,dataset,onLink=()=>{},onShowSheet,onFilterMissing}){
-  const {spec,links}=result,{theme}=useContext(ThemeContext),dark=theme!=='paper';
+  const {spec,links}=result,{theme}=useContext(ThemeContext),dark=(THEMES.find(item=>item.id===theme)?.mode||'dark')==='dark';
   const host=useRef(null),chart=useRef(null),root=useRef(null),optionRef=useRef(null),exportRef=useRef(null);
   const [tab,setTab]=useState('Chart'),[renderer,setRenderer]=useState(spec.evidence.rows.length>4000?'canvas':'svg'),[consent,setConsent]=useState(false);
   const [message,setMessage]=useState(''),[error,setError]=useState(''),[page,setPage]=useState(0),[benchmark,setBenchmark]=useState(null);
@@ -54,7 +54,7 @@ export default function ScientificChart({result,dataset,onLink=()=>{},onShowShee
         try{
           if(format==='svg'&&renderer==='canvas'){
             element=document.createElement('div');element.style.cssText='position:fixed;left:-10000px;width:1000px;height:550px';document.body.append(element);
-            temporary=echarts.init(element,null,{renderer:'svg'});temporary.setOption(chartOptions(spec,{dark:false}));
+            temporary=echarts.init(element,null,{renderer:'svg'});temporary.setOption(chartOptions(spec,{dark}));
           }
           let url=(temporary||instance).getDataURL({type:format,pixelRatio:2,backgroundColor:dark?'#122128':'#fff'});
           if(format==='png'&&url.startsWith('data:image/svg'))url=await rasterize(url,dark?'#122128':'#fff');
@@ -68,17 +68,17 @@ export default function ScientificChart({result,dataset,onLink=()=>{},onShowShee
   const exportAllowed=!spec.privacy.observationLevel||consent;
   const changeTab=value=>{setTab(value);setError('');setMessage('');};
   const maxPage=Math.max(0,Math.ceil(spec.evidence.rows.length/100)-1),currentPage=Math.min(page,maxPage);
-  return <section ref={root} className="prism-chart-card prism-f18-chart" aria-label={spec.researchContext?'F20 scientific chart':spec.modelContext?'F19 scientific chart':'F18 scientific chart'}>
+  return <section ref={root} className="prism-chart-card prism-f18-chart" aria-label={spec.researchContext?' scientific chart':spec.modelContext?' scientific chart':' scientific chart'}>
     <header className="prism-chart-head"><div>
       <p className="prism-eyebrow">PRISM / REPRODUCIBLE VISUAL EVIDENCE</p><h5 className="prism-chart-title">{spec.title}</h5>
       <p className="prism-subtitle">Population: <strong>{populationLabel[spec.source.population]||spec.source.name}</strong> · {spec.source.rowCount} {spec.source.unit||'observations'} · {spec.evidence.rows.length} measured plot records</p>
     </div><button className="prism-action" onClick={()=>action(async()=>{if(document.fullscreenElement)await document.exitFullscreen();else await root.current.requestFullscreen();})}>Fullscreen chart</button></header>
-    <div className="prism-chart-toolbar"><PrismTabs buttons label="F18 chart views" value={tab} onChange={changeTab} items={['Chart','Data','Python','JavaScript','Methods'].map(value=>({value}))}/></div>
+    <div className="prism-chart-toolbar"><PrismTabs buttons label=" chart views" value={tab} onChange={changeTab} items={['Chart','Data','Python','JavaScript','Methods'].map(value=>({value}))}/></div>
     <div className="prism-chart-body">
       {spec.evidence.warnings.map((warning,i)=><p className="prism-chart-caption" key={i} role="note">{warning}</p>)}
       {tab==='Chart'&&<>
         <div className="prism-sheet-tools">
-          <label>Renderer<select aria-label="F18 renderer" value={renderer} onChange={e=>setRenderer(e.target.value)}><option value="svg">SVG</option><option value="canvas">Canvas</option></select></label>
+          <label>Renderer<select aria-label=" renderer" value={renderer} onChange={e=>setRenderer(e.target.value)}><option value="svg">SVG</option><option value="canvas">Canvas</option></select></label>
           {!spec.researchContext&&links.some(ids=>ids.length)&&<><button onClick={()=>chart.current?.dispatchAction({type:'takeGlobalCursor',key:'brush',brushOption:{brushType:'rect',brushMode:'single'}})}>Brush observations</button>
             <button onClick={()=>{chart.current?.dispatchAction({type:'brush',areas:[]});onLink([]);}}>Clear chart selection</button></>}
           {onShowSheet&&<button onClick={onShowSheet}>Show linked DataSheet</button>}
@@ -89,7 +89,7 @@ export default function ScientificChart({result,dataset,onLink=()=>{},onShowShee
         {benchmark&&<p className="prism-chart-caption" data-testid="f18-render-benchmark">{benchmark.renderer.toUpperCase()} ready in {benchmark.initMs} ms · {benchmark.evidenceRows} evidence records · zoom by wheel/pinch or slider; Data provides keyboard row linking</p>}
       </>}
       {tab==='Data'&&<div className="space-y-3">
-        <div className="prism-table-scroll" role="region" tabIndex={0} aria-label="F18 exact plotted data">
+        <div className="prism-table-scroll" role="region" tabIndex={0} aria-label=" exact plotted data">
           <table className="prism-data-table"><caption>Exact plotted evidence · records {spec.evidence.rows.length?currentPage*100+1:0}–{Math.min((currentPage+1)*100,spec.evidence.rows.length)} of {spec.evidence.rows.length}</caption>
             <thead><tr>{spec.evidence.columns.map(c=><th scope="col" key={c.key}>{c.key}</th>)}{links.length>0&&<th scope="col">{spec.researchContext?'Linked research records':'Linked observations'}</th>}</tr></thead>
             <tbody>{spec.evidence.rows.slice(currentPage*100,(currentPage+1)*100).map((row,index)=><tr key={index}>
@@ -105,7 +105,7 @@ export default function ScientificChart({result,dataset,onLink=()=>{},onShowShee
         <button className="prism-action" onClick={()=>action(async()=>{await navigator.clipboard.writeText(tab==='Python'?python:javascript);setMessage(tab+' copied');})}>Copy {tab}</button>
         <pre tabIndex={0} className="prism-code-block"><code>{tab==='Python'?python:javascript}</code></pre>
       </div>}
-      {tab==='Methods'&&<div className="space-y-3" aria-label="F18 methods and provenance">
+      {tab==='Methods'&&<div className="space-y-3" aria-label=" methods and provenance">
         <p>Method: {spec.method.name} · implementation v{spec.method.implementationVersion} · registry v{spec.registryVersion}</p>
         {spec.method.notes.map((note,i)=><p key={i} className="prism-chart-caption">{note}</p>)}
         {spec.researchContext&&<pre className="prism-code-block" tabIndex={0}>{JSON.stringify(spec.researchContext,null,2)}</pre>}

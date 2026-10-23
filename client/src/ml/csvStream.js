@@ -3,8 +3,28 @@ import {coerce,detectCsvDelimiter,safeHeaders} from './datasetImport.js';
 export const CSV_MAX_BYTES=100*1024*1024;
 export function csvOptions(options={}) {
   return {delimiter:options.delimiter??options.delimiterChoice??'auto',quoteChar:options.quoteChar??'"',
-    encoding:options.encoding??'utf-8',hasHeader:options.hasHeader!==false,decimalSeparator:options.decimalSeparator??'.'};
+    encoding:options.encoding??'utf-8',hasHeader:options.hasHeader!==false,decimalSeparator:options.decimalSeparator??'.',schemaOverrides:options.schemaOverrides||{}};
 }
+export function parseCsvCell(raw,type='auto',decimalSeparator='.',rowNumber=1,column='value'){
+  if(type===undefined||type==='auto')return coerce(decimalSeparator===','?raw.replaceAll('.','').replace(',','.'):raw);
+  if(type==='text')return raw===''?null:raw;
+  if(raw==='')return null;
+  if(type==='numeric'){
+    const value=decimalSeparator===','?raw.replaceAll('.','').replace(',','.'):raw;
+    if(!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(value.trim())||!Number.isFinite(Number(value)))throw new Error(`Source row ${rowNumber}: “${raw.slice(0,80)}” is not numeric in “${column}”.`);
+    return Number(value);
+  }
+  if(type==='boolean'){
+    const value=raw.trim().toLowerCase();if(['true','yes','1'].includes(value))return true;if(['false','no','0'].includes(value))return false;
+    throw new Error(`Source row ${rowNumber}: “${raw.slice(0,80)}” is not a recognized boolean in “${column}”.`);
+  }
+  if(type==='date'){
+    const value=raw.trim();if(!/^\d{4}-\d{2}-\d{2}(?:t\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:z|[+-]\d{2}:?\d{2})?)?$/i.test(value))throw new Error(`Source row ${rowNumber}: “${raw.slice(0,80)}” is not an ISO date in “${column}”.`);
+    const date=new Date(value);if(!Number.isFinite(date.getTime()))throw new Error(`Source row ${rowNumber}: invalid ISO date in “${column}”.`);return value.length===10?value:date.toISOString();
+  }
+  throw new Error(`Unsupported type override for “${column}”.`);
+}
+function rowError(message,rowNumber,fields){const error=new Error(message);error.diagnostics=[{rowNumber,reason:message,fields:fields.slice(0,100).map(value=>String(value).slice(0,160))}];return error;}
 
 /** One record at a time. No source row array or file-sized decoded string. */
 export async function scanCsv(file,options={},onRow=()=>{}, {onHeaders=()=>{},onProgress=()=>{},onBytes=()=>{},signal,edits={}}={}) {
@@ -26,9 +46,9 @@ export async function scanCsv(file,options={},onRow=()=>{}, {onHeaders=()=>{},on
     record.push(cell);cell='';closedQuote=false;
     if(record.length===1&&record[0]===''){record=[];return;}
     if(!headers){const originalHeaders=cfg.hasHeader?[...record]:record.map((_,i)=>`Column ${i+1}`);headers=safeHeaders(originalHeaders);if(headers.length>100)throw new Error('The source exceeds 100 columns.');onHeaders(headers,originalHeaders);if(cfg.hasHeader){record=[];return;}}
-    if(record.length!==headers.length)throw new Error(`Source row ${rows+1} has ${record.length} fields; expected ${headers.length}.`);
+    if(record.length!==headers.length)throw rowError(`Source row ${rows+1} has ${record.length} fields; expected ${headers.length}.`,rows+1,record);
     const row=Object.create(null);row.id=`source-${rows}`;row.sourceRowNumber=rows+1;
-    for(let i=0;i<headers.length;i++){let value=record[i];if(cfg.decimalSeparator===',')value=value.replaceAll('.','').replace(',','.');row[headers[i]]=coerce(value);}
+    for(let i=0;i<headers.length;i++)try{row[headers[i]]=parseCsvCell(record[i],cfg.schemaOverrides[headers[i]],cfg.decimalSeparator,rows+1,headers[i]);}catch(error){throw rowError(error.message,rows+1,[record[i]]);}
     for(const [column,value] of patches.get(row.id)??[]){if(headers.includes(column))row[column]=value;}
     record=[];rows++;stopped=onRow(row)===true;
   };

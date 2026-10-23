@@ -120,7 +120,7 @@ export default function DataSheetWorkspace({ dataset, filters, name, selectedRow
       <button onClick={() => { setSorts([]); setSearch(''); }}>Reset sheet view</button>
     </div>
     <p className="prism-sheet-muted">Click column names to sort; Shift-click adds another sort. Shift-click or Shift+arrows selects a range. {sorts.map(s => s.column + ' ' + s.direction).join(', ')}</p>
-    {changes.length>0&&<p className="prism-sheet-muted">Draft charts are labeled Working copy. Commit edits before using them in F10 source analysis or F11 preparation.</p>}
+    {changes.length>0&&<p className="prism-sheet-muted">Draft charts are labeled Working copy. Commit edits before using them in  source analysis or  preparation.</p>}
     {error && <p role="alert" className="text-red-300">{error}</p>}
     <p role="status" className="prism-sheet-muted">{status}</p>
     {highlightedRowIds.length>0&&<p role="status" className="prism-sheet-help">Linked chart highlights: {highlightedRowIds.length} original observations. View/search/filter operations preserve their source identities.</p>}

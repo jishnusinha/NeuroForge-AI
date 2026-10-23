@@ -7,7 +7,7 @@ export function validateSourceEdits(edits) {
     const pair=JSON.parse(key);
     if(!Array.isArray(pair)||pair.length!==2||!/^source-\d+$/.test(pair[0])||typeof pair[1]!=='string'||
       !pair[1]||['id','sourceRowNumber','__proto__','constructor','prototype'].includes(pair[1])||
-      !(value===null||typeof value==='string'||typeof value==='number'&&Number.isFinite(value)))throw new Error('Invalid source edit cell.');
+      !(value===null||typeof value==='string'||typeof value==='boolean'||typeof value==='number'&&Number.isFinite(value)))throw new Error('Invalid source edit cell.');
   }
   return edits;
 }

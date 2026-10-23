@@ -8,7 +8,7 @@ export function learningContext(input){
  const workspace=input.workspace,algorithm=workspace==='studio'?'dense_network':input.algorithm;
  if(workspace!=='studio'&&!Object.hasOwn(ALGORITHMS[workspace],algorithm))throw new Error('Unknown code algorithm');
  const family=workspace==='studio'?'mlp':ALGORITHMS[workspace][algorithm];
- if(!family)return freeze({schemaVersion:1,workspace,algorithm,supported:false,reason:'This algorithm has no reviewed F22.0 template. Expanded model templates belong to F22.4; existing chart code reproduces plotted evidence only.'});
+ if(!family)return freeze({schemaVersion:1,workspace,algorithm,supported:false,reason:'This algorithm has no reviewed learning template yet; existing chart code reproduces plotted evidence only.'});
  const task=family==='kmeans'?'clustering':family==='linear'||family==='ridge'?'regression':['baseline','softmax','knn','cart','forest'].includes(family)?(input.task??'binary_classification'):'binary_classification';
  if(!['regression','binary_classification','multiclass_classification','clustering'].includes(task)||['softmax','knn'].includes(family)&&['regression','clustering'].includes(task))throw new Error('Unsupported learning task');
  const features=number(family==='linear'?1:workspace==='studio'?2:input.features,2,1,64,true);

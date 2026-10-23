@@ -33,7 +33,7 @@ export function compute({dataset,config}){
     }
   }
   return evidence({columns:[col('series','text'),col('x','text'),col('y',kind==='heatmap'?'text':'number'),col('value'),col('count'),col('excluded'),col('observed'),col('numeric'),col('text'),col('unique'),col('denominator')],
-    rows,kind,stats,links,warnings,observationLevel,notes:['Pearson and tie-aware Spearman values and pairwise observation counts reuse the F10 correlation engine. Fewer than three pairs or zero variance is unavailable, never zero.',
+    rows,kind,stats,links,warnings,observationLevel,notes:['Pearson and tie-aware Spearman values and pairwise observation counts reuse the validated correlation engine. Fewer than three pairs or zero variance is unavailable, never zero.',
       'Missingness counts use every scoped row. The matrix shows up to 80 systematically spaced source rows; displayed row numbers are positions in this population, not stable IDs.',
       'Completeness denominators include all scoped observations. Missing means null, undefined, blank or non-finite.',
       'Duplicates compare original column values, excluding generated row IDs; counts describe repeated occurrences after the first. No cleanup or source mutation occurs.'],

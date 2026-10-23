@@ -78,7 +78,7 @@ function StepList({ recipe, selectedId, onSelect, onChange }) {
     if(i===other)return nodes[index];
     return item;
   })});
-  return <ol aria-label="F11 executable pipeline steps" className="space-y-2">
+  return <ol aria-label=" executable pipeline steps" className="space-y-2">
     {nodes.map((node,index)=><li key={node.id} className={'rounded-xl border p-3 space-y-2 '+(node.id===selectedId?'border-plasma-cyan/40 bg-plasma-cyan/5':'border-white/10 bg-obsidian')}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <button type="button" aria-label={'Configure pipeline step '+(index+1)}
@@ -140,7 +140,7 @@ export default function PipelineStudio({ dataset, onLaunch }) {
   });
   const restore=withFeedback(async()=>{
     const item=await getSnapshotLocal(STASH_ID);
-    if(!item||item.kind!=='f11-recipe')throw new Error('No locally saved F11 recipe found.');
+    if(!item||item.kind!=='f11-recipe')throw new Error('No locally saved  recipe found.');
     if(item.sourceDigest!==await fingerprint())
       throw new Error('Saved recipe belongs to a different dataset; no changes were applied.');
     const valid=validateStudioRecipe(dataset,item.recipe);
@@ -180,8 +180,8 @@ export default function PipelineStudio({ dataset, onLaunch }) {
   };
   return <details id="prism-preprocessing" className="rounded-xl border border-plasma-cyan/25 bg-surface-dark p-3 sm:p-4">
     <summary className="cursor-pointer text-lg font-semibold text-text-primary">Advanced Pipeline Studio (F11) <span className="block text-xs font-normal text-text-muted">Build real, ordered, reproducible transformations; open the editor</span></summary>
-    <div role="region" aria-label="F11 Pipeline Studio" className="mt-4 space-y-4">
-      <p className="text-sm text-text-muted">Raw imported rows remain unchanged. Split membership is established before fitting. F12 accepts all prepared features for classification or regression; legacy Playground and Studio still require two numeric inputs with 0/1 labels.</p>
+    <div role="region" aria-label=" Pipeline Studio" className="mt-4 space-y-4">
+      <p className="text-sm text-text-muted">Raw imported rows remain unchanged. Split membership is established before fitting.  accepts all prepared features for classification or regression; legacy Playground and Studio still require two numeric inputs with 0/1 labels.</p>
       <div className="grid gap-3 sm:grid-cols-2">
         <fieldset className="rounded-xl border border-white/10 bg-obsidian p-3">
           <legend className="px-1 text-sm font-semibold">Input features</legend>
@@ -196,13 +196,13 @@ export default function PipelineStudio({ dataset, onLaunch }) {
         </fieldset>
         <div className="space-y-2 rounded-xl border border-white/10 bg-obsidian p-3">
           <label className="block text-xs font-semibold">Learning task
-            <select aria-label="F12 learning task" value={recipe.taskType??'classification'} onChange={event=>setRecipe(previous=>({...previous,taskType:event.target.value}))} className={inputClass}>
+            <select aria-label=" learning task" value={recipe.taskType??'classification'} onChange={event=>setRecipe(previous=>({...previous,taskType:event.target.value}))} className={inputClass}>
               <option value="classification">Classification (2–12 classes)</option>
               <option value="regression">Regression (continuous numeric target)</option>
             </select>
           </label>
           <label className="block text-xs font-semibold">Target column
-            <select aria-label="F11 target column" value={recipe.targetColumn} onChange={event=>setRecipe(previous=>({
+            <select aria-label=" target column" value={recipe.targetColumn} onChange={event=>setRecipe(previous=>({
               ...previous,targetColumn:event.target.value,
               featureColumns:previous.featureColumns.filter(name=>name!==event.target.value),
             }))} className={inputClass}>
@@ -210,12 +210,12 @@ export default function PipelineStudio({ dataset, onLaunch }) {
             </select>
           </label>
           <label className="block text-xs font-semibold">Split configuration
-            <select aria-label="F11 split preset" value={recipe.splitPreset} onChange={event=>setRecipe(previous=>({...previous,splitPreset:event.target.value}))} className={inputClass}>
+            <select aria-label=" split preset" value={recipe.splitPreset} onChange={event=>setRecipe(previous=>({...previous,splitPreset:event.target.value}))} className={inputClass}>
               <option value="70/15/15">70 / 15 / 15</option><option value="80/10/10">80 / 10 / 10</option><option value="60/20/20">60 / 20 / 20</option>
             </select>
           </label>
           <label className="block text-xs font-semibold">Split seed
-            <input type="number" aria-label="F11 split seed" min="0" max="4294967295" step="1" value={recipe.seed}
+            <input type="number" aria-label=" split seed" min="0" max="4294967295" step="1" value={recipe.seed}
               onChange={event=>setRecipe(previous=>({...previous,seed:Number(event.target.value)}))}
               className={inputClass}/>
           </label>
@@ -236,7 +236,7 @@ export default function PipelineStudio({ dataset, onLaunch }) {
         {selected&&<NodeInspector key={selected.id} node={selected} available={available} onChange={editSelected}/>}
       </div>
       {result.error?<p role="status" className="rounded-lg border border-signal-amber/30 bg-signal-amber/10 p-3 text-sm text-signal-amber">Pipeline preview unavailable: {result.error}</p>
-        :<div role="region" aria-label="F11 fitted pipeline preview" className="rounded-xl border border-quantum-mint/25 bg-obsidian p-3 space-y-3">
+        :<div role="region" aria-label=" fitted pipeline preview" className="rounded-xl border border-quantum-mint/25 bg-obsidian p-3 space-y-3">
           <h5 className="font-semibold text-quantum-mint">Pipeline ready · Training-only fitted parameters</h5>
           <p className="text-xs text-text-muted">{result.plan.counts.train} training · {result.plan.counts.validation} validation · {result.plan.counts.test} test · {result.plan.outputFeatures.length} numeric output features</p>
           <p className="break-all text-xs text-text-muted">Output schema: {result.plan.outputFeatures.join(', ')}</p>
@@ -262,14 +262,14 @@ export default function PipelineStudio({ dataset, onLaunch }) {
         <button type="button" onClick={restore} className="min-h-10 rounded-lg border border-white/20 px-3 text-sm">Restore local recipe</button>
         <button type="button" onClick={()=>downloadRecipe(recipe)} className="min-h-10 rounded-lg border border-white/20 px-3 text-sm">Export recipe JSON</button>
         <label className="min-h-10 cursor-pointer rounded-lg border border-white/20 px-3 py-2 text-sm">Import recipe JSON
-          <input aria-label="Import F11 recipe" type="file" accept=".json,application/json" className="sr-only" onChange={importFile}/>
+          <input aria-label="Import  recipe" type="file" accept=".json,application/json" className="sr-only" onChange={importFile}/>
         </label>
       </div>
       <div className="flex flex-wrap gap-2">
         <button type="button" disabled={!result.plan?.labCompatible} onClick={launch('playground')}
-          className="min-h-11 rounded-lg bg-plasma-cyan px-4 text-sm font-semibold text-ink-on-accent disabled:opacity-40">Launch F11 pipeline in Playground</button>
+          className="min-h-11 rounded-lg bg-plasma-cyan px-4 text-sm font-semibold text-ink-on-accent disabled:opacity-40">Launch  pipeline in Playground</button>
         <button type="button" disabled={!result.plan?.labCompatible} onClick={launch('studio')}
-          className="min-h-11 rounded-lg border border-plasma-cyan/40 bg-plasma-cyan/10 px-4 text-sm font-semibold text-plasma-cyan disabled:opacity-40">Launch F11 pipeline in Studio</button>
+          className="min-h-11 rounded-lg border border-plasma-cyan/40 bg-plasma-cyan/10 px-4 text-sm font-semibold text-plasma-cyan disabled:opacity-40">Launch  pipeline in Studio</button>
       </div>
       {result.plan&&<PipelineVisualization dataset={dataset} plan={result.plan}/>}
       {result.plan && <ModelWorkbench key={JSON.stringify(recipe)} plan={result.plan}/>}

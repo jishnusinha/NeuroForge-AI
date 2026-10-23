@@ -47,7 +47,7 @@ export async function createModelChartSpec({matrix,candidate,config,report=candi
     digest({features:matrix.features,membership:matrix.membership,lineage:matrix.lineage}),digest(config.type==='training_loss'?candidate.trainingTrace??null:report.evidence),digest(matrix.lineage.fittedPipeline),digest(candidate.model),digest(report),digest(matrix.membership[split])]);
   const candidateDigest=await digest({candidateId:candidate.id,modelDigest,reportDigest});
   const spec={kind:'neuroforge-prism-chart',schemaVersion:2,registryVersion:CHART_REGISTRY_VERSION,chartId:crypto.randomUUID(),chartType:config.type,title:def.label,
-    source:{name:'F12 '+candidate.algorithm+' · '+split,datasetDigest,scopeDigest,pipelineDigest,population:'model_'+split,rowCount:split==='train'?matrix.membership.train.length:selected.length,sourceCount:matrix.rows.length,datasetVersion:null,selectionDigest:null},
+    source:{name:candidate.algorithm+' · '+split,datasetDigest,scopeDigest,pipelineDigest,population:'model_'+split,rowCount:split==='train'?matrix.membership.train.length:selected.length,sourceCount:matrix.rows.length,datasetVersion:null,selectionDigest:null},
     modelContext:{candidateDigest,modelDigest,reportDigest,membershipDigest,task:matrix.task.type,algorithm:candidate.algorithm,split,sourceReportSplit:report.split,classes:[...matrix.task.classes],finalAccessedAt:report.split==='test'?finalTest.accessedAt:null},
     variables:{columns:[...matrix.features]},configuration:{...config},method:{name:config.type,implementationVersion:1,notes:result.notes,missingPolicy:'Unavailable denominators remain null.'},
     visual:{palette:config.palette||'prism',showLabels:true,axisMin:null,axisMax:null},evidence:result.evidence,plot:result.plot,

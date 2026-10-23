@@ -1,12 +1,12 @@
 import {simulationConfig} from '../../ml/optimization/traceContracts.js';
 import {optimizationKernelSource} from './optimizationKernelSource.js';
-export function optimizationJavascript(configs){const safe=configs.map(simulationConfig);return `// Exact objective/trace reproduction, F22 v1. Node.js 24; no dependencies.
+export function optimizationJavascript(configs){const safe=configs.map(simulationConfig);return `// Exact objective/trace reproduction,  v1. Node.js 24; no dependencies.
 // Pure reviewed mathematical engine, seeded examples only; no imported rows or model weights.
 ${optimizationKernelSource}
 const configurations=${JSON.stringify(safe,null,2)};
 console.log(JSON.stringify(configurations.map(simulate)));
 `;}
-export function optimizationPython(configs,{framework=true}={}){const safe=configs.map(simulationConfig);return `# NeuroForge F22 v1: exact objective/trace reproduction, float64 CPU
+export function optimizationPython(configs,{framework=true}={}){const safe=configs.map(simulationConfig);return `# NeuroForge  v1: exact objective/trace reproduction, float64 CPU
 # Python 3.12, torch==2.5.1; python neuroforge-optimization.py
 # Nesterov uses explicit look-ahead, not torch.optim.SGD(nesterov=True).
 # SGD samples actual seeded training examples with replacement; no imported data.

@@ -2,7 +2,7 @@ import {scanCsv,csvOptions} from './csvStream.js';
 
 const PREVIEW_LIMIT=100,SAMPLE_LIMIT=2000;
 const missing=value=>value==null||value==='';
-function completeProfile(stats){return stats.map(s=>{const numeric=s.numeric>0&&s.numeric/Math.max(1,s.count)>=.8;return {name:s.name,type:numeric?'numeric':s.count?'categorical':'empty',count:s.count,missingCount:s.missing,min:numeric?s.min:null,max:numeric?s.max:null,mean:numeric?s.mean:null,variance:numeric&&s.numeric>1?s.m2/(s.numeric-1):numeric?0:null,scope:'whole_source_stream',status:'exact'};});}
+function completeProfile(stats,overrides={}){return stats.map(s=>{const inferred=s.numeric>0&&s.numeric/Math.max(1,s.count)>=.8?'numeric':s.count?'categorical':'empty',type=overrides[s.name]&&overrides[s.name]!=='auto'?overrides[s.name]:inferred,numeric=type==='numeric';return {name:s.name,type,inferredType:inferred,overridden:type!==inferred,count:s.count,missingCount:s.missing,min:numeric?s.min:null,max:numeric?s.max:null,mean:numeric?s.mean:null,variance:numeric&&s.numeric>1?s.m2/(s.numeric-1):numeric?0:null,scope:'whole_source_stream',status:'exact'};});}
 self.onmessage=async event=>{
   const {type,id,file,...options}=event.data||{};if(type!=='parse')return;
   let headers=[],originalHeaders=[],stats=[],rows=0,seed=0x6d2b79f5,lastProgress=0,hashA=0x811c9dc5,hashB=0x9e3779b9;
@@ -26,8 +26,8 @@ self.onmessage=async event=>{
     const cfg=csvOptions(options),hex=value=>value.toString(16).padStart(8,'0');
     self.postMessage({type:'result',id,summary:{fileName:file.name,fileBytes:file.size,
       sourceFingerprint:{kind:'noncryptographic_composite_fingerprint',algorithm:'two-32-bit-streaming-hashes',value:`${hex(hashA)}${hex(hashB)}:${file.size}`},
-      headers,originalHeaders,sourceRows:rows,sourceColumns:headers.length,previewRows:preview,sampleRows:reservoir,profile:completeProfile(stats),
+      headers,originalHeaders,sourceRows:rows,sourceColumns:headers.length,previewRows:preview,sampleRows:reservoir,profile:completeProfile(stats,cfg.schemaOverrides),schemaOverrides:cfg.schemaOverrides,
       previewLimit:PREVIEW_LIMIT,sampleLimit:SAMPLE_LIMIT,delimiter:result.delimiter==='\t'?'tab':result.delimiter,encoding:cfg.encoding,decimalSeparator:cfg.decimalSeparator,
       parseStatus:'complete',statisticsScope:'whole_source_stream',chartSample:{method:'seeded_reservoir_sample',seed:1831565813,rowCount:reservoir.length},localOnly:true,warnings:[]}});
-  }catch(reason){self.postMessage({type:'error',id,message:reason.message||'Could not import this source.'});}
+  }catch(reason){self.postMessage({type:'error',id,message:reason.message||'Could not import this source.',diagnostics:(reason.diagnostics||[]).slice(0,100)});}
 };

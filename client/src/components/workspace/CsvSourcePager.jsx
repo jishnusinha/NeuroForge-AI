@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {readCsvPage} from '../../ml/readCsvPage.js';
-import {coerce} from '../../ml/datasetImport.js';
+import {parseCsvCell} from '../../ml/csvStream.js';
 import {exportEditedCsv} from '../../ml/exportEditedCsv.js';
 import {useSourceEdits} from '../../services/useSourceEdits.js';
 
@@ -8,7 +8,7 @@ const PAGE_SIZE=100;
 export default function CsvSourcePager({dataset}){
   const file=dataset?.sourceFile,summary=dataset?.sourceSummary;
   const [pageIndex,setPageIndex]=useState(0),[response,setResponse]=useState(null),[failure,setFailure]=useState(null),[filterDraft,setFilterDraft]=useState({column:'',operator:'contains',value:''}),[activeFilter,setActiveFilter]=useState(null),[sortDraft,setSortDraft]=useState({column:'',direction:'asc'}),[activeSort,setActiveSort]=useState(null),[exporting,setExporting]=useState(false);
-  const {edits,save:setEdits,error:overlayError}=useSourceEdits(summary);
+  const {edits,save:setEdits,error:overlayError,undo,redo,canUndo,canRedo}=useSourceEdits(summary);
   const [editMode,setEditMode]=useState(false),[editingCell,setEditingCell]=useState(null),[cellDraft,setCellDraft]=useState(''),[editError,setEditError]=useState('');
   const [retry,setRetry]=useState(0),[scanProgress,setScanProgress]=useState(null),readAbort=useRef(null);
   const request=useMemo(()=>({file,summary,pageIndex,options:dataset.sourceOptions,filter:activeFilter,sort:activeSort,edits,retry}),[file,summary,pageIndex,dataset.sourceOptions,activeFilter,activeSort,edits,retry]);
@@ -21,11 +21,12 @@ export default function CsvSourcePager({dataset}){
   if(!summary)return null;
   const total=activeFilter?(response?.request===request?response.result.matchedRows:0):summary.sourceRows,pages=Math.max(1,Math.ceil(total/PAGE_SIZE)),start=pageIndex*PAGE_SIZE;
   const page=response?.request===request?response.result:null,error=failure?.request===request?failure.message:'',loading=!page&&!error;
-  const saveCell=()=>{if(!editingCell)return;const key=JSON.stringify([editingCell.id,editingCell.column]),next={...edits,[key]:coerce(cellDraft)};try{setEdits(next);setEditError('');}catch(reason){setEditError(reason.message||'Could not save this local edit.');}setEditingCell(null);};
+  const saveCell=()=>{if(!editingCell)return;const rowNumber=page?.rows.find(row=>row.id===editingCell.id)?.sourceRowNumber||1;try{const value=parseCsvCell(cellDraft,dataset.sourceOptions?.schemaOverrides?.[editingCell.column]||'auto',dataset.sourceOptions?.decimalSeparator||'.',rowNumber,editingCell.column),key=JSON.stringify([editingCell.id,editingCell.column]);setEdits({...edits,[key]:value});setEditError('');}catch(reason){setEditError(reason.message||'Could not save this local edit.');}setEditingCell(null);};
   const downloadEdited=async()=>{setExporting(true);setEditError('');try{const {blob}=await exportEditedCsv(file,dataset.sourceOptions,summary,edits);const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=(summary.fileName||'dataset.csv').replace(/\.csv$/i,'')+'-edited.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(reason){setEditError(reason.message||'Could not create the edited CSV.');}finally{setExporting(false);}};
   return <section aria-label="Full source file browser" className="space-y-3 rounded-xl border border-white/10 bg-surface-dark p-3 sm:p-4">
     <div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-semibold">Full source browser and editor</h3><p className="text-xs text-text-muted">Local source pages · {total.toLocaleString()} rows · {Object.keys(edits).length.toLocaleString()} edited cells saved in this browser.</p></div><div className="flex items-center gap-2"><button type="button" className="prism-ui-button" disabled={loading||pageIndex===0} onClick={()=>setPageIndex(value=>Math.max(0,value-1))}>Previous page</button><span className="text-sm tabular-nums">Page {pageIndex+1} of {pages}</span><button type="button" className="prism-ui-button" disabled={loading||pageIndex+1>=pages} onClick={()=>setPageIndex(value=>Math.min(pages-1,value+1))}>Next page</button></div></div>
     <div className="flex flex-wrap gap-2"><button type="button" className="prism-ui-button" onClick={()=>setEditMode(value=>!value)}>{editMode?'Finish editing':'Edit full source'}</button><button type="button" className="prism-ui-button" disabled={exporting||!Object.keys(edits).length} onClick={downloadEdited}>{exporting?'Building edited CSV…':'Download edited full CSV'}</button><button type="button" className="prism-ui-button" disabled={!Object.keys(edits).length} onClick={()=>{const blob=new Blob([JSON.stringify({kind:'neuroforge-full-source-edit-draft',sourceFingerprint:summary.sourceFingerprint,edits},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='neuroforge-source-edits.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}}>Export edit draft</button><button type="button" className="prism-ui-button" disabled={!Object.keys(edits).length&&!overlayError} onClick={()=>{try{setEdits({});setEditError('');}catch(reason){setEditError(reason.message);}}}>Discard all edits</button></div>
+    <div className="flex gap-2"><button type="button" className="prism-ui-button" disabled={!canUndo} onClick={undo}>Undo edit</button><button type="button" className="prism-ui-button" disabled={!canRedo} onClick={redo}>Redo edit</button></div>
     {editMode&&<p className="text-xs text-text-muted">Select a cell to edit; changes are stored locally as an overlay keyed to this exact source fingerprint. The original CSV remains unchanged. Export the edit draft to preserve or share the patch.</p>}
     {(editError||overlayError)&&<p role="alert" className="text-sm text-rose-300">{editError||overlayError}</p>}
     <div className="grid gap-2 sm:grid-cols-[minmax(120px,0.8fr)_minmax(130px,0.8fr)_minmax(150px,1fr)_auto]">

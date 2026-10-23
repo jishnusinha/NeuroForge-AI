@@ -31,9 +31,15 @@ jobs:
             client/package-lock.json
             server/package-lock.json
       - run: npm ci
+      - name: Verify theme contrast and scientific chart palette behavior
+        run: node scripts/verify-theme-contract.mjs
+      - name: Guard public copy against internal phase labels
+        run: node scripts/verify-public-copy.mjs
       - run: npm --prefix client ci
       - run: npm --prefix server ci
       - run: npx playwright install --with-deps chromium
+      - name: Benchmark the production CSV worker at the 100 MiB limit
+        run: npm run benchmark:csv:browser
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -43,6 +49,8 @@ jobs:
       - name: Install pinned CPU PyTorch for reviewed learning examples
         run: python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
       - run: python -m pip install scikit-learn==1.7.2
+      - name: Execute all ten Academy Python examples
+        run: node scripts/export-academy-code-fixtures.mjs && python scripts/verify-academy-code.py && node scripts/verify-academy-javascript.mjs
       - run: node scripts/export-learning-code-fixtures-f22.mjs
       - run: python scripts/verify-learning-code-f22.py
       - run: node scripts/export-optimization-fixtures-f22.mjs

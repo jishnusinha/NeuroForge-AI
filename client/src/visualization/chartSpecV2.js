@@ -30,9 +30,10 @@ export function validateChartSpec(spec){
   if(!spec||spec.kind!=='neuroforge-prism-chart'||spec.schemaVersion!==2||!spec.chartId||!spec.source||
      !(spec.researchContext?spec.source.datasetDigest===null&&/^[a-f0-9]{64}$/.test(spec.source.collectionDigest):/^[a-f0-9]{64}$/.test(spec.source.datasetDigest))||!/^[a-f0-9]{64}$/.test(spec.source.scopeDigest)||!populations.includes(spec.source.population)||
      !Number.isInteger(spec.source.rowCount)||spec.source.rowCount<0||spec.source.rowCount>2000||!spec.method||spec.method.implementationVersion!==1||
-     !Number.isInteger(spec.source.sourceCount)||spec.source.sourceCount<spec.source.rowCount||spec.source.sourceCount>2000||
+     !Number.isSafeInteger(spec.source.sourceCount)||spec.source.sourceCount<spec.source.rowCount||
      !Array.isArray(spec.evidence?.columns)||!Array.isArray(spec.evidence?.rows)||spec.evidence.rows.length>40000||
-     !['ok','unavailable'].includes(spec.evidence.status)||!Array.isArray(spec.evidence.warnings)||!Array.isArray(spec.method.notes))throw new Error('F18_INVALID_CHART_SPEC');
+     !['ok','unavailable'].includes(spec.evidence.status)||!Array.isArray(spec.evidence.warnings)||!Array.isArray(spec.method.notes)||
+     spec.source.sampling!==undefined&&(!spec.source.sampling||spec.source.sampling.kind!=='bounded_source_sample'||!Number.isSafeInteger(spec.source.sampling.populationCount)||spec.source.sampling.populationCount!==spec.source.sourceCount||!Number.isInteger(spec.source.sampling.plottedRows)||spec.source.sampling.plottedRows!==spec.source.rowCount))throw new Error('F18_INVALID_CHART_SPEC');
   const definition=chartDefinition(spec.chartType);
   if(definition.family.startsWith('research_')){
     const context=spec.researchContext;
@@ -63,7 +64,7 @@ export function validateChartSpec(spec){
   if(new TextEncoder().encode(JSON.stringify(spec)).length>6*1024*1024)throw new Error('F18_CHART_BUDGET');
   return spec;
 }
-export async function createChartSpec({dataset,config,population='source',sourceDataset=dataset,sourceName='Imported CSV',plan=null,selectionDigest=null}){
+export async function createChartSpec({dataset,config,population='source',sourceDataset=dataset,sourceName='Imported CSV',plan=null,selectionDigest=null,populationCount=sourceDataset?.rows?.length,sampling=null}){
   validateDataSheet(dataset);validateDataSheet(sourceDataset);
   const sourceRows=new Map(sourceDataset.rows.map(r=>[r.id,r]));
   if(dataset.headers.some(h=>!sourceDataset.headers.includes(h))||dataset.rows.some(row=>!sourceRows.has(row.id)||population!=='working_copy'&&dataset.headers.some(h=>!Object.is(row[h],sourceRows.get(row.id)[h]))))throw new Error('F18_SOURCE_POPULATION_MISMATCH');
@@ -82,10 +83,12 @@ export async function createChartSpec({dataset,config,population='source',source
   }
   const fingerprint=data=>digest({headers:data.headers,rows:data.rows.map(row=>({id:row.id,values:data.headers.map(h=>row[h]??null)}))});
   const [datasetDigest,scopeDigest,pipelineDigest]=await Promise.all([fingerprint(sourceDataset),fingerprint(scopedDataset),plan?digest(plan.artifact):null]);
+  if(!Number.isSafeInteger(populationCount)||populationCount<sourceDataset.rows.length)throw new Error('F18_INVALID_POPULATION_COUNT');
+  const samplingEvidence=populationCount>sourceDataset.rows.length?{...(sampling&&typeof sampling==='object'?structuredClone(sampling):{}),kind:'bounded_source_sample',populationCount,plottedRows:scopedDataset.rows.length}:undefined;
   const spec={kind:'neuroforge-prism-chart',schemaVersion:2,registryVersion:CHART_REGISTRY_VERSION,
     chartId:globalThis.crypto.randomUUID(),chartType:config.type,title:chartDefinition(config.type).label,
     source:{name:sourceName,datasetDigest,scopeDigest,population:plan?'prepared_pipeline':population,rowCount:scopedDataset.rows.length,
-      sourceCount:sourceDataset.rows.length,selectionDigest,pipelineDigest,datasetVersion:sourceDataset.provenance?.versionId||null},
+      sourceCount:populationCount,...(samplingEvidence?{sampling:samplingEvidence}:{}),selectionDigest,pipelineDigest,datasetVersion:sourceDataset.provenance?.versionId||null},
     variables:{x:config.x||null,y:config.y||null,group:config.group||null,columns:config.columns||dataset.headers},
     configuration:structuredClone(config),method:{name:config.type,missingPolicy:'explicit exclusions; see counts',implementationVersion:1,notes:result.notes},
     visual:{palette:config.palette||'prism',showLabels:config.showLabels!==false,axisMin:config.axisMin??null,axisMax:config.axisMax??null},

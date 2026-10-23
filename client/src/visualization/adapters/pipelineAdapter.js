@@ -55,9 +55,9 @@ export function compute({config,plan}){
   }
   stats.inputFeatures=stage?.inputFeatures||plan.recipe.featureColumns;stats.outputFeatures=stage?.outputFeatures||plan.outputFeatures;
   return evidence({columns:[col('series','text'),col('x',type==='pipeline_distribution'||type==='pipeline_lineage'?'number':'text'),col('y'),col('from'),col('to'),col('count'),col('min'),col('max'),col('mean'),col('sd'),col('missing'),col('absent'),col('nonNumeric'),col('observed'),col('imputed'),col('denominator'),col('label','text'),col('detail','text')],rows,kind,stats,warnings,
-    notes:['Every stage replays applyFittedNode using the existing F11 artifact. No fitting, split creation, model evaluation, or test-access operation is invoked.',
+    notes:['Every stage replays applyFittedNode using the existing fitted artifact. No fitting, split creation, model evaluation, or test-access operation is invoked.',
       'Before/after measurements use the identical selected partition and stable row order. Absent columns after one-hot encoding are distinguished from missing cells; categorical non-numeric values are unavailable to numeric plots, not necessarily invalid data.',
-      'F11 retains all observations. Dropped-row count is zero; generated/removed feature columns are shown explicitly. Scaling ranges and means are measured after applying the frozen stage.',
+      'The pipeline retains all observations. Dropped-row count is zero; generated/removed feature columns are shown explicitly. Scaling ranges and means are measured after applying the frozen stage.',
       'Before/after histograms have independently measured equal-width bin edges, exported exactly; their ranges can differ. Split composition is descriptive, not a model validation score.'],
     plot:{histogram:type==='pipeline_distribution',range:type==='pipeline_scaling',xLabel:type==='pipeline_distribution'?x+' · numbered bins':'Stage / column',yLabel:type==='pipeline_scaling'?'Measured mean (ranges in data table)':'Measured value / count'}});
 }

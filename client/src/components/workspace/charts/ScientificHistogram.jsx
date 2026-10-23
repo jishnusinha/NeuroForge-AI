@@ -108,7 +108,7 @@ export default function ScientificHistogram({dataset,column,binCount=8,sourceNam
       <div className="min-w-0 space-y-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="prism-eyebrow">PRISM / SCIENTIFIC VISUALIZATION</span>
-          <span className="prism-status-pill">F16 · Live F10 evidence</span>
+          <span className="prism-status-pill"> · Live  evidence</span>
         </div>
         <h5 className="prism-chart-title">{spec.title}</h5>
         <p className="prism-subtitle">Equal-width bins · filtered source population · missing values excluded</p>
@@ -167,7 +167,7 @@ export default function ScientificHistogram({dataset,column,binCount=8,sourceNam
       </div>}
       {view==='data'&&<div role="region" aria-label="PRISM histogram data table" tabIndex={0} className="prism-table-scroll">
         <table className="prism-data-table">
-          <caption>Exact F10 distribution evidence for {spec.column}</caption>
+          <caption>Exact  distribution evidence for {spec.column}</caption>
           <thead><tr><th scope="col">Bin</th><th scope="col">Lower edge</th><th scope="col">Upper edge</th><th scope="col">Observed rows</th></tr></thead>
           <tbody>{spec.bins.map(bin=><tr key={bin.index}>
             <th scope="row">{bin.index}</th><td>{display(bin.from)}</td>

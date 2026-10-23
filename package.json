@@ -8,6 +8,8 @@
     "test:e2e": "npm run build:client && playwright test",
     "test:e2e:memory": "npm run build:client && node scripts/run-browser-tests.mjs memory",
     "baseline:summary": "node scripts/summarize-verification.mjs",
+    "benchmark:csv": "node scripts/benchmark-csv-stream.mjs",
+    "benchmark:csv:browser": "node scripts/benchmark-csv-browser.mjs",
     "audit:f21": "node scripts/prism-audit-f21.mjs candidate --full",
     "review:f21": "node scripts/prism-visual-review-f21.mjs",
     "fixtures:f22": "node scripts/export-learning-code-fixtures-f22.mjs",

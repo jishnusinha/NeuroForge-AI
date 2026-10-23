@@ -61,7 +61,7 @@ export function compute({dataset,config}){
       'Quartiles use linear interpolation at (n−1)p. Box whiskers end at observed values within 1.5 IQR; outlier counts are reported without exposing individual outlier coordinates.',
       'Gaussian KDE: explicit bandwidth or Silverman robust rule 0.9 min(sample SD, IQR/1.34) n^(−1/5); 96 samples over observed range ±3 bandwidths. Violin widths share a common density scale.',
       'ECDF is right-continuous: P(X ≤ x), with ties combined. Up to eight groups; remaining groups are explicitly combined.',
-      'Histograms reuse the F16/F10 numerical engine; grouped histograms share the full scoped population’s bin edges and the same floor/clamp assignment rule. The final upper edge is included. Adaptive bin counts are constrained to 4–16.'],
+      'Histograms reuse the validated distribution engine; grouped histograms share the full scoped population’s bin edges and the same floor/clamp assignment rule. The final upper edge is included. Adaptive bin counts are constrained to 4–16.'],
     plot:{histogram:type==='histogram',step:type==='ecdf',xLabel:['box','violin'].includes(type)?group||'Group':type==='histogram'?x+' · numbered bins':x,
       yLabel:['box','violin'].includes(type)?x:type==='kde'?'Estimated density':type==='ecdf'?'Cumulative fraction':normalization==='count'?'Observed rows':normalization,grouped:!!group}});
 }

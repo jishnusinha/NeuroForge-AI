@@ -51,7 +51,7 @@ export function compute({dataset,config}){
   return evidence({columns:[col('series','text'),col('x'),col('y'),col('count'),col('from'),col('to'),col('dx'),col('dy'),col('facet_x','text'),col('facet_y','text')],rows,
     kind:type==='scatter_matrix'?'matrix':type==='hexbin'?'hexbin':'scatter',stats:{excludedPairs:excluded,fit,pairs:pairs.length,sourceRows:dataset.rows.length},links,warnings,
     observationLevel:type!=='hexbin',notes:['Pairwise complete finite numeric observations only; no sampling of scatter points.',
-      'Scatter matrix is capped at four selected variables, with exact F10 histograms on the diagonal. Pairwise exclusions can differ between panels.',
+      'Scatter matrix is capped at four selected variables, with exact histograms on the diagonal. Pairwise exclusions can differ between panels.',
       'Hexbin uses pointy-top axial hexagons, cube-coordinate rounding and independently normalized axes (18 units per observed range). Counts sum to complete pairs.',
       'OLS is descriptive unweighted least squares with an intercept. No uncertainty bands or causal claims. Constant targets have undefined R².'],
     plot:{xLabel:x,yLabel:y,facets:type==='scatter_matrix'?columns.slice(0,4):[],trend:type==='trend'}});

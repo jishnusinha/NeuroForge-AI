@@ -148,6 +148,8 @@ export default function DataScienceWorkbench({ dataset, name, onCreateSubset, on
       key={studioRequest?.key||JSON.stringify([studioRequest?.columns,studioRequest?.population,filters,analysisIds])}
       dataset={studioRequest?.dataset||analyzedDataset} sourceDataset={studioRequest?.sourceDataset||dataset}
       population={studioRequest?.population||(filters.length||analysisIds?'filtered_source':'source')} sourceName={name}
+      populationCount={!filters.length&&!analysisIds&&dataset.sourceSummary?dataset.sourceSummary.sourceRows:(studioRequest?.sourceDataset||dataset).rows.length}
+      sampling={!filters.length&&!analysisIds&&dataset.sourceSummary?{method:'first_records_preview',statisticsAreSampleDerived:true}:null}
       initialColumns={studioRequest?.columns} initialType={studioRequest?.type}
       onLink={ids=>setLinkedIds(ids)} onShowSheet={()=>setTab('datasheet')}
       onFilterMissing={column=>{setFilters(previous=>[...previous,{id:crypto.randomUUID(),column,operator:'missing'}]);setStudioRequest(null);setTab('datasheet');}}/></Suspense></div>}

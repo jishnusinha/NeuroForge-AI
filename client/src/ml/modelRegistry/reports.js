@@ -28,7 +28,7 @@ export function createRunResearchReport(runs,{title='NeuroForge research record'
      typeof limitations!=='string'||limitations.length>4000)
     throw new Error('F14_REPORT_INVALID');
   runs.forEach(validateRunReceipt);
-  const head=['# '+title.trim(),'','**Report type:** Saved F12/F13 research receipts (not model training reproduction).','',
+  const head=['# '+title.trim(),'','**Report type:** Saved model and explanation receipts (not training reproduction).','',
     '## Observed validation evidence','','| Experiment | Task | Algorithm | Source digest | Validation samples | Metric(s) |',
     '|---|---|---|---|---:|---|'];
   for(const run of runs) {
@@ -45,7 +45,7 @@ export function createRunResearchReport(runs,{title='NeuroForge research record'
       ('Access recorded at '+clean(access[0].accessedAt)+'. This result was not used to rank candidates.') :
       'No final-test access recorded in this archived receipt.'));
   }
-  head.push('','## F15 model-selection evidence','');
+  head.push('','## Model-selection evidence','');
   for(const run of runs){
     const selection=run.selectionEvidence;
     head.push('- **'+clean(run.title)+'**: '+(selection
@@ -53,7 +53,7 @@ export function createRunResearchReport(runs,{title='NeuroForge research record'
         ' fold inner cross-validation; '+clean(selection.metric)+
         ' mean '+fmt(selection.selectedMean)+', fold SD '+fmt(selection.selectedSampleSd)+
         '; fold digest '+selection.foldMembershipDigest+'.')
-      :'No F15 selection evidence attached.'));
+      :'No model-selection evidence attached.'));
   }
   head.push('','## Attached explanation evidence','');
   for(const run of runs){
@@ -61,7 +61,7 @@ export function createRunResearchReport(runs,{title='NeuroForge research record'
       ' saved summary receipt(s); algorithm '+clean(run.model.algorithm)+
       ', model SHA-256 '+run.model.digest+'.');
     for(const exp of run.explanations)
-      head.push('  - F13 evidence at '+clean(exp.createdAt)+
+      head.push('  - Explanation evidence at '+clean(exp.createdAt)+
         '; global importance '+clean(exp.permutation?.status??'Not recorded')+
         '; partial dependence '+(exp.dependence?'Recorded':'Not recorded')+
         '; subgroup evidence '+(exp.subgroups?'Recorded':'Not recorded')+'.');
@@ -69,9 +69,9 @@ export function createRunResearchReport(runs,{title='NeuroForge research record'
   head.push('','## Research notes','',observations||'No observations recorded.','',
     '## Limitations','',limitations||'No researcher-supplied limitations.','',
     '- Saved metrics are measurements from their recorded validation populations; different source/split populations must not be ranked together.',
-    '- A saved receipt does not restore the source dataset, fitted F11 preprocessing, or training environment.',
+    '- A saved receipt does not restore the source dataset, fitted preprocessing, or training environment.',
     '- The final-test access log is a local workflow record, not tamper-proof provenance.',
-    '- F13 explanations are model behavior, not causal conclusions.',
+    '- Explanations describe model behavior, not causal conclusions.',
     '');
   return head.join('\n');
 }

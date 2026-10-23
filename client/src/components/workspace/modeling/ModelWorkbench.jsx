@@ -29,7 +29,7 @@ function ScorePanel({ report }) {
         <dd className="text-lg font-semibold tabular-nums">{format(report.metrics[key])}</dd>
       </div>)}
     </dl>
-    {report.confusion&&<div role="region" aria-label={'F12 '+report.split+' confusion matrix'} tabIndex={0} className="overflow-auto rounded-lg border border-white/10">
+    {report.confusion&&<div role="region" aria-label={' '+report.split+' confusion matrix'} tabIndex={0} className="overflow-auto rounded-lg border border-white/10">
       <table className="w-full text-left text-xs">
         <caption className="p-2 text-left text-text-muted">Confusion matrix: true rows × predicted columns · {report.count} observations.</caption>
         <thead><tr><th scope="col" className="p-2">Actual / predicted</th>{report.perClass.map(item=><th key={String(item.name)} scope="col" className="p-2">{String(item.name)}</th>)}</tr></thead>
@@ -44,7 +44,7 @@ function ScorePanel({ report }) {
 }
 
 function PredictionTable({ report }) {
-  return <div role="region" aria-label={'F12 '+report.split+' prediction evidence'} tabIndex={0}
+  return <div role="region" aria-label={' '+report.split+' prediction evidence'} tabIndex={0}
     className="max-h-72 overflow-auto rounded-lg border border-white/10">
     <table className="w-full min-w-[420px] text-left text-xs">
       <caption className="p-2 text-left text-text-muted">First {Math.min(20,report.count)} of {report.count} scored {report.split} records; all records contribute to metrics.</caption>
@@ -103,7 +103,7 @@ export default function ModelWorkbench({ plan }) {
     setCandidates(previous=>[...previous,{id,algorithm:advancedAlgorithm,
       options:{...advancedOptions},model:fitted,validation,selectionEvidence,trainingTrace:trace.length?{points:trace}:null}]);
     setSelectedId(id);
-    setMessage('F15 inner CV selection refitted on original training rows; fixed outer validation measured. Test remains sealed.');
+    setMessage(' inner CV selection refitted on original training rows; fixed outer validation measured. Test remains sealed.');
     setError('');
   };
 
@@ -146,13 +146,13 @@ export default function ModelWorkbench({ plan }) {
           });
           const stored=await saveF14Run(refreshed,previous.revision);
           setSavedByCandidate(current=>({...current,[selected.id]:{receipt:stored}}));
-          setMessage('Final test accessed once and its audit receipt updated in the local F14 archive. Further candidate tuning is frozen.');
+          setMessage('Final test accessed once and its audit receipt updated in the local  archive. Further candidate tuning is frozen.');
         }catch(reason){
           setError('Final test was accessed, but its archive audit could not be saved: '+reason.message+
             '. Save the run again to preserve the access event.');
         }
       }else{
-        setMessage('Final test accessed once. Save an F14 research receipt to preserve this audit after refresh. Candidate tuning is frozen.');
+        setMessage('Final test accessed once. Save an  research receipt to preserve this audit after refresh. Candidate tuning is frozen.');
       }
     }catch(reason){setError(reason.message);}
   };
@@ -164,24 +164,24 @@ export default function ModelWorkbench({ plan }) {
       const previous=savedRun?.receipt??null;
       const next=await createRunReceipt({
         matrix,plan,candidate:selected,finalTest:testResult,
-        title:saveTitle.trim()||previous?.title||selected.algorithm+' F12 investigation',
+        title:saveTitle.trim()||previous?.title||selected.algorithm+'  investigation',
         tags:previous?.tags??[],notes:previous?.notes??'',
         includeArtifact:['baseline','logistic','ridge'].includes(selected.algorithm)?saveArtifact:false,
         existing:previous,
       });
       const stored=await saveF14Run(next,previous?.revision??0);
       setSavedByCandidate(current=>({...current,[selected.id]:{receipt:stored}}));
-      setMessage('Saved F14 run revision '+stored.revision+' locally. Open My Experiments to reopen and compare it.');
-    }catch(reason){setError('F14 save failed: '+reason.message);}
+      setMessage('Saved  run revision '+stored.revision+' locally. Open My Experiments to reopen and compare it.');
+    }catch(reason){setError(' save failed: '+reason.message);}
     finally{setSaving(false);}
   };
   const attachF13=async(receipt)=>{
     const saved=savedByCandidate[selected?.id]?.receipt;
-    if(!saved)throw new Error('Save this run in F14 before attaching F13 evidence.');
+    if(!saved)throw new Error('Save this run in  before attaching  evidence.');
     const next=attachExplanationToRun(saved,receipt);
     const stored=await saveF14Run(next,saved.revision);
     setSavedByCandidate(current=>({...current,[selected.id]:{receipt:stored}}));
-    setMessage('F13 explanation summary attached to the local F14 research run.');
+    setMessage(' explanation summary attached to the local  research run.');
   };
 
   const exportEvidence=async()=>{
@@ -206,10 +206,10 @@ export default function ModelWorkbench({ plan }) {
   };
 
   return <details className="rounded-xl border border-plasma-cyan/30 bg-obsidian/70 p-3 sm:p-4">
-    <summary className="cursor-pointer text-base font-semibold">F12 — Professional ML Workbench
-      <span className="mt-1 block text-xs font-normal text-text-muted">Train real N-feature models using the prepared F11 matrix; inspect validation evidence and release final test once</span>
+    <summary className="cursor-pointer text-base font-semibold"> — Professional ML Workbench
+      <span className="mt-1 block text-xs font-normal text-text-muted">Train real N-feature models using the prepared  matrix; inspect validation evidence and release final test once</span>
     </summary>
-    <div role="region" aria-label="F12 Model Workbench" className="mt-4 space-y-4">
+    <div role="region" aria-label=" Model Workbench" className="mt-4 space-y-4">
       <div className="prism-scope-bar" aria-label="Model investigation context"><strong>{selected?'Fitted candidate: '+selected.algorithm:'Configure a model'}</strong><span>Target: {matrix.task.targetColumn}</span><span>{matrix.features.length} prepared features</span><span>{matrix.membership.validation.length} fixed validation observations</span><span>{testResult?'Final test access recorded':'Final test protected'}</span></div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[['Task',matrix.task.type.replaceAll('_',' ')],['Features',matrix.features.length],['Training',matrix.membership.train.length],['Validation',matrix.membership.validation.length]].map(([label,value])=>
@@ -218,39 +218,39 @@ export default function ModelWorkbench({ plan }) {
       <p className="break-all text-xs text-text-muted">Every prepared input is used: {matrix.features.join(', ')}. Raw source records remain unchanged.</p>
       <div className="grid gap-3 sm:grid-cols-3">
         <label className="text-xs font-semibold">Algorithm
-          <select aria-label="F12 algorithm" value={algorithm} disabled={busy||Boolean(testResult)}
+          <select aria-label=" algorithm" value={algorithm} disabled={busy||Boolean(testResult)}
             onChange={event=>setModelId(event.target.value)}
             className="mt-1 w-full min-h-10 rounded-lg border border-white/20 bg-surface-dark p-2 text-sm text-text-primary">
             {available.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}
           </select>
         </label>
         {['ridge','logistic','softmax'].includes(algorithm)&&<label className="text-xs font-semibold">L2 regularization
-          <input aria-label="F12 regularization" type="number" min="0.000001" max="10" step="0.01" value={lambda}
+          <input aria-label=" regularization" type="number" min="0.000001" max="10" step="0.01" value={lambda}
             disabled={busy||Boolean(testResult)} onChange={event=>setLambda(Number(event.target.value))}
             className="mt-1 w-full min-h-10 rounded-lg border border-white/20 bg-surface-dark p-2 text-sm text-text-primary"/>
         </label>}
         {algorithm==='knn'&&<label className="text-xs font-semibold">Neighbors (k)
-          <input aria-label="F12 neighbors" type="number" min="1" max="25" step="1" value={k}
+          <input aria-label=" neighbors" type="number" min="1" max="25" step="1" value={k}
             disabled={busy||Boolean(testResult)} onChange={event=>setK(Number(event.target.value))}
             className="mt-1 w-full min-h-10 rounded-lg border border-white/20 bg-surface-dark p-2 text-sm text-text-primary"/>
         </label>}
         {['logistic','softmax'].includes(algorithm)&&<label className="text-xs font-semibold">Training epochs
-          <input aria-label="F12 epochs" type="number" min="20" max="400" step="10" value={epochs}
+          <input aria-label=" epochs" type="number" min="20" max="400" step="10" value={epochs}
             disabled={busy||Boolean(testResult)} onChange={event=>setEpochs(Number(event.target.value))}
             className="mt-1 w-full min-h-10 rounded-lg border border-white/20 bg-surface-dark p-2 text-sm text-text-primary"/>
         </label>}
         {['cart','forest'].includes(algorithm)&&<label className="text-xs font-semibold">Tree depth
-          <input type="number" aria-label="F15 tree depth" value={maxDepth} min={1} max={7} step={1}
+          <input type="number" aria-label=" tree depth" value={maxDepth} min={1} max={7} step={1}
             disabled={busy||Boolean(testResult)} onChange={event=>setMaxDepth(Number(event.target.value))}
             className="mt-1 w-full min-h-10 rounded-lg border border-white/20 bg-surface-dark p-2 text-sm text-text-primary"/>
         </label>}
         {['cart','forest'].includes(algorithm)&&<label className="text-xs font-semibold">Minimum leaf rows
-          <input type="number" aria-label="F15 tree minimum leaf" value={minLeaf} min={2} max={30} step={1}
+          <input type="number" aria-label=" tree minimum leaf" value={minLeaf} min={2} max={30} step={1}
             disabled={busy||Boolean(testResult)} onChange={event=>setMinLeaf(Number(event.target.value))}
             className="mt-1 w-full min-h-10 rounded-lg border border-white/20 bg-surface-dark p-2 text-sm text-text-primary"/>
         </label>}
         {algorithm==='forest'&&<label className="text-xs font-semibold">Forest trees
-          <input type="number" aria-label="F15 forest trees" value={trees} min={3} max={30} step={1}
+          <input type="number" aria-label=" forest trees" value={trees} min={3} max={30} step={1}
             disabled={busy||Boolean(testResult)} onChange={event=>setTrees(Number(event.target.value))}
             className="mt-1 w-full min-h-10 rounded-lg border border-white/20 bg-surface-dark p-2 text-sm text-text-primary"/>
         </label>}
@@ -264,7 +264,7 @@ export default function ModelWorkbench({ plan }) {
       {candidates.length>=8&&<p className="text-xs text-signal-amber">Eight-candidate browser session limit reached. Start a new preparation session for further experiments.</p>}
       <p className="text-xs text-text-muted">The held-out test set is not evaluated while training or selecting candidates. Validation measurements drive comparison. This session is browser-local.</p>
 
-      {candidates.length>0&&<section aria-label="F12 model candidates" className="space-y-3">
+      {candidates.length>0&&<section aria-label=" model candidates" className="space-y-3">
         <h5 className="font-semibold">Candidate comparison · {scoreKey} on validation</h5>
         <div className="space-y-2">
           {candidates.map(item=><button key={item.id} type="button"
@@ -278,34 +278,34 @@ export default function ModelWorkbench({ plan }) {
         </div>
         <p className="text-xs text-text-muted">{lowerIsBetter(matrix.task.type)?'Lower validation RMSE is better.':'Higher validation F1 is better.'} Compare only candidates sharing this frozen dataset and split.</p>
       </section>}
-      {selected&&<section aria-label="F12 validation results" className="space-y-3">
+      {selected&&<section aria-label=" validation results" className="space-y-3">
         <h5 className="font-semibold">Validation results · {selected.algorithm}</h5>
         <ScorePanel report={selected.validation}/>
         <PredictionTable report={selected.validation}/>
       </section>}
       {selected&&<ModelVisualization key={'f19-'+selected.id} matrix={matrix} candidate={selected}/>}
-      {selected&&<section aria-label="F14 save research run" className="space-y-3 rounded-xl border border-plasma-cyan/30 bg-surface-dark p-3">
-        <h5 className="font-semibold">F14 — Preserve this research run</h5>
+      {selected&&<section aria-label=" save research run" className="space-y-3 rounded-xl border border-plasma-cyan/30 bg-surface-dark p-3">
+        <h5 className="font-semibold"> — Preserve this research run</h5>
         <p className="text-xs text-text-muted">Save validation metrics, fingerprints and any recorded final-test access locally. Raw rows and per-row prediction records are never stored. This is a research receipt, not automatic model deployment.</p>
         <label className="block max-w-lg text-xs font-semibold">Experiment title
-          <input aria-label="F14 experiment title" maxLength={100} value={saveTitle}
-            placeholder={savedRun?.receipt.title??selected.algorithm+' F12 investigation'}
+          <input aria-label=" experiment title" maxLength={100} value={saveTitle}
+            placeholder={savedRun?.receipt.title??selected.algorithm+'  investigation'}
             onChange={event=>setSaveTitle(event.target.value)}
             className="mt-1 min-h-10 w-full rounded-lg border border-white/20 bg-obsidian p-2 text-sm text-text-primary"/>
         </label>
         <label className="flex items-start gap-2 text-xs text-text-muted">
-          <input type="checkbox" aria-label="F14 opt-in fitted artifact" checked={saveArtifact}
+          <input type="checkbox" aria-label=" opt-in fitted artifact" checked={saveArtifact}
             disabled={!['baseline','logistic','ridge'].includes(selected.algorithm)} onChange={event=>setSaveArtifact(event.target.checked)}/>
-          <span>Opt in to saving fitted model parameters for prepared-vector inference replay (baseline, logistic and ridge only). Training statistics may be sensitive. F15 tree/forest/softmax and kNN models are receipt-only until artifact validators are implemented.</span>
+          <span>Opt in to saving fitted model parameters for prepared-vector inference replay (baseline, logistic and ridge only). Training statistics may be sensitive.  tree/forest/softmax and kNN models are receipt-only until artifact validators are implemented.</span>
         </label>
         <div className="flex flex-wrap items-center gap-2">
           <button type="button" disabled={saving} onClick={archiveRun} className={buttonClass}>
-            {saving?'Saving locally…':savedRun?'Update saved F14 run':'Save F14 research run'}
+            {saving?'Saving locally…':savedRun?'Update saved  run':'Save  research run'}
           </button>
           <Link to="/app/experiments" className="min-h-10 rounded-lg border border-plasma-cyan/25 px-3 py-2 text-sm text-plasma-cyan">Open My Experiments archive</Link>
         </div>
         {savedRun&&<p role="status" className="text-xs text-quantum-mint">
-          Local F14 receipt saved · revision {savedRun.receipt.revision} · {savedRun.receipt.model.storageMode==='opt_in_artifact'?'opt-in replay artifact':'receipt only'}.
+          Local  receipt saved · revision {savedRun.receipt.revision} · {savedRun.receipt.model.storageMode==='opt_in_artifact'?'opt-in replay artifact':'receipt only'}.
         </p>}
       </section>}
       {selected&&<ExplainabilityStudio key={selected.id} matrix={matrix} candidate={selected} plan={plan}
@@ -315,7 +315,7 @@ export default function ModelWorkbench({ plan }) {
         <p className="text-xs text-text-muted">Finalize candidate selection before evaluating the {matrix.membership.test.length} held-out test records. This action reveals test metrics and freezes further model tuning in this session.</p>
         <button type="button" onClick={finalEvaluate} disabled={busy} className={buttonClass}>Evaluate selected model on held-out test once</button>
       </div>}
-      {testResult&&<section aria-label="F12 final test results" className="rounded-xl border border-quantum-mint/40 bg-surface-dark p-3 space-y-3">
+      {testResult&&<section aria-label=" final test results" className="rounded-xl border border-quantum-mint/40 bg-surface-dark p-3 space-y-3">
         <h5 className="font-semibold text-quantum-mint">Final held-out test · {selected?.algorithm}</h5>
         <p className="text-xs text-text-muted">Test accessed at {testResult.accessedAt}. This is the single recorded final evaluation for the selected candidate.</p>
         <ScorePanel report={testResult.report}/>
@@ -323,12 +323,12 @@ export default function ModelWorkbench({ plan }) {
         <ModelVisualization key={'f19-final-'+selected.id} matrix={matrix} candidate={selected} finalTest={testResult}/>
       </section>}
       <button type="button" onClick={exportEvidence} disabled={!candidates.length} className={buttonClass}>
-        Export F12 evidence JSON
+        Export  evidence JSON
       </button>
       <CodeCompanionEntry context={{workspace:'workbench',algorithm,task:matrix.task.type,features:matrix.features.length,classCount:matrix.task.classes.length||2,epochs,lambda,k,maxDepth,minLeaf,trees,learningRate:.25,seed:42}} evidence={{trainingRows:matrix.membership.train.length,validationRows:matrix.membership.validation.length}}/>
       {message&&<p role="status" className="text-sm text-quantum-mint">{message}</p>}
       {error&&<p role="alert" className="text-sm text-signal-amber">{error}</p>}
-      <p className="text-xs text-text-muted">Standard F12 evidence exports contain only metadata and measured metrics. F14 can store a research receipt locally; fitted model parameters are saved only with explicit opt-in, never for kNN. Full source-data restoration and N-dimensional Arena integration remain future work.</p>
+      <p className="text-xs text-text-muted">Standard  evidence exports contain only metadata and measured metrics.  can store a research receipt locally; fitted model parameters are saved only with explicit opt-in, never for kNN. Full source-data restoration and N-dimensional Arena integration remain future work.</p>
     </div>
   </details>;
 }
