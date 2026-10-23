@@ -1,0 +1,74 @@
+import {test,expect} from '@playwright/test';
+import {readFile} from 'node:fs/promises';
+
+test('full-source fitting consumes source edits, preserves held-out test and archives reproducible evidence',async({page})=>{
+  await page.goto('/app/datasets');
+  const csv='x,y,target\n'+Array.from({length:6000},(_,i)=>`${i%2?-1:1},${(i*7)%11},${i%2}`).join('\n');
+  await page.getByLabel('CSV file',{exact:true}).setInputFiles({name:'full-source-fit.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
+  await expect(page.getByRole('region',{name:'Whole file profile'})).toContainText('6,000 source rows');
+  await page.getByRole('button',{name:'Full source pages',exact:true}).click();
+  const source=page.getByRole('region',{name:'Full source file browser'});
+  await expect(source.locator('tbody tr')).toHaveCount(100);
+  await source.getByRole('button',{name:'Edit full source',exact:true}).click();
+  await source.locator('tbody tr').first().locator('td').first().getByRole('button').click();
+  const cell=source.getByLabel('Edit source row 1 x');await cell.fill('7');await cell.press('Enter');
+  await expect(source).toContainText('1 edited cells saved in this browser');
+  await page.getByRole('button',{name:'Open full-source model fitting',exact:true}).click();
+  const studio=page.getByRole('region',{name:'Full-source model fitting',exact:true});
+  await expect(studio).toContainText('6,000 source rows · 1 edited cells');
+  await studio.getByLabel('Full-source epochs', {exact:true}).fill('2');
+  await studio.getByRole('button',{name:'Fit full source and score validation',exact:true}).click();
+  await expect(studio.getByRole('region',{name:'Full-source validation results',exact:true})).toContainText('900 scored rows',{timeout:30000});
+  await expect(studio).toContainText('4,200');
+  await expect(studio.getByRole('region',{name:'Full-source test results',exact:true})).toHaveCount(0);
+  await source.locator('tbody tr').first().locator('td').first().getByRole('button').click();
+  const laterEdit=source.getByLabel('Edit source row 1 x');await laterEdit.fill('9');await laterEdit.press('Enter');
+  await expect(studio).toContainText('Source edits have changed since this fit');
+  await studio.getByLabel('Full-source save fitted artifact', {exact:true}).check();
+  await studio.getByRole('button',{name:'Save full-source experiment',exact:true}).click();
+  await expect(studio).toContainText('Saved F14 receipt · revision 1');
+  await studio.getByRole('button',{name:'Evaluate full-source held-out test once',exact:true}).click();
+  await expect(studio.getByRole('region',{name:'Full-source test results',exact:true})).toContainText('900 scored rows');
+  await expect(studio).toContainText('Saved F14 receipt · revision 2');
+  await expect(studio.getByRole('button',{name:'Evaluate full-source held-out test once',exact:true})).toHaveCount(0);
+  const download=page.waitForEvent('download');await studio.getByRole('button',{name:'Export full-source evidence JSON',exact:true}).click();
+  const receipt=JSON.parse(await readFile(await (await download).path(),'utf8'));
+  expect(receipt.model.artifact).toBeNull();expect(receipt.counts).toEqual({train:4200,validation:900,test:900});expect(receipt.model.config.editedCells).toBe(1);expect(receipt.finalTest.accessHistory).toHaveLength(1);expect(receipt.lineage.sourceDigest).toMatch(/^[a-f0-9]{64}$/);
+  await studio.getByRole('link',{name:'Open My Experiments',exact:true}).click();
+  await expect(page.getByText('Full-source experiment',{exact:true}).first()).toBeVisible();
+});
+
+test('newly selected visual-lab samples consume edits and invalidate after later source changes',async({page})=>{
+  await page.goto('/app/datasets');
+  const csv='x,y,target\n'+Array.from({length:1200},(_,i)=>`${i%11},${i%7},${i%2}`).join('\n');
+  await page.getByLabel('CSV file',{exact:true}).setInputFiles({name:'edited-sample.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
+  const sample=page.getByRole('button',{name:'Use a reproducible sample for model preparation',exact:true});
+  await sample.click();await expect(page.getByLabel('CSV x',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Full source pages',exact:true}).click();
+  const source=page.getByRole('region',{name:'Full source file browser'});
+  await expect(source.locator('tbody tr')).toHaveCount(100);
+  await source.getByRole('button',{name:'Edit full source',exact:true}).click();
+  await source.locator('tbody tr').first().locator('td').first().getByRole('button').click();
+  const cell=source.getByLabel('Edit source row 1 x');await cell.fill('4');await cell.press('Enter');
+  await expect(page.getByRole('region',{name:'Whole file profile'})).toContainText('Source edits changed after this model sample was selected');
+  await expect(page.getByLabel('CSV x',{exact:true})).toHaveCount(0);
+  await sample.click();await expect(page.getByLabel('CSV x',{exact:true})).toBeVisible();
+  const preview=page.getByRole('region',{name:'Prepared row comparison',exact:true});
+  await expect(preview.locator('tbody tr').first().locator('td').nth(1)).toHaveText('4');
+});
+
+test('full-source worker can be cancelled and a new configuration can be fitted',async({page})=>{
+  await page.goto('/app/datasets');
+  const csv='x,y,target\n'+Array.from({length:12000},(_,i)=>`${i%101},${i%7},${i%2}`).join('\n');
+  await page.getByLabel('CSV file',{exact:true}).setInputFiles({name:'cancel-fit.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
+  await page.getByRole('button',{name:'Open full-source model fitting',exact:true}).click();
+  const studio=page.getByRole('region',{name:'Full-source model fitting',exact:true});
+  await studio.getByLabel('Full-source epochs',{exact:true}).fill('400');
+  await studio.getByRole('button',{name:'Fit full source and score validation',exact:true}).click();
+  await studio.getByRole('button',{name:'Cancel full-source execution',exact:true}).click();
+  await expect(studio.getByLabel('Full-source epochs',{exact:true})).toBeEnabled();
+  await studio.getByLabel('Full-source algorithm',{exact:true}).selectOption('baseline');
+  await studio.getByRole('button',{name:'Fit full source and score validation',exact:true}).click();
+  await expect(studio.getByRole('region',{name:'Full-source validation results',exact:true})).toBeVisible();
+  await expect(studio.getByRole('region',{name:'Full-source test results',exact:true})).toHaveCount(0);
+});

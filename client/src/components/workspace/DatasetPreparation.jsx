@@ -1,15 +1,17 @@
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { parseAndValidateCSV } from '../../ml/datasetImport.js';
+import { importCsvFile } from '../../ml/importCsvFile.js';
 import { buildDatasetPipeline, defaultPipelineColumns, SPLIT_PRESETS } from '../../ml/pipelinePlanner.js';
 import { validateExecutionBudget } from '../../services/productionConfig.js';
 import { digest } from '../../../../shared/domain.mjs';
 import { useLabStore } from '../../store/useLabStore.js';
 import PipelineStudio from './pipeline/PipelineStudio.jsx';
+import {useSourceEdits} from '../../services/useSourceEdits.js';
+const FullSourceModeling=lazy(()=>import('./modeling/FullSourceModeling.jsx'));
 
 const display = value => Number.isFinite(value) ? Number(value.toFixed(4)).toLocaleString() : 'Missing';
 
-export default function DatasetPreparation({ initialData = null, onParsed }) {
+export default function DatasetPreparation({ initialData = null, onParsed, onSampleSelected }) {
   const [data, setData] = useState(initialData);
   const [columns, setColumns] = useState(() => defaultPipelineColumns(initialData));
   const [imputation, setImputation] = useState('mean');
@@ -17,6 +19,20 @@ export default function DatasetPreparation({ initialData = null, onParsed }) {
   const [splitPreset, setSplitPreset] = useState('70/15/15');
   const [seed, setSeed] = useState(42);
   const [error, setError] = useState('');
+  const [importProgress,setImportProgress]=useState(null);
+  const [sourceSummary,setSourceSummary]=useState(initialData?.sourceSummary||null);
+  const [modelSelected,setModelSelected]=useState(!initialData?.sourceSummary);
+  const [fullSourceOpened,setFullSourceOpened]=useState(false);
+  const {edits:sourceEdits,error:sourceEditError,revision:sourceEditRevision}=useSourceEdits(sourceSummary);
+  const [sampleEditRevision,setSampleEditRevision]=useState(null);
+  const sampleEditsChanged=Boolean(sourceSummary&&modelSelected&&sampleEditRevision!==sourceEditRevision);
+  const [delimiter,setDelimiter]=useState('auto');
+  const [quoteChar,setQuoteChar]=useState('"');
+  const [encoding,setEncoding]=useState('utf-8');
+  const [hasHeader,setHasHeader]=useState(true);
+  const [decimalSeparator,setDecimalSeparator]=useState('.');
+  const importAbort=useRef(null);
+  useEffect(()=>()=>importAbort.current?.abort(),[]);
   const navigate = useNavigate();
   const loadRun = useLabStore(state => state.loadRun);
 
@@ -33,6 +49,7 @@ export default function DatasetPreparation({ initialData = null, onParsed }) {
   const launch = async workspace => {
     try {
       if (!data) throw new Error('Import or select a dataset before preparation.');
+      if(sourceEditError||sampleEditsChanged)throw new Error(sourceEditError||'Source edits changed. Select the reproducible model sample again before preparation.');
       if (result.issue) throw new Error(result.issue);
       if (!result.plan) throw new Error('Preview the preparation pipeline before launching a lab.');
       validateExecutionBudget(data.rows.length, 2);
@@ -66,6 +83,7 @@ export default function DatasetPreparation({ initialData = null, onParsed }) {
 
 
   const launchAdvanced = async (plan, workspace) => {
+    if(sourceEditError||sampleEditsChanged)throw new Error(sourceEditError||'Source edits changed. Select the reproducible model sample again before preparation.');
     if (!data || !plan.labCompatible || !plan.labPoints) throw new Error('F11_LAB_COMPATIBILITY: Choose exactly two numeric output features and binary targets 0/1.');
     validateExecutionBudget(plan.labPoints.length, plan.outputFeatures.length);
     const serialized = plan.artifact;
@@ -101,31 +119,60 @@ export default function DatasetPreparation({ initialData = null, onParsed }) {
     <div className="space-y-1">
       <h3 className="text-lg font-semibold text-white">Visual preparation pipeline</h3>
       <p className="text-xs leading-relaxed text-text-muted">
-        Import a CSV up to 2 MB and 2,000 rows, choose two numeric features and a 0/1 target, then inspect
-        the real split and train-fitted transformations before launching either lab.
-        Validation and test rows never contribute to imputer or scaler parameters.
+        CSV and TSV files are scanned locally in a background worker (up to 100 MiB and 100 columns on this device).
+        Choose full-source fitting for supported numeric models, or an explicit sample for the visual model labs.
+        Visual model labs remain limited to 2,000 rows and 20 features.
       </p>
     </div>
     <label className="block max-w-xl text-sm font-medium text-white">
-      Upload CSV dataset
-      <input aria-label="CSV file" type="file" accept=".csv,text/csv"
+      Choose CSV or TSV · Processed locally
+      <input aria-label="CSV file" type="file" accept=".csv,.tsv,text/csv,text/tab-separated-values"
         className="mt-2 block w-full max-w-xl rounded-lg border border-white/20 bg-surface-dark px-3 py-3 text-xs"
         onChange={async event => {
           try {
             const file = event.target.files[0];
             if (!file) return;
-            if (file.size > 2 * 1024 * 1024) throw new Error('CSV must be at most 2 MB.');
-            const parsed = parseAndValidateCSV(await file.text(), {requiredNumericCols: 0});
-            setData(parsed);
-            setColumns(defaultPipelineColumns(parsed));
-            onParsed?.(parsed, file.name);
+            importAbort.current?.abort();importAbort.current=new AbortController();
+            setError('');setImportProgress({fileName:file.name,bytes:0,totalBytes:file.size,rows:0});setModelSelected(false);
+            const summary=await importCsvFile(file,{signal:importAbort.current.signal,onProgress:setImportProgress,delimiter,quoteChar,encoding,hasHeader,decimalSeparator});
+            const visibleHeaders=summary.headers;
+            const visibleRows=summary.previewRows.map(row=>{const next=Object.create(null);next.id=row.id;for(const header of visibleHeaders)next[header]=row[header];return next;});
+            const parsed={headers:visibleHeaders,originalHeaders:summary.originalHeaders,rows:visibleRows,rowCount:summary.previewRows.length,sourceSummary:summary,sourceRowCount:summary.sourceRows,sourceFile:file,sourceOptions:{delimiter,quoteChar,encoding,hasHeader,decimalSeparator},sampling:{kind:'source_preview',method:'first_records',rowCount:summary.previewRows.length}};
+            setSourceSummary(summary);setData(parsed);setColumns(defaultPipelineColumns(parsed));
+            onParsed?.(parsed,file.name);
             setError('');
-          } catch (reason) { setError(reason.message); }
+            setImportProgress(null);
+          } catch (reason) { if(reason.name!=='AbortError')setError(reason.message);setImportProgress(null); }
         }} />
     </label>
+    <details className="max-w-xl rounded-xl border border-white/10 p-3"><summary className="cursor-pointer text-sm font-medium">Parsing preferences</summary><div className="mt-3 grid gap-3 sm:grid-cols-2"><label className="text-xs">Delimiter<select aria-label="CSV delimiter" value={delimiter} onChange={e=>setDelimiter(e.target.value)} className="mt-1 block min-h-10 w-full rounded border border-white/20 bg-surface-dark p-2"><option value="auto">Detect automatically</option><option value=",">Comma</option><option value=";">Semicolon</option><option value="tab">Tab</option></select></label><label className="text-xs">Quote character<select aria-label="CSV quote character" value={quoteChar} onChange={e=>setQuoteChar(e.target.value)} className="mt-1 block min-h-10 w-full rounded border border-white/20 bg-surface-dark p-2"><option value={'"'}>Double quote</option><option value="'">Single quote</option></select></label><label className="text-xs">Encoding<select aria-label="CSV encoding" value={encoding} onChange={e=>setEncoding(e.target.value)} className="mt-1 block min-h-10 w-full rounded border border-white/20 bg-surface-dark p-2"><option value="utf-8">UTF-8</option><option value="utf-16le">UTF-16 little endian</option><option value="utf-16be">UTF-16 big endian</option><option value="iso-8859-1">ISO-8859-1</option></select></label><label className="text-xs">Decimal separator<select aria-label="Decimal separator" value={decimalSeparator} onChange={e=>setDecimalSeparator(e.target.value)} className="mt-1 block min-h-10 w-full rounded border border-white/20 bg-surface-dark p-2"><option value=".">Period (1.25)</option><option value=",">Comma (1,25)</option></select></label><label className="flex min-h-10 items-center gap-2 text-xs sm:col-span-2"><input type="checkbox" checked={hasHeader} onChange={e=>setHasHeader(e.target.checked)}/>First row contains column names</label></div></details>
 
-    {data && <>
-      <p className="text-sm text-text-muted">{data.rowCount} source rows · {data.headers.length} original columns · All data remains local</p>
+    {importProgress&&<div className="max-w-xl rounded-xl border border-white/10 bg-surface-dark p-3 space-y-2" role="status" aria-live="polite">
+      <p className="text-sm font-medium">Scanning {importProgress.fileName} locally</p>
+      <progress className="w-full" max={importProgress.totalBytes||1} value={importProgress.bytes||0}/>
+      <p className="text-xs text-text-muted">{Math.round((importProgress.bytes||0)/1024/1024)} of {Math.ceil((importProgress.totalBytes||0)/1024/1024)} MiB · {importProgress.rows.toLocaleString()} complete records</p>
+      <button type="button" className="min-h-10 rounded border border-white/20 px-3" onClick={()=>importAbort.current?.abort()}>Cancel import</button>
+    </div>}
+
+    {sourceSummary&&<section id="prism-source-preparation" aria-label="Whole file profile" className="space-y-3 rounded-xl border border-cyan-400/20 bg-surface-dark p-3 sm:p-4">
+      <h4 className="font-semibold">Whole-file overview · exact streamed profile</h4>
+      <p className="text-sm text-text-muted">{sourceSummary.sourceRows.toLocaleString()} source rows · {sourceSummary.sourceColumns} columns · {(sourceSummary.fileBytes/1024/1024).toFixed(2)} MiB · {sourceSummary.delimiter==='tab'?'Tab separated':`“${sourceSummary.delimiter}” separated`}</p>
+      <p className="text-xs text-text-muted">The sheet below shows the first 100 records and up to 100 columns. Numeric counts, missing values, minimum, maximum, mean and variance were computed across the complete source. Model preparation continues to use an explicit sample capped at 2,000 rows and 20 output features.</p>
+      <div className="max-h-64 overflow-auto rounded-lg border border-white/10"><table className="w-full min-w-[560px] text-left text-xs"><caption className="p-2 text-left text-text-muted">Column profile · whole source stream</caption><thead><tr>{['Column','Inferred type','Observed','Missing','Minimum','Maximum','Mean'].map(x=><th scope="col" key={x} className="p-2">{x}</th>)}</tr></thead><tbody>{sourceSummary.profile.map(col=><tr key={col.name} className="border-t border-white/10"><th scope="row" className="p-2">{col.name}</th><td className="p-2">{col.type}</td><td className="p-2">{col.count.toLocaleString()}</td><td className="p-2">{col.missingCount.toLocaleString()}</td><td className="p-2">{display(col.min)}</td><td className="p-2">{display(col.max)}</td><td className="p-2">{display(col.mean)}</td></tr>)}</tbody></table></div>
+      <button type="button" disabled={Boolean(sourceEditError)} className="min-h-11 rounded-xl bg-cyan-700 px-4 py-2 font-semibold text-white" onClick={()=>{
+        const sampleRows=sourceSummary.sampleRows.slice(0,2000).map(row=>{const next=Object.create(null);next.id=row.id;for(const header of data.headers){const key=JSON.stringify([row.id,header]);next[header]=Object.hasOwn(sourceEdits,key)?sourceEdits[key]:row[header];}return next;});
+        const selected={...data,rows:sampleRows,rowCount:sampleRows.length,sourceSummary,sourceRowCount:sourceSummary.sourceRows,modelSelection:{explicit:true,method:'seeded_reservoir_sample',seed:sourceSummary.chartSample.seed,sourceRows:sourceSummary.sourceRows,selectedRows:sampleRows.length}};
+        setData(selected);setColumns(defaultPipelineColumns(selected));setModelSelected(true);setSampleEditRevision(sourceEditRevision);onSampleSelected?.(selected);setError('');
+      }}>Use a reproducible sample for model preparation</button>
+      {modelSelected&&data?.modelSelection&&<p role="status" className="text-xs">Explicit model sample: {data.modelSelection.selectedRows.toLocaleString()} of {data.modelSelection.sourceRows.toLocaleString()} source rows · seeded reservoir sample · Seed {data.modelSelection.seed}.</p>}
+      {sourceEditError&&<p role="alert" className="text-xs text-signal-amber">{sourceEditError}</p>}
+      {sampleEditsChanged&&<p role="status" className="text-xs text-signal-amber">Source edits changed after this model sample was selected. Select the reproducible sample again to include the latest values before launching a lab.</p>}
+      {!fullSourceOpened&&data?.sourceFile&&<button type="button" className="prism-ui-button" onClick={()=>setFullSourceOpened(true)}>Open full-source model fitting</button>}
+      {fullSourceOpened&&data?.sourceFile&&<Suspense fallback={<p role="status">Loading full-source modeling…</p>}><FullSourceModeling key={sourceSummary.sourceFingerprint.value} dataset={data}/></Suspense>}
+    </section>}
+
+    {data && modelSelected && !sampleEditsChanged && !sourceEditError && <>
+      <p className="text-sm text-text-muted">{data.modelSelection?`${data.modelSelection.selectedRows.toLocaleString()} explicitly sampled model rows of ${data.sourceRowCount.toLocaleString()} source rows`: `${data.rowCount} source rows`} · {data.headers.length} model-available columns · All data remains local</p>
       <div className="grid gap-3 sm:grid-cols-3" role="group" aria-label="Feature and target selection">
         {['x', 'y', 'target'].map(key => <label key={key} className="block text-xs font-semibold uppercase tracking-wide text-text-muted">
           {key === 'target' ? 'Target (binary)' : 'Feature ' + key.toUpperCase()}

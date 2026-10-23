@@ -11,7 +11,7 @@ function download(name, text, type) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export default function DataSheetWorkspace({ dataset, filters, name, selectedRowId, onSelectRow, onInspectRow, onCommit, onAnalyze, onChart,highlightedRowIds=[],recovery = null }) {
+export default function DataSheetWorkspace({ dataset, filters, name, selectedRowId, onSelectRow, onInspectRow, onCommit, onAnalyze, onChart,onBrowseFullSource=null,highlightedRowIds=[],recovery = null }) {
   const owner = useRef(datasetOwner());
   const editorRef=useRef(null);
   const [history, setHistory] = useState([recovery?.current || { headers: dataset.headers, rows: dataset.rows }]);
@@ -103,9 +103,10 @@ export default function DataSheetWorkspace({ dataset, filters, name, selectedRow
   }, [editing, changes.length, saved, current]);
 
   return <div className="space-y-3" aria-label="DataSheet workspace">
-    <div className="prism-scope-bar" aria-label="DataSheet context"><strong>{changes.length?'Working copy':'Original source view'}</strong><span>{view.rows.length} visible / {dataset.rows.length} source rows</span><span>{cells.length} selected rows</span><span>{changes.length} changed cells</span><span>{saved===current?'Draft saved in this browser':changes.length?'Draft changes need saving':'Source preserved'}</span></div>
+    <div className="prism-scope-bar" aria-label="DataSheet context"><strong>{changes.length?'Working copy':'Original source view'}</strong><span>{view.rows.length} loaded preview rows / {(dataset.sourceRowCount??dataset.rows.length).toLocaleString()} source rows</span><span>{cells.length} selected rows</span><span>{changes.length} changed cells</span><span>{saved===current?'Draft saved in this browser':changes.length?'Draft changes need saving':'Source preserved'}</span></div>
     <div className="prism-sheet-tools">
       <label>Search values or columns<input aria-label="Search DataSheet" value={search} onChange={e => setSearch(e.target.value)} /></label>
+      {onBrowseFullSource&&<button type="button" onClick={onBrowseFullSource}>Open full-source DataSheet editor</button>}
       <button onClick={() => { setEditing(true); setStatus('Working copy · source preserved'); }} disabled={editing}>Create working copy</button>
       <button disabled={!cells.length} onClick={copy}>Copy selection</button>
       <button onClick={() => download('prism-filtered.csv', delimitedExport([view.headers, ...view.rows.map(row => view.headers.map(h => row[h]))]), 'text/csv')}>Export filtered CSV</button>
@@ -123,7 +124,7 @@ export default function DataSheetWorkspace({ dataset, filters, name, selectedRow
     {error && <p role="alert" className="text-red-300">{error}</p>}
     <p role="status" className="prism-sheet-muted">{status}</p>
     {highlightedRowIds.length>0&&<p role="status" className="prism-sheet-help">Linked chart highlights: {highlightedRowIds.length} original observations. View/search/filter operations preserve their source identities.</p>}
-    <DataSheet dataset={view} sourceCount={dataset.rows.length} selectedRowId={selectedRowId} onSelectRow={onSelectRow} onInspectRow={onInspectRow} highlightedRowIds={highlightedRowIds}
+    <DataSheet dataset={view} sourceCount={dataset.sourceRowCount??dataset.rows.length} selectedRowId={selectedRowId} onSelectRow={onSelectRow} onInspectRow={onInspectRow} highlightedRowIds={highlightedRowIds}
       workingCopy={editing} selection={cells} onCellSelect={select} onCopy={copy}
       onEdit={()=>editorRef.current?.focus()}
       onHistory={direction=>{if(!busy){setCursor(Math.max(0,Math.min(history.length-1,cursor+(direction==='undo'?-1:1))));setStatus('Unsaved working copy');}}}

@@ -9,6 +9,10 @@ Research Intelligence is implemented in My Experiments: 2–10 saved-run compari
 - GitHub source: https://github.com/jishnusinha/NeuroForge-AI
 - Backend: optional separately deployed Express + MongoDB, **not hosted by GitHub Pages**.
 
+## CSV, Academy and themes
+
+The local CSV importer profiles the complete source in a Web Worker. Full-source pages support editing, filtering and sorting without a row cap within the 100 MiB budget; sorting retains at most 10,000 entries per pass. A separate streaming path fits baseline, binary logistic and ridge models on the complete edited source with training-only preprocessing, exact fixed splits, a protected final test and F14 receipts. The visual model labs retain an explicit deterministic sample capped at 2,000 rows. Ten seeded Academy cases provide data, dictionaries, code and workflow handoffs; the theme picker offers ten stable palettes. Details and limits: [CSV, Academy and themes](DS_CSV_ACADEMY_THEMES.md).
+
 ## Core capabilities from the existing main branch
 - Browser-local Playground with linear/logistic regression, KNN and K-means.
 - TF.js Neural Studio, Arena saved-run comparisons, Academy and Showcase.

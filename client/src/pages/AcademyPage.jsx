@@ -106,6 +106,7 @@ export default function AcademyPage() {
       <ResearchPageHeader eyebrow="Learning / Predict before reveal" title="NeuroForge Academy" description="Form a hypothesis, reveal the mathematical explanation, and connect it to a working experiment. Checkpoints reflect your recorded answers."/>
 
       <div className="space-y-6">
+        <section className="rounded-2xl border border-cyan-400/20 bg-surface-dark p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs uppercase tracking-wide text-text-muted">Curated practice</p><h2 className="text-xl font-semibold">Synthetic ML case studies</h2><p className="mt-1 text-sm text-text-muted">Ten reproducible datasets with explanations, diagrams, downloads and code.</p></div><Link className="prism-ui-button prism-ui-button-primary" to="/app/learn/cases">Browse case studies <ArrowRight size={15}/></Link></div></section>
         <p className="text-sm text-quantum-mint">Checkpoints completed: {lessons.filter(lesson => progress[lesson.id]===true).length} / {lessons.length}</p>
         <div role="region" aria-label="Learning paths" className="grid gap-3 sm:grid-cols-3">
           {tracks.map(track=><div key={track.id} className="rounded-xl border border-white/10 bg-obsidian p-4">

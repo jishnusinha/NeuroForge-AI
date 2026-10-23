@@ -19,7 +19,7 @@ export default function ShowcasePage() {
     {title:'Inspect the engineering',time:'2:30–3:00',text:'Small models execute in the browser with TensorFlow.js. Express stores run metadata, actual dataset points and metric history in MongoDB. Without a database the server uses temporary memory; offline saves stay in this browser. Reopen a report to export its configuration or fork a new run.',action:<Link to="/app/experiments" className="text-cyan-300 underline">Inspect saved reports</Link>},
   ];
   return <div className="max-w-5xl mx-auto p-6 sm:p-10 space-y-6 w-full">
-    <p className="text-violet-300 text-xs uppercase tracking-widest">Guided interview showcase</p><h2 className="text-3xl font-bold">Explore → Build → Train → Compare</h2>
+    <p className="text-violet-300 text-xs uppercase tracking-widest">Guided product tour</p><h2 className="text-3xl font-bold">Explore → Build → Train → Compare</h2>
     <p className="text-slate-400">A suggested three-minute route through real experiments. Save each run before opening the next workspace.</p>
     <nav aria-label="Showcase steps" className="flex flex-wrap gap-2">{steps.map((s,i)=><button key={s.title} aria-current={step===i?'step':undefined} onClick={()=>setStep(i)} className={`p-3 rounded-xl border ${step===i?'border-cyan-300 bg-cyan-300/10':'border-white/10'}`}>{i+1}. {s.title}</button>)}</nav>
     <article className="p-6 rounded-2xl bg-obsidian border border-white/10 space-y-5"><p className="text-xs text-violet-300">{steps[step].time}</p><h3 className="text-xl font-bold">{steps[step].title}</h3><p className="text-slate-300 leading-relaxed">{steps[step].text}</p>{steps[step].action}</article>

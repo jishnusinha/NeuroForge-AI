@@ -6,7 +6,7 @@
  * This module never mutates a dataset and never evaluates cell contents.
  */
 export const SHEET_MAX_ROWS=2000;
-export const SHEET_MAX_COLUMNS=20;
+export const SHEET_MAX_COLUMNS=100;
 export const SHEET_ROW_HEIGHT=40;
 export const SHEET_HEADER_HEIGHT=64;
 export const SHEET_GUTTER_WIDTH=72;

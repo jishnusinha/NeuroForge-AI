@@ -59,6 +59,15 @@ export function validateRunReceipt(receipt) {
   }
   if(receipt.selectionEvidence!==undefined&&receipt.selectionEvidence!==null)
     validateSelectionEvidence(receipt.selectionEvidence,receipt.model.algorithm,receipt.task.type);
+  if(receipt.model.config?.execution==='full_source_streaming_v1') {
+    const config=receipt.model.config;
+    if(!Number.isSafeInteger(config.sourceRows)||config.sourceRows!==receipt.counts.train+receipt.counts.validation+receipt.counts.test||
+      !Number.isInteger(config.editedCells)||config.editedCells<0||!Number.isInteger(config.seed)||config.seed<0||config.seed>0xffffffff||
+      config.task!==receipt.task.type||config.targetColumn!==receipt.task.targetColumn||JSON.stringify(config.features)!==JSON.stringify(receipt.features)||
+      !finite(config.lambda)||config.lambda<.000001||config.lambda>10||!Number.isInteger(config.epochs)||config.epochs<1||config.epochs>400||
+      !['70/15/15','80/10/10','60/20/20'].includes(config.splitPreset)||!['baseline','ridge','logistic'].includes(receipt.model.algorithm))
+      throw new Error('F14_INVALID_FULL_SOURCE_CONFIGURATION');
+  }
   if(receipt.task.type === 'regression' && receipt.task.classes.length !== 0)
     throw new Error('F14_INVALID_CLASS_SCHEMA');
   if(receipt.task.type !== 'regression' &&

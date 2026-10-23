@@ -23,6 +23,7 @@ test('F14: persist regression model, attach real F13 evidence, record final test
   const rows=Array.from({length:60},(_,i)=>[i%17,Math.floor(i/5),7+3*(i%17)-2*Math.floor(i/5)].join(','));
   await page.getByLabel('CSV file').setInputFiles({name:'f14-regression.csv',mimeType:'text/csv',
     buffer:Buffer.from(['age,spend,target',...rows].join('\n'))});
+  await page.getByRole('button',{name:'Use a reproducible sample for model preparation',exact:true}).click();
   const f11=page.locator('summary:visible').filter({hasText:'Advanced Pipeline Studio (F11)'}).first();
   await f11.click();
   await page.getByRole('region',{name:'F11 Pipeline Studio'})

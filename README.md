@@ -6,6 +6,8 @@ Review fixes, persistence behavior, verification commands, and current limitatio
 
 PRISM workspace guides: [F17 DataSheet](docs/DS_F17_PRISM_DATASHEET.md), [F18 Scientific Visualization Studio](docs/DS_F18_PRISM_VISUALIZATION.md), and [F19 Model Evaluation & Explainability](docs/DS_F19_MODEL_VISUALIZATION.md).
 
+The CSV importer, ten reproducible Academy case studies, ten product themes and navigation updates are described in [CSV, Academy and themes](docs/DS_CSV_ACADEMY_THEMES.md). Local Workers support full-source editing, filtering, bounded-memory sorting and streaming baseline/logistic/ridge fitting with protected evaluation and experiment receipts. The visual labs retain their explicit 2,000-row model samples.
+
 > **Don't just study intelligence. Build it. Train it. Understand it.**
 
 An interactive Machine Learning & Deep Learning laboratory built with **React JSX**, **TensorFlow.js**, **HTML5 Canvas**, **Node.js/Express**, and **MongoDB**. Designed to bridge mathematical theory, empirical model experimentation, and full-stack software engineering into an interview-grade portfolio product.

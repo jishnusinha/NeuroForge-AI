@@ -52,7 +52,7 @@ export default function MissionControl() {
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-plasma-cyan/15 text-plasma-cyan text-xs font-mono mb-3 border border-plasma-cyan/30">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Featured Interview Challenge</span>
+            <span>Featured learning challenge</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight">
             The 90-Second Neural Network Challenge
@@ -109,7 +109,7 @@ export default function MissionControl() {
               <div className="p-3 rounded-xl bg-plasma-cyan/10 text-plasma-cyan border border-plasma-cyan/20 group-hover:scale-105 transition-transform">
                 <Sliders className="w-6 h-6" />
               </div>
-              <span className="text-xs font-mono px-2 py-0.5 rounded bg-white/5 text-plasma-cyan">P0 Flagship</span>
+              <span className="text-xs font-mono px-2 py-0.5 rounded bg-white/5 text-plasma-cyan">Explore</span>
             </div>
             <h4 className="text-lg font-display font-semibold text-white group-hover:text-plasma-cyan transition-colors">
               ML Algorithm Playground
@@ -131,7 +131,7 @@ export default function MissionControl() {
               <div className="p-3 rounded-xl bg-neural-violet/10 text-neural-violet border border-neural-violet/20 group-hover:scale-105 transition-transform">
                 <Network className="w-6 h-6" />
               </div>
-              <span className="text-xs font-mono px-2 py-0.5 rounded bg-white/5 text-neural-violet">P0 Flagship</span>
+              <span className="text-xs font-mono px-2 py-0.5 rounded bg-white/5 text-neural-violet">Build</span>
             </div>
             <h4 className="text-lg font-display font-semibold text-white group-hover:text-neural-violet transition-colors">
               Neural Network Studio
@@ -153,7 +153,7 @@ export default function MissionControl() {
               <div className="p-3 rounded-xl bg-quantum-mint/10 text-quantum-mint border border-quantum-mint/20 group-hover:scale-105 transition-transform">
                 <Scale className="w-6 h-6" />
               </div>
-              <span className="text-xs font-mono px-2 py-0.5 rounded bg-white/5 text-quantum-mint">P0 Flagship</span>
+              <span className="text-xs font-mono px-2 py-0.5 rounded bg-white/5 text-quantum-mint">Research</span>
             </div>
             <h4 className="text-lg font-display font-semibold text-white group-hover:text-quantum-mint transition-colors">
               Experiment Arena

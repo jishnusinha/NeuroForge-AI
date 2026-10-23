@@ -4,7 +4,7 @@ import { parseAndValidateCSV } from '../client/src/ml/datasetImport.js';
 import { PreprocessingPipeline } from '../client/src/ml/preprocessingPipeline.js';
 import { createStratifiedSplit, recordTestAccess } from '../client/src/ml/evaluationProtocol.js';
 
-test('Phase 6: CSV Importer safely parses tabular data, computes profiles, and rejects formula injection', () => {
+test('CSV importer safely parses tabular data and leaves formula-like source values inert', () => {
   const validCsv = `
 x1,x2,category
 1.0,10.0,A
@@ -22,7 +22,7 @@ x1,x2,category
   assert.equal(result.summary[0].max, 5);
   assert.equal(result.summary[2].type, 'categorical');
 
-  // Formula injection rejection
+  // Source values remain data; spreadsheet escaping happens only at export.
   const formulaCsv = `
 =cmd|' /C calc'!A0,x2,label
 1.0,2.0,A
@@ -30,9 +30,7 @@ x1,x2,category
 3.0,4.0,A
 4.0,5.0,B
 `;
-  assert.throws(() => {
-    parseAndValidateCSV(formulaCsv);
-  }, /CSV_REJECTED/);
+  assert.equal(parseAndValidateCSV(formulaCsv).rows[0]['=cmd|\' /C calc\'!A0'], 1);
 
   // Insufficient numeric features
   const allTextCsv = `

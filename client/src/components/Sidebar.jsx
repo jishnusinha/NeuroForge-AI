@@ -4,12 +4,9 @@ import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Sliders, 
-  Network, 
-  Scale, 
   BookOpen, 
   Database, 
   FolderGit2, 
-  Sparkles,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -19,15 +16,11 @@ export default function Sidebar() {
   const { sidebarExpanded, toggleSidebar } = useLabStore();
 
   const navItems = [
-    { name: 'Mission Control', path: '/app', icon: LayoutDashboard },
-    { name: 'ML Playground', path: '/app/playground', icon: Sliders, badge: 'Flagship' },
-    { name: 'Neural Studio', path: '/app/studio', icon: Network, badge: 'Flagship' },
-    { name: 'Optimization Lab', path: '/app/optimization', icon: Sliders },
-    { name: 'Experiment Arena', path: '/app/arena', icon: Scale, badge: 'Flagship' },
-    { name: 'Academy', path: '/app/learn', icon: BookOpen },
-    { name: 'Dataset Explorer', path: '/app/datasets', icon: Database },
-    { name: 'My Experiments', path: '/app/experiments', icon: FolderGit2, description:'Research Intelligence' },
-    { name: 'Showcase', path: '/showcase', icon: Sparkles, mobileOnly: true },
+    { name: 'Home', path: '/app', icon: LayoutDashboard },
+    { name: 'Learn', path: '/app/learn', icon: BookOpen },
+    { name: 'Explore Data', path: '/app/datasets', icon: Database },
+    { name: 'Build Models', path: '/app/playground', icon: Sliders },
+    { name: 'Research', path: '/app/experiments', icon: FolderGit2 },
   ];
 
   return (
@@ -89,50 +82,16 @@ export default function Sidebar() {
               title={!sidebarExpanded ? item.name : undefined}
             >
               <Icon className="w-5 h-5 flex-shrink-0" />
-              <span className="lg:hidden text-[10px] font-medium leading-tight text-center whitespace-nowrap">{item.name === 'Experiment Arena' ? 'Arena' : item.name === 'ML Playground' ? 'Playground' : item.name === 'Mission Control' ? 'Home' : item.name === 'Dataset Explorer' ? 'Datasets' : item.name === 'My Experiments' ? 'Runs' : item.name === 'Neural Studio' ? 'Studio' : item.name}</span>
-              {sidebarExpanded && (
-                <div className="hidden lg:flex items-center justify-between flex-1 overflow-hidden">
-                  <span className="min-w-0"><span className="block truncate">{item.name}</span>{item.description&&<span className="block text-[10px] font-normal truncate">{item.description}</span>}</span>
-                  {item.badge && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-neural-violet border border-neural-violet/20 uppercase font-mono">
-                      {item.badge}
-                    </span>
-                  )}
-                </div>
-              )}
+              <span className="lg:hidden text-[10px] font-medium leading-tight text-center whitespace-nowrap">{item.name}</span>
+              {sidebarExpanded && <span className="hidden lg:block min-w-0 flex-1 truncate">{item.name}</span>}
             </NavLink>
           );
         })}
       </nav>
 
       <ThemePicker />
-      {/* Showcase Feature Highlight */}
+      {/* Local session status */}
       <div className="hidden lg:block p-3 border-t border-white/10 space-y-2">
-        <NavLink
-          to="/showcase"
-          className={({ isActive }) =>
-            `flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-medium border transition-all ${
-              isActive 
-                ? 'bg-gradient-to-r from-neural-violet/20 to-plasma-cyan/20 border-plasma-cyan/50 text-white shadow-glow-cyan'
-                : 'bg-gradient-to-r from-white/[0.03] to-white/[0.06] border-white/10 text-text-primary hover:border-plasma-cyan/40'
-            }`
-          }
-          title={!sidebarExpanded ? '3-Min Interview Showcase' : undefined}
-        >
-          <div className="p-1 rounded-lg bg-neural-violet/20 text-neural-violet">
-            <Sparkles className="w-4 h-4 flex-shrink-0 animate-pulse" />
-          </div>
-          {sidebarExpanded && (
-            <div className="hidden lg:block overflow-hidden">
-              <div className="font-semibold text-white flex items-center gap-1">
-                Interview Showcase
-              </div>
-              <p className="text-[10px] text-text-muted truncate">3-min guided tour</p>
-            </div>
-          )}
-        </NavLink>
-
-        {/* Guest Status & Collapse Button for Mini-bar */}
         <div className="flex items-center justify-between pt-1">
           {sidebarExpanded ? (
             <div className="hidden lg:flex items-center gap-2 px-1 text-[11px] text-text-muted font-mono">

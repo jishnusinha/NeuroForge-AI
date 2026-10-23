@@ -9,9 +9,11 @@
       // Restore the saved palette before CSS is painted, avoiding a dark-theme flash.
       try {
         const saved = localStorage.getItem('neuroforge-theme-v1');
-        if (['midnight', 'slate', 'forest', 'paper'].includes(saved)) {
+        if (['midnight', 'slate', 'forest', 'paper', 'glacier', 'dusk', 'ocean', 'sand', 'rose', 'contrast'].includes(saved)) {
           document.documentElement.dataset.theme = saved;
-          document.documentElement.classList.toggle('dark', saved !== 'paper');
+          const light = ['paper', 'glacier', 'sand', 'rose'].includes(saved);
+          document.documentElement.classList.toggle('dark', !light);
+          document.documentElement.style.colorScheme = light ? 'light' : 'dark';
         }
       } catch { /* Storage may be unavailable. */ }
     </script>

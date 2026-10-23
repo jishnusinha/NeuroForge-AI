@@ -23,11 +23,12 @@ export default function ThemePicker({ compact = false }) {
         onChange={event => setTheme(event.target.value)}
         title="Choose workspace appearance"
         className={compact
-          ? 'max-w-[120px] rounded-lg border border-white/10 bg-obsidian px-2 py-2 text-xs text-text-primary'
+          ? 'max-w-[170px] rounded-lg border border-white/10 bg-obsidian px-2 py-2 text-xs text-text-primary'
           : 'w-full rounded-lg border border-white/10 bg-obsidian p-2 text-sm text-text-primary'}
       >
-        {THEMES.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
+        {THEMES.map(item => <option key={item.id} value={item.id}>{item.label} · {item.mode}</option>)}
       </select>
+      {!compact&&<div className="mt-2 grid grid-cols-5 gap-1" aria-hidden="true">{THEMES.map(item=><span key={item.id} title={item.label} className={`h-5 rounded border ${theme===item.id?'ring-2 ring-offset-1 ring-offset-surface-dark ring-current':'border-white/20'}`} style={{background:`linear-gradient(90deg,${item.swatches.join(',')})`}} />)}</div>}
     </div>
   );
 }

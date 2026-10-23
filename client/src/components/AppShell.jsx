@@ -2,7 +2,7 @@ import { syncOutbox } from '../services/syncManager.js';
 import { isFeatureEnabled } from '../services/productionConfig.js';
 import React, { useEffect, useRef,useState, lazy, Suspense } from 'react';
 import {useDialogFocus} from '../design/useDialogFocus.js';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import WorkspaceHeader from './WorkspaceHeader';
 import CommandPalette from './CommandPalette';
@@ -140,6 +140,7 @@ export default function AppShell() {
 
         {/* Workspace Canvas / Viewport */}
         <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col overflow-x-hidden bg-deep-space">
+          {(['/app/playground','/app/studio','/app/optimization'].includes(location.pathname)||location.pathname==='/app/arena'||location.pathname.startsWith('/app/experiments'))&&<nav aria-label={location.pathname==='/app/arena'||location.pathname.startsWith('/app/experiments')?'Research tools':'Model building tools'} className="flex flex-wrap gap-2 border-b border-white/10 px-4 py-2 sm:px-6">{(location.pathname==='/app/arena'||location.pathname.startsWith('/app/experiments')?[['/app/experiments','Saved experiments'],['/app/arena','Compare runs']]:[['/app/playground','ML Playground'],['/app/studio','Neural Studio'],['/app/optimization','Loss Atlas']]).map(([to,label])=><Link key={to} to={to} aria-current={location.pathname===to?'page':undefined} className="rounded-lg border border-white/10 px-3 py-2 text-sm hover:border-cyan-400/40 aria-[current=page]:border-cyan-400/60 aria-[current=page]:text-cyan-300">{label}</Link>)}</nav>}
           <Outlet key={location.pathname} />
         </main>
       </div>

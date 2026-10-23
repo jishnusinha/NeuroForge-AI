@@ -39,17 +39,17 @@ test('F17.0 Excel-style addresses and source row position are unambiguous',()=>{
   assert.equal(columnLetter(0),'A');
   assert.equal(columnLetter(19),'T');
   assert.equal(cellAddress(0,0),'A1');
-  assert.equal(cellAddress(1999,19),'T2000');
-  assert.throws(()=>columnLetter(20),/F17_COLUMN_INDEX/);
+  assert.equal(cellAddress(1999,99),'CV2000');
+  assert.throws(()=>columnLetter(100),/F17_COLUMN_INDEX/);
   assert.throws(()=>cellAddress(2000,0),/F17_ROW_INDEX/);
 });
 
-test('F17.0 full 2000x20 data is valid, but the viewport renders a bounded subset',()=>{
+test('F17.0 bounded 2000x100 data is valid, but the viewport renders a bounded subset',()=>{
   const data=fullData();
   const before=structuredClone(data.rows[1999]);
   assert.equal(validateDataSheet(data),data);
   const widths=normalizeColumnWidths([],data.headers.length);
-  assert.equal(widths.length,20);
+  assert.equal(widths.length,100);
   const initial=gridViewport({
     rowCount:data.rows.length,columnWidths:widths,
     scrollTop:0,scrollLeft:0,viewportHeight:480,viewportWidth:760,
@@ -58,7 +58,7 @@ test('F17.0 full 2000x20 data is valid, but the viewport renders a bounded subse
   assert.ok(initial.mountedRowCount<30);
   assert.ok(initial.mountedColumnCount<8);
   assert.equal(initial.totalHeight,SHEET_HEADER_HEIGHT+2000*SHEET_ROW_HEIGHT);
-  assert.equal(initial.totalWidth,SHEET_GUTTER_WIDTH+20*180);
+  assert.equal(initial.totalWidth,SHEET_GUTTER_WIDTH+100*180);
   const nearEnd=gridViewport({
     rowCount:2000,columnWidths:widths,
     scrollTop:SHEET_HEADER_HEIGHT+1995*SHEET_ROW_HEIGHT,
@@ -67,24 +67,24 @@ test('F17.0 full 2000x20 data is valid, but the viewport renders a bounded subse
   assert.ok(nearEnd.rowStart>=1990);
   assert.equal(nearEnd.rowEnd,2000);
   assert.ok(nearEnd.colStart>=15);
-  assert.equal(nearEnd.colEnd,20);
+  assert.equal(nearEnd.colEnd,21);
   assert.ok(nearEnd.mountedRowCount<30);
   assert.deepEqual(data.rows[1999],before);
 });
 
 test('F17.0 keyboard navigation respects sheet boundaries, wrapping and paging',()=>{
-  const args={rowIndex:0,columnIndex:0,rowCount:2000,columnCount:20};
+  const args={rowIndex:0,columnIndex:0,rowCount:2000,columnCount:100};
   assert.deepEqual(moveSheetCell({...args,key:'ArrowLeft'}),{rowIndex:0,columnIndex:0});
   assert.deepEqual(moveSheetCell({...args,key:'ArrowDown'}),{rowIndex:1,columnIndex:0});
   assert.deepEqual(moveSheetCell({...args,key:'ArrowRight'}),{rowIndex:0,columnIndex:1});
-  assert.deepEqual(moveSheetCell({...args,key:'End'}),{rowIndex:0,columnIndex:19});
-  assert.deepEqual(moveSheetCell({...args,key:'End',ctrlKey:true}),{rowIndex:1999,columnIndex:19});
+  assert.deepEqual(moveSheetCell({...args,key:'End'}),{rowIndex:0,columnIndex:99});
+  assert.deepEqual(moveSheetCell({...args,key:'End',ctrlKey:true}),{rowIndex:1999,columnIndex:99});
   assert.deepEqual(moveSheetCell({...args,key:'Home',metaKey:true,rowIndex:400,columnIndex:8}),
     {rowIndex:0,columnIndex:0});
-  assert.deepEqual(moveSheetCell({...args,key:'Tab',rowIndex:1,columnIndex:19}),
+  assert.deepEqual(moveSheetCell({...args,key:'Tab',rowIndex:1,columnIndex:99}),
     {rowIndex:2,columnIndex:0});
   assert.deepEqual(moveSheetCell({...args,key:'Tab',shiftKey:true,rowIndex:3,columnIndex:0}),
-    {rowIndex:2,columnIndex:19});
+    {rowIndex:2,columnIndex:99});
   assert.deepEqual(moveSheetCell({...args,key:'PageDown',pageSize:13}),
     {rowIndex:13,columnIndex:0});
   assert.deepEqual(moveSheetCell({...args,key:'Enter',shiftKey:true}),

@@ -74,7 +74,7 @@ function CommandDialog() {
     {
       category: 'Workspaces',
       id: 'ws-showcase',
-      title: 'Interview Demo Walkthrough',
+      title: 'Guided product tour',
       desc: 'Guided 3-minute portfolio tour demonstrating real ML engineering',
       icon: Sparkles,
       action: () => navigate('/showcase'),

@@ -9,6 +9,7 @@ import ResearchPageHeader from '../design/patterns/ResearchPageHeader.jsx';
 import DatasetStages from '../design/patterns/DatasetStages.jsx';
 import { generateTwoMoons, generateXOR, generateGaussianBlobs, generateLinearTrend, generateConcentricCircles, generateSpiral, trainTestSplit } from '../ml/datasets';
 import { useLabStore } from '../store/useLabStore';
+import {generateAcademyCase} from '../academy/cases/catalog.js';
 const presets = { 'Two Moons': generateTwoMoons, 'XOR Problem': generateXOR, 'Gaussian Blobs': generateGaussianBlobs, 'Linear Trend': generateLinearTrend, 'Concentric Circles': generateConcentricCircles, Spiral: generateSpiral };
 export default function DatasetsPage() {
   const [params]=useSearchParams();
@@ -22,6 +23,9 @@ export default function DatasetsPage() {
   const {loadRun,setExperimentName} = useLabStore();
   const navigate = useNavigate();
   const points = useMemo(() => presets[name](count, noise, 42),[name,count,noise]);
+  const academyCaseId=params.get('source')==='academy'?params.get('case'):null;
+  const academyImport=useMemo(()=>{if(!academyCaseId)return null;try{const {spec,rows}=generateAcademyCase(academyCaseId),headers=[...spec.features,...(spec.target?[spec.target]:[])];const dataRows=rows.map((record,index)=>{const row=Object.create(null);row.id=`academy-${spec.seed}-${index}`;for(const header of headers)row[header]=record[header]??null;return row;});return {data:{headers,rows:dataRows,rowCount:dataRows.length,provenance:{kind:'synthetic-academy-case',caseId:spec.id,seed:spec.seed}},name:`${spec.title} · deterministic synthetic seed ${spec.seed}`};}catch{return null;}},[academyCaseId]);
+  const activeFile=academyImport||exploredFile;
   const split = useMemo(() => trainTestSplit(points,ratio,42),[points,ratio]);
   const colors = ['#46D7F2','#A78BFA','#3CD5AA'];
   const extent = Math.max(2.5,...points.flatMap(p => [Math.abs(p.x),Math.abs(p.y)]));
@@ -40,7 +44,7 @@ export default function DatasetsPage() {
   };
   return <div className="p-6 space-y-5 max-w-6xl mx-auto w-full">
     <ResearchPageHeader eyebrow="Data / Investigation" title="Dataset Explorer & Microscope" description="Follow the evidence from original values through exploration, working copies, fitted preprocessing and model evaluation."/>
-    <DatasetStages dataset={exploredFile?.data} name={exploredFile?.name} modeling={params.get('stage')==='modeling'}/>
+    <DatasetStages dataset={activeFile?.data} name={activeFile?.name} modeling={params.get('stage')==='modeling'}/>
     {isFeatureEnabled('anti_leakage_prep') && (
       <section aria-label="Data Science Workbench" className="space-y-4 rounded-2xl border border-cyan-400/20 bg-surface-dark p-3 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -57,24 +61,25 @@ export default function DatasetsPage() {
           setExploredFile(record.version?{data:record.version,name:record.name+' · committed version'}:{data:record.source,name:record.name,recovery:record});
           setDatasetRevision(previous=>previous+1);
         }}/>
-        <DatasetPreparation key={'preparation-'+datasetRevision} initialData={exploredFile?.data}
+        <DatasetPreparation key={'preparation-'+datasetRevision} initialData={activeFile?.data}
+          onSampleSelected={data=>setExploredFile(previous=>previous?{...previous,data}:previous)}
           onParsed={(data, fileName) => {
             setExploredFile(data ? { data, name: fileName } : null);
             setDatasetRevision(previous => previous + 1);
           }} /></div>
-        <DataScienceWorkbench key={'workbench-'+datasetRevision} dataset={exploredFile?.data} name={exploredFile?.name}
-          recovery={exploredFile?.recovery}
+        <DataScienceWorkbench key={'workbench-'+datasetRevision} dataset={activeFile?.data} name={activeFile?.name}
+          recovery={activeFile?.recovery}
           onCommitVersion={(data,fileName)=>{setExploredFile({data,name:fileName});setDatasetRevision(previous=>previous+1);}}
           onCreateSubset={rows => {
-            if (!exploredFile?.data || rows.length < 4) return;
+            if (!activeFile?.data || rows.length < 4) return;
             const subset = {
-              ...exploredFile.data,
+              ...activeFile.data,
               rows: rows.map(row => ({ ...row })),
               rowCount: rows.length,
             };
-            setExploredFile({ data: subset, name: exploredFile.name + ' · selected subset' });
+            setExploredFile({ data: subset, name: activeFile.name + ' · selected subset' });
             setDatasetRevision(previous => previous + 1);
-          }} />
+          }} onSampleSelected={data=>setExploredFile(previous=>previous?{...previous,data,name:previous.name+' · explicit seeded sample'}:previous)} />
       </section>
     )}
     <label className="block text-sm">Search datasets<input aria-label="Search datasets" className="block p-2 bg-obsidian rounded w-full" value={query} onChange={e=>setQuery(e.target.value)} /></label>

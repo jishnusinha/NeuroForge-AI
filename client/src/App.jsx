@@ -14,6 +14,7 @@ const ShowcasePage = lazy(() => import('./pages/ShowcasePage'));
 const DatasetsPage = lazy(() => import('./pages/DatasetsPage'));
 const ExperimentsPage = lazy(() => import('./pages/ExperimentsPage'));
 const AcademyPage = lazy(() => import('./pages/AcademyPage'));
+const AcademyCasesPage = lazy(() => import('./pages/AcademyCasesPage.jsx'));
 const ReportPage = lazy(() => import('./pages/ReportPage'));
 const OptimizationLabPage = lazy(() => import('./pages/OptimizationLabPage.jsx'));
 
@@ -39,6 +40,8 @@ export default function App() {
           <Route path="experiments" element={<ExperimentsPage />} />
           <Route path="experiments/:id" element={<ReportPage />} />
           <Route path="learn" element={<AcademyPage />} />
+          <Route path="learn/cases" element={<AcademyCasesPage />} />
+          <Route path="learn/cases/:caseId" element={<AcademyCasesPage />} />
           <Route path="learn/:slug" element={<AcademyPage />} />
         </Route>
 
@@ -47,7 +50,7 @@ export default function App() {
           <Route index element={<ReportPage />} />
         </Route>
 
-        {/* Showcase / Interview Walkthrough Route (in AppShell) */}
+        {/* Historic public showcase URL retained for existing links. */}
         <Route path="/showcase" element={<AppShell />}>
           <Route index element={<ShowcasePage />} />
         </Route>

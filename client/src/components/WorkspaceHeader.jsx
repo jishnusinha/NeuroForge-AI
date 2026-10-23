@@ -74,7 +74,7 @@ export default function WorkspaceHeader() {
       case '/app/learn':
         return { section: 'Education', title: 'NeuroForge Academy' };
       case '/showcase':
-        return { section: 'Evaluation', title: 'Interview Showcase Mode' };
+        return { section: 'Learning', title: 'Guided product tour' };
       default:
         return { section: 'Workspace', title: 'Laboratory' };
     }

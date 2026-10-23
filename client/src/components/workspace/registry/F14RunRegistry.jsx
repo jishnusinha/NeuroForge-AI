@@ -11,6 +11,7 @@ const field='min-h-10 w-full rounded-lg border border-white/20 bg-obsidian px-3 
 const button='min-h-10 rounded-lg border border-white/20 bg-obsidian px-3 py-2 text-sm text-text-primary disabled:opacity-40';
 const metricFormat=value=>Number.isFinite(value)?Number(value).toFixed(5):'Unavailable';
 const diagnosticLabel=run=>run.model.storageMode==='opt_in_artifact'?'Opt-in artifact':'Evidence receipt';
+const isFullSource=run=>run?.model.config?.execution==='full_source_streaming_v1';
 function exportText(text,filename,mime){
   const blob=new Blob([text],{type:mime});
   const url=URL.createObjectURL(blob);
@@ -174,7 +175,7 @@ export default function F14RunRegistry(){
         <div className="min-w-0 space-y-1">
           <button type="button" onClick={()=>chooseRun(run)} className="text-left text-sm font-semibold text-plasma-cyan">{run.title}</button>
           <p className="text-xs text-text-muted">{run.model.algorithm} · {run.task.type.replaceAll('_',' ')} · {diagnosticLabel(run)} · revision {run.revision}</p>
-          <p className="text-xs text-text-muted">{run.validation.count} validation rows · {run.explanations.length} F13 evidence receipt(s)</p>
+          <p className="text-xs text-text-muted">{isFullSource(run)?`Full-source fit · ${run.model.config.sourceRows.toLocaleString()} source rows · `:''}{run.validation.count} validation rows · {run.explanations.length} F13 evidence receipt(s)</p>
         </div>
         <label className="flex items-center gap-2 text-xs text-text-muted">
           <input type="checkbox" aria-label={'F14 compare '+run.title} checked={compareIds.includes(run.runId)}
@@ -193,6 +194,7 @@ export default function F14RunRegistry(){
         Source fingerprint: {active.lineage.sourceDigest.slice(0,20)}… · split: {active.lineage.splitDigest.slice(0,20)}… · pipeline: {active.lineage.pipelineDigest.slice(0,20)}…
       </p>
       <p className="text-xs text-text-muted">Prepared features ({active.features.length}): {active.features.join(', ')}</p>
+      {isFullSource(active)&&<p className="text-xs text-text-muted">Streaming full-source fit · {active.model.config.sourceRows.toLocaleString()} source rows · {active.model.config.editedCells} edited cells · exact fixed split, seed {active.model.config.seed}. Fitted preprocessing uses training-mean imputation and training population scaling.</p>}
       <p className="text-xs text-text-muted">Recorded population: {active.counts.train} training · {active.counts.validation} validation · {active.counts.test} held-out test.</p>
       <div role="region" aria-label="F14 recorded validation measurements" className="overflow-auto rounded-lg border border-white/10">
         <table className="w-full min-w-[300px] text-left text-xs">
@@ -225,7 +227,7 @@ export default function F14RunRegistry(){
       <div className="space-y-2 rounded-lg border border-white/10 p-3">
         <h5 className="text-sm font-semibold">Fitted model artifact integrity</h5>
         <p className="text-xs text-text-muted">{active.model.storageMode==='opt_in_artifact'?
-          'Opt-in fitted model parameters were saved. Inference accepts only prepared numeric feature vectors in the original feature order.' :
+          isFullSource(active)?'Opt-in fitted model parameters were saved. Enter numeric source values in the recorded feature order; fill missing inputs before replay. The saved model applies its training-fitted scaling.':'Opt-in fitted model parameters were saved. Inference accepts only prepared numeric feature vectors in the original feature order.' :
           'Receipt-only archive. No fitted weights or training vectors were saved.'}</p>
         <button type="button" onClick={checkReplay} className={button}>Verify saved model artifact</button>
         {verification&&<p role="status" className="text-xs text-text-muted">{verification.replayable?'Artifact checksum verified; replay available.':verification.reason}</p>}

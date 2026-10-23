@@ -9,7 +9,7 @@ export const WORKSPACES=Object.freeze([
   {path:'/app/experiments',section:'Research',title:'My Experiments',description:'Manage saved evidence and compare compatible research runs.'},
   {path:'/app/arena',section:'Evaluation',title:'Experiment Arena',description:'Compare recorded experiments on compatible evaluation populations.'},
   {path:'/app/learn',section:'Education',title:'NeuroForge Academy',description:'Learn through predictions, experiments and measured evidence.'},
-  {path:'/showcase',section:'Demonstration',title:'Interview Showcase Mode',description:'Follow a guided journey through working scientific tools.'},
+  {path:'/showcase',section:'Learning',title:'Guided Product Tour',description:'Follow a guided journey through working scientific tools.'},
 ]);
 export function workspaceInfo(path){return WORKSPACES.find(w=>w.path===path)|| (path.startsWith('/app/learn/')?WORKSPACES.find(w=>w.path==='/app/learn'):path.startsWith('/app/experiments/')||path.startsWith('/report/')?{section:'Research',title:'Experiment Report',description:'Inspect recorded methods, evidence and limitations.'}:{section:'Workspace',title:path==='/app/account'?'Account':'Laboratory',description:'Your local scientific workspace.'});}
 export function isEditingTarget(target){return Boolean(target?.closest?.('input,textarea,select,[contenteditable="true"],[role="textbox"],[role="grid"],[role="gridcell"]'));}

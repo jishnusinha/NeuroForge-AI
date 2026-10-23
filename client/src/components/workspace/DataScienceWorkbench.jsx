@@ -9,6 +9,7 @@ import EdaQualityView from './eda/EdaQualityView.jsx';
 import EdaCorrelationView from './eda/EdaCorrelationView.jsx';
 import EdaRowExplorer from './eda/EdaRowExplorer.jsx';
 import DataSheetWorkspace from './datasheet/DataSheetWorkspace.jsx';
+import CsvSourcePager from './CsvSourcePager.jsx';
 import EdaReportPanel from './eda/EdaReportPanel.jsx';
 import DatasetInvestigation from './DatasetInvestigation.jsx';
 import AlgorithmInsights from './AlgorithmInsights.jsx';
@@ -74,15 +75,18 @@ export default function DataScienceWorkbench({ dataset, name, onCreateSubset, on
   </div>;
 
   const active = report.columns.find(column=>column.name===selectedColumn) ?? report.columns[0];
-  const tabs = [{id:'overview',name:'Overview'}, {id:'distributions',name:'Distributions'}, {id:'chart-studio',name:'Chart Studio'}, {id:'relationships',name:'Relationships'}, {id:'balance',name:'Class balance'}, {id:'outliers',name:'Outliers & quality'}, {id:'algorithms',name:'Algorithms'}, {id:'correlations',name:'Correlations'}, {id:'missingness',name:'Missingness'}, {id:'quality-pro',name:'Quality Pro'}, {id:'datasheet',name:'DataSheet'}, {id:'rows',name:'Row Explorer'}, {id:'evidence',name:'Evidence & export'}, {id:'preview',name:'Row preview'}];
+  const wholeSourceRows=dataset.sourceSummary?.sourceRows??dataset.sourceRowCount??filtered.sourceCount;
+  const isPreview=Boolean(dataset.sourceSummary);
+  const sampleLabel=dataset.modelSelection?'Seeded reservoir sample':isPreview?'First-record preview':'source data';
+  const tabs = [{id:'overview',name:'Overview'}, ...(dataset.sourceFile?[{id:'full-source',name:'Full source pages'}]:[]), {id:'distributions',name:'Distributions'}, {id:'chart-studio',name:'Chart Studio'}, {id:'relationships',name:'Relationships'}, {id:'balance',name:'Class balance'}, {id:'outliers',name:'Outliers & quality'}, {id:'algorithms',name:'Algorithms'}, {id:'correlations',name:'Correlations'}, {id:'missingness',name:'Missingness'}, {id:'quality-pro',name:'Quality Pro'}, {id:'datasheet',name:'DataSheet'}, {id:'rows',name:'Row Explorer'}, {id:'evidence',name:'Evidence & export'}, {id:'preview',name:'Row preview'}];
   return <section id="prism-analysis" role="region" aria-label="Dataset profile dashboard" className="prism-lab space-y-5 rounded-2xl border border-white/10 bg-surface-dark p-3 sm:p-5">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div className="min-w-0">
         <div className="prism-eyebrow mb-2">NEUROFORGE / PRISM RESEARCH CANVAS</div>
         <h4 className="font-display text-xl font-semibold tracking-tight text-text-primary sm:text-2xl">Exploratory data analysis</h4>
-        <p className="text-xs text-text-muted">Source: {name || 'Imported CSV'} · {filtered.sourceCount} original / {report.rowCount} analyzed · Exploratory statistics only.</p>
+        <p className="text-xs text-text-muted">Source: {name || 'Imported CSV'} · {isPreview?`${report.rowCount} ${dataset.modelSelection?'sample':'preview'} rows analyzed; ${wholeSourceRows.toLocaleString()} source rows profiled`:`${filtered.sourceCount} source rows / ${report.rowCount} analyzed`} · Exploratory statistics only.</p>
       </div>
-      <span className="prism-status-pill">Local-only analysis · F16 foundation</span>
+      <span className="prism-status-pill">Local-only analysis · {isPreview?'preview sample':'source data'}</span>
     </div>
     <dl className="grid grid-cols-2 gap-2 md:grid-cols-4">
       <Metric label="Rows" value={report.rowCount} />
@@ -90,7 +94,7 @@ export default function DataScienceWorkbench({ dataset, name, onCreateSubset, on
       <Metric label="Missing cells" value={report.missingCells} />
       <Metric label="Duplicate rows" value={report.duplicateRows} />
     </dl>
-    <div className="prism-scope-bar" aria-label="Active analysis population"><strong>{analysisIds?'Selected observations':filters.length?'Filtered view':'Original source'}</strong><span>{report.rowCount} analyzed of {filtered.sourceCount} source rows</span><span>Source version: {dataset.provenance?.versionId||'Imported source'}</span></div>
+    <div className="prism-scope-bar" aria-label="Active analysis population"><strong>{analysisIds?'Selected observations':filters.length?'Filtered view':sampleLabel}</strong><span>{report.rowCount} analyzed · {isPreview?`${wholeSourceRows.toLocaleString()} whole-source rows`:`${filtered.sourceCount} source rows`}</span><span>{isPreview?'Sample-derived summaries; exact whole-file profile shown above.':`Source version: ${dataset.provenance?.versionId||'Imported source'}`}</span></div>
     {analysisIds&&<button type="button" onClick={()=>setAnalysisIds(null)}>Clear DataSheet analysis scope ({analysisIds.length} selected observations)</button>}
     <EdaFilterToolbar headers={dataset.headers} filters={filters} onChange={setFilters} sourceCount={filtered.sourceCount} visibleCount={filtered.visibleCount} />
     <PrismTabs buttons label="Workbench views" value={tab} items={tabs.map(t=>({value:t.id,label:t.name}))} onChange={value=>{if(value==='chart-studio')setStudioOpened(true);setTab(value);}}/>
@@ -98,7 +102,7 @@ export default function DataScienceWorkbench({ dataset, name, onCreateSubset, on
       <p className="text-xs text-text-muted">Numeric summaries use only observed finite values. Missingness counts exclude empty, null and NaN fields.</p>
       <div role="region" aria-label="Column quality profile" tabIndex={0} className="max-w-full overflow-x-auto rounded-xl border border-white/10">
         <table className="w-full min-w-[680px] text-left text-xs">
-          <caption className="p-3 text-left font-semibold text-white">Column summary and missingness</caption>
+          <caption className="p-3 text-left font-semibold text-white">{isPreview?'Preview sample column summary and missingness':'Column summary and missingness'}</caption>
           <thead className="bg-surface-elevated"><tr>{['Column','Inferred type','Observed','Missing','Distinct','Mean','Median','Min','Max'].map(h=><th key={h} scope="col" className="p-2">{h}</th>)}</tr></thead>
           <tbody>{report.columns.map(col=><tr key={col.name} className="border-t border-white/10">
             <th scope="row" className="p-2 font-semibold">{col.name}</th>
@@ -114,6 +118,7 @@ export default function DataScienceWorkbench({ dataset, name, onCreateSubset, on
       </div>
       {report.duplicateRows>0 && <p className="text-xs text-amber-200">Duplicate rows are counted by original CSV columns, excluding generated row identifiers. Review whether duplicates are expected before removing them.</p>}
     </div>}
+    {tab==='full-source'&&<CsvSourcePager dataset={dataset}/>}
     {tab==='distributions' && <div className="space-y-3">
       <label className="block text-sm font-medium text-white">Feature to inspect
         <select aria-label="Distribution column" value={active.name} onChange={event=>setSelectedColumn(event.target.value)}
@@ -146,7 +151,7 @@ export default function DataScienceWorkbench({ dataset, name, onCreateSubset, on
       initialColumns={studioRequest?.columns} initialType={studioRequest?.type}
       onLink={ids=>setLinkedIds(ids)} onShowSheet={()=>setTab('datasheet')}
       onFilterMissing={column=>{setFilters(previous=>[...previous,{id:crypto.randomUUID(),column,operator:'missing'}]);setStudioRequest(null);setTab('datasheet');}}/></Suspense></div>}
-    {dataset&&<div hidden={tab!=='datasheet'}><DataSheetWorkspace dataset={dataset} filters={filters} name={name} recovery={recovery} selectedRowId={selectedRowId}
+    {dataset&&<div hidden={tab!=='datasheet'}><DataSheetWorkspace dataset={dataset} filters={filters} name={name} recovery={recovery} selectedRowId={selectedRowId} onBrowseFullSource={dataset.sourceFile?()=>setTab('full-source'):null}
       onSelectRow={setSelectedRowId} onInspectRow={inspectRow} onCommit={onCommitVersion} highlightedRowIds={linkedIds}
       onChart={request=>{setStudioRequest({...request,key:crypto.randomUUID()});setTab('chart-studio');}}
       onAnalyze={(ids,column)=>{setAnalysisIds(ids);if(column)setSelectedColumn(column);setTab('distributions');}}/></div>}

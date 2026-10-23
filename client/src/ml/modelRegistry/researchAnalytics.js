@@ -4,14 +4,15 @@ import {normalizeSearchEvidence,researchConfiguration,finite} from '../modelSele
 import {MODEL_DEFINITIONS} from '../modelWorkbench/models.js';
 export function projectResearchRun(run){
   validateRunReceipt(run);
+  const fullSource=run.model.config?.execution==='full_source_streaming_v1';
   if(typeof run.task.targetColumn!=='string'||!run.task.targetColumn||run.task.targetColumn.length>200||run.features.some(f=>f.length>200)||!MODEL_DEFINITIONS.some(d=>d.id===run.model.algorithm&&d.tasks.includes(run.task.type))||run.finalTest.accessHistory.some(e=>!Number.isFinite(Date.parse(e.accessedAt))))throw new Error('F20_INVALID_RECEIPT_METADATA');
-  if(!Number.isFinite(Date.parse(run.createdAt))||!Number.isFinite(Date.parse(run.updatedAt))||Object.values(run.counts).reduce((n,v)=>n+v,0)>2000||
+  if(!Number.isFinite(Date.parse(run.createdAt))||!Number.isFinite(Date.parse(run.updatedAt))||!fullSource&&Object.values(run.counts).reduce((n,v)=>n+v,0)>2000||
      run.task.classes.some(c=>typeof c!=='string'&&!finite(c))||new Set(run.task.classes).size!==run.task.classes.length||
      Object.entries(run.validation.metrics).some(([k,v])=>!['mse',...Object.keys(REGISTRY_METRICS)].includes(k)||v!==null&&!finite(v)))throw new Error('F20_INVALID_RECEIPT_MEASUREMENTS');
   const metrics=Object.fromEntries(Object.entries(REGISTRY_METRICS).filter(([,d])=>d.tasks.includes(run.task.type)).map(([k])=>[k,run.validation.metrics[k]??null]));
   if(run.task.type==='regression'&&Object.hasOwn(run.validation.metrics,'mse'))metrics.mse=run.validation.metrics.mse;
   if(Object.entries(metrics).some(([k,v])=>finite(v)&&(k!=='r2'&&v<0||['accuracy','macroF1','weightedF1','precision','recall','f1'].includes(k)&&v>1)))throw new Error('F20_INVALID_RECEIPT_MEASUREMENTS');
-  const config=researchConfiguration(run.model.config);
+  const config=researchConfiguration(fullSource?{lambda:run.model.config.lambda,epochs:run.model.config.epochs,seed:run.model.config.seed}:run.model.config);
   const selection=run.selectionEvidence?normalizeSearchEvidence(run.selectionEvidence,{archived:true}):null;
   if(selection){const chosen=selection.trials.find(t=>t.configIndex===selection.selectedIndex);
     if(selection.sourceTrainingCount!==run.counts.train||Object.entries(chosen.configuration).some(([k,v])=>config[k]!==v))throw new Error('F20_ARCHIVED_SELECTION_MISMATCH');}
@@ -19,7 +20,9 @@ export function projectResearchRun(run){
     task:{type:run.task.type,targetColumn:run.task.targetColumn,classes:[...run.task.classes]},features:[...run.features],lineage:Object.fromEntries(['sourceDigest','splitDigest','pipelineDigest','featureSchemaDigest'].map(k=>[k,run.lineage[k]])),
     model:{algorithm:run.model.algorithm,digest:run.model.digest,configuration:config},validation:{count:run.validation.count,metricDefinitionVersion:run.validation.metricDefinitionVersion,metrics},
     counts:{train:run.counts.train,validation:run.counts.validation,test:run.counts.test},
-    finalTestAudit:run.finalTest.accessHistory.map(e=>({accessedAt:e.accessedAt,count:e.count})),selection};
+    finalTestAudit:run.finalTest.accessHistory.map(e=>({accessedAt:e.accessedAt,count:e.count})),selection,
+    ...(fullSource?{sourceExecution:{kind:'full_source_streaming_v1',sourceRows:run.model.config.sourceRows,editedCells:run.model.config.editedCells,
+      seed:run.model.config.seed,splitPreset:run.model.config.splitPreset,splitMethod:run.task.type==='regression'?'affine_source_order_v1':'stratified_affine_source_order_v1'}}:{})};
 }
 export function analyzeResearchRuns(runs,metric){
   const projected=runs.map(projectResearchRun),comparison=compareRunCollection(runs,metric);
