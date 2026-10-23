@@ -8,6 +8,7 @@ import {downloadText} from '../../../visualization/chartExport.js';
 import {createResearchComparisonReport,createResearchComparisonSnapshot} from '../../../ml/modelRegistry/reports.js';
 import ResearchChart from '../charts/ResearchChart.jsx';
 import SearchVisualization from '../charts/SearchVisualization.jsx';
+import CodeCompanionEntry from '../../../design/components/CodeCompanionEntry.jsx';
 export default function ResearchDashboard({runs,onOpen}){
   const [params]=useSearchParams(),detailsRef=useRef(null),showResearch=params.get('view')==='research';
   const [preview,setPreview]=useState(false);
@@ -25,6 +26,7 @@ export default function ResearchDashboard({runs,onOpen}){
   const download=async json=>{try{const options={metric,observations:notes,limitations};downloadText('neuroforge-research-report.'+(json?'json':'md'),json?JSON.stringify(await createResearchComparisonSnapshot(chosen,options),null,2):createResearchComparisonReport(chosen,options),json?'application/json':'text/markdown');setMessage('Research report exported.');}catch(error){setMessage(error.message);}};
   return <details ref={detailsRef} className="prism-chart-card" onToggle={e=>setOpen(e.currentTarget.open)}><summary className="cursor-pointer p-4 font-semibold">F20 — Research Intelligence · Compare Research Runs</summary>{open&&<section aria-label="F20 Research Intelligence" className="prism-research-workspace space-y-4 p-3">
     <p>Select 2–10 saved runs. Rankings require matching source, split, task, target and metric definition. Final-test results never tune this comparison.</p>
+    {chosen.length===1&&<CodeCompanionEntry summary="F22 — Archived model example (not saved-run replay)" context={{...chosen[0].model.config,workspace:'workbench',algorithm:chosen[0].model.algorithm,task:chosen[0].task.type,features:chosen[0].features.length,classCount:chosen[0].task.classes?.length||2,seed:chosen[0].model.config?.seed??42}}/>}
     <div className="prism-sheet-tools"><label>Search<input aria-label="F20 search runs" value={filters.query} onChange={e=>update('query',e.target.value)}/></label>
     {['task','algorithm','tag','source','population'].map(key=>{const values=[...new Set(runs.flatMap(r=>key==='task'?[r.task.type]:key==='algorithm'?[r.model.algorithm]:key==='tag'?r.tags:[r.lineage[key==='source'?'sourceDigest':'splitDigest']]))];return <label key={key}>{key}<select aria-label={'F20 filter '+key} value={filters[key]} onChange={e=>update(key,e.target.value)}><option value="all">All</option>{values.map(v=><option key={v} value={v}>{v}</option>)}</select></label>;})}
     <label>Metric<select aria-label="F20 metric" value={metric} onChange={e=>setMetric(e.target.value)}>{Object.keys(REGISTRY_METRICS).map(m=><option key={m}>{m}</option>)}</select></label></div>

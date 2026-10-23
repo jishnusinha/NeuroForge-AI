@@ -15,6 +15,7 @@ const DatasetsPage = lazy(() => import('./pages/DatasetsPage'));
 const ExperimentsPage = lazy(() => import('./pages/ExperimentsPage'));
 const AcademyPage = lazy(() => import('./pages/AcademyPage'));
 const ReportPage = lazy(() => import('./pages/ReportPage'));
+const OptimizationLabPage = lazy(() => import('./pages/OptimizationLabPage.jsx'));
 
 // Hash routes avoid GitHub Pages 404s when deep-linking into an experiment.
 const Router = import.meta.env?.VITE_STATIC_DEMO === 'true' ? HashRouter : BrowserRouter;
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="account" element={isFeatureEnabled('accounts_and_sync') ? <AccountPage /> : <p role="status" className="p-6">Account features are disabled for this rollout.</p>} />
           <Route path="playground" element={<PlaygroundShell />} />
           <Route path="studio" element={<StudioShell />} />
+          <Route path="optimization" element={<OptimizationLabPage />} />
           <Route path="arena" element={<ArenaShell />} />
           <Route path="datasets" element={<DatasetsPage />} />
           <Route path="experiments" element={<ExperimentsPage />} />

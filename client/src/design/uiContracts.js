@@ -5,6 +5,7 @@ export const WORKSPACES=Object.freeze([
   {path:'/app/datasets',section:'Data',title:'Dataset Explorer',description:'Import, inspect, edit, prepare and visualize a dataset.'},
   {path:'/app/playground',section:'Laboratory',title:'ML Algorithm Playground',description:'Explore measured behavior with interactive classical models.'},
   {path:'/app/studio',section:'Deep Learning',title:'Neural Network Studio',description:'Build a network, train it and inspect its learned behavior.'},
+  {path:'/app/optimization',section:'Optimization',title:'3D Loss Atlas',description:'Explore exact objective surfaces and optimizer updates.'},
   {path:'/app/experiments',section:'Research',title:'My Experiments',description:'Manage saved evidence and compare compatible research runs.'},
   {path:'/app/arena',section:'Evaluation',title:'Experiment Arena',description:'Compare recorded experiments on compatible evaluation populations.'},
   {path:'/app/learn',section:'Education',title:'NeuroForge Academy',description:'Learn through predictions, experiments and measured evidence.'},

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import {Link} from 'react-router-dom';
 import { simulateOptimizer } from '../../ml/optimizerLandscape.js';
 
 const format = value => Number.isFinite(value) ? Number(value.toFixed(5)).toLocaleString() : 'Unavailable';
@@ -15,6 +16,7 @@ export default function OptimizerLandscapeLab() {
   return <section role="region" aria-label="Optimizer landscape simulator" className="space-y-4 rounded-xl border border-violet-400/20 bg-obsidian p-3 sm:p-5">
     <div>
       <h3 className="text-lg font-semibold text-white">Optimizer Landscape Simulator</h3>
+      <Link className="underline" to="/app/optimization">Open 3D Optimization Lab</Link>
       <p className="mt-1 text-xs text-text-muted">Exact simulated gradient updates on a convex quadratic surface, L(x,y) = ½(x² + 6y²). Compare optimizer dynamics without modifying your actual TensorFlow.js network or confusing this with real model training loss.</p>
     </div>
     <div className="grid gap-3 sm:grid-cols-3">

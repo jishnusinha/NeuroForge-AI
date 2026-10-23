@@ -21,8 +21,18 @@ try{
   const download=await pending;expect(await readFile(await download.path(),'utf8')).toContain('synthetic example only');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(errors).toEqual([]);
   await panel.screenshot({path:'.artifacts/f22/pages-code-'+width+'.png',animations:'disabled'});
-  results.push({width,hashRoute:page.url(),errors,download:download.suggestedFilename()});await page.close();
+  results.push({width,hashRoute:page.url(),errors,download:download.suggestedFilename()});
+  await page.goto('http://127.0.0.1:4192/NeuroForge-AI/#/app/optimization');
+  const atlas=page.getByRole('region',{name:'Optimization Lab',exact:true});
+  await expect(atlas.locator('canvas')).toHaveAttribute('data-f22-scene','true');
+  const bounds=await atlas.locator('canvas').boundingBox();expect(bounds.x).toBeGreaterThanOrEqual(0);expect(bounds.x+bounds.width).toBeLessThanOrEqual(width+1);
+  await expect(atlas.getByRole('table',{name:'Stationary points and analytic classification'}).locator('tbody tr')).toHaveCount(9);
+  await atlas.getByLabel('Optimization update cursor',{exact:true}).fill('3');
+  await expect.poll(async()=>JSON.parse(await atlas.locator('canvas').getAttribute('data-positions'))[0].completedStep).toBe(3);
+  await atlas.locator('canvas').screenshot({path:'.artifacts/f22/pages-atlas-'+width+'.png'});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(errors).toEqual([]);
+  results.push({width,hashRoute:page.url(),errors,atlas:true});await page.close();
  }
  await writeFile('.artifacts/f22/pages-smoke.json',JSON.stringify(results,null,2));
- console.log('F22 static hash routing, lazy companion and Python download passed at 390 and 1440px.');
+ console.log('F22 static hash routing, lazy companion, code download and 3D atlas passed at 390 and 1440px.');
 }finally{await browser.close();await new Promise(resolve=>server.httpServer.close(resolve));}

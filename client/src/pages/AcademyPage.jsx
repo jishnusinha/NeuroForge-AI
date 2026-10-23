@@ -1,4 +1,5 @@
 import ChallengeHub from '../components/workspace/ChallengeHub.jsx';
+import CodeCompanionEntry from '../design/components/CodeCompanionEntry.jsx';
 import ResearchPageHeader from '../design/patterns/ResearchPageHeader.jsx';
 import { summarizeLearningTracks, readAcademyProgress, writeAcademyProgress } from '../ml/learningPaths.js';
 import { useLabStore } from '../store/useLabStore.js';
@@ -159,6 +160,8 @@ export default function AcademyPage() {
               </div>
 
               {/* Revealed Explanation */}
+              <CodeCompanionEntry summary={'Inspect code — '+(lesson.id==='lesson-xor'?'neural example':'ML example')} context={lesson.id==='lesson-xor'?{workspace:'studio',seed:42,epochs:60,learningRate:.04}:{workspace:'playground',algorithm:lesson.id==='lesson-lr'?'Linear Regression':'Logistic Regression',method:'gd',seed:42,learningRate:.08}}/>
+              {lesson.track==='Optimization'&&<Link className="underline" to="/app/optimization">Inspect optimizer steps in the 3D Loss Atlas</Link>}
               {isRevealed && (
                 <div className="p-4 rounded-xl bg-surface-dark border border-quantum-mint/30 text-xs text-text-muted leading-relaxed animate-in fade-in space-y-2">
                   <div className="flex items-center gap-2 text-xs font-semibold text-quantum-mint">

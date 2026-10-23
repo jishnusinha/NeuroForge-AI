@@ -45,8 +45,9 @@
 ## Deferred product roadmap
 A first slice for an epic is not the entire epic: further work includes arbitrary-dimensional/categorical preprocessing, multiclass and clustering algorithms, deeper neural CNN/attention/gradient visualizations, rich research notebook organization, full accessibility and performance audits, and production cloud identity/synchronization. Report these gaps explicitly rather than claiming feature completeness.
 
-## F22.0 review gate
+## F22 review gate
 
-- Run `npm run fixtures:f22` and `python scripts/verify-learning-code-f22.py` with the documented dependencies; require CI Python execution before merge.
-- Verify copy/download, live settings, unavailable model states, synthetic provenance, four themes, keyboard tabs, and mobile overflow in the Code Companion.
-- Preserve existing training, F8 optimizer, F12 final-test isolation, and chart export checks. Review and manually merge F22.0 before dependent F22 phases. See [F22 documentation](DS_F22_OPTIMIZATION_CODE_LAB.md).
+- Run `npm run fixtures:f22`, `node scripts/export-optimization-fixtures-f22.mjs`, and both Python verifiers with the documented dependencies; require CI Python execution before merge.
+- Verify copy/download, live settings, expanded model templates, synthetic provenance, four themes, keyboard tabs, and mobile overflow in the Code Companion.
+- Verify the 3D atlas, objective-derived ball height, nine Multiwell stationary points, all eight optimizer rules, races, context-loss/no-WebGL fallback, immutable replay, both mesh sizes and disposed contexts.
+- Preserve existing training, F8 optimizer, F12 final-test isolation, F15 fold isolation and chart exports. Record physical-device performance and manual accessibility checks before release signoff. See [F22 documentation](DS_F22_OPTIMIZATION_CODE_LAB.md) and [verification evidence](DS_F22_VERIFICATION.md).

@@ -2,9 +2,12 @@ import {useId,useMemo,useState} from 'react';
 import {learningContext} from '../../codegen/learning/contracts.js';
 import {learningSnippet} from '../../codegen/learning/templateRegistry.js';
 import {PrismButton,PrismTabs,PrismStatus,PrismDataTable} from './Prism.jsx';
+import OptimizationCodeCompanion from './OptimizationCodeCompanion.jsx';
+import SearchCodeCompanion from './SearchCodeCompanion.jsx';
 const EVIDENCE={trainingRows:'Browser training rows',validationRows:'Browser validation rows',completedEpochs:'Recorded browser epochs',trainingLoss:'Recorded browser training loss',validationLoss:'Recorded browser validation loss',mse:'Recorded browser MSE',validationAccuracy:'Recorded browser validation accuracy'};
 function download(name,text,type){const url=URL.createObjectURL(new Blob([text],{type})),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-export default function CodeCompanion({context,evidence}){
+export default function CodeCompanion(props){return props.optimization?<OptimizationCodeCompanion {...props.optimization}/>:props.search?<SearchCodeCompanion context={props.search}/>:<LearningCodeCompanion {...props}/>;}
+function LearningCodeCompanion({context,evidence}){
  const id=useId(),[view,setView]=useState('concept'),[language,setLanguage]=useState('python'),[mode,setMode]=useState('beginner'),[feedback,setFeedback]=useState(null);
  const safe=useMemo(()=>{try{return {key:JSON.stringify(learningContext(context))};}catch{return {error:'No reviewed example is available for these dimensions or settings. The existing experiment is unchanged.'};}},[context]);
  const snippet=useMemo(()=>safe.error?null:learningSnippet(JSON.parse(safe.key),{language,style:view==='scratch'?'scratch':'framework'}),[safe.key,safe.error,language,view]);

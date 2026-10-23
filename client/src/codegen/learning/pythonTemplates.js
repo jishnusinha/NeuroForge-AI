@@ -153,6 +153,9 @@ else:
             loss.backward()
             opt.step()
             updates += 1
+    # An in-memory checkpoint of this synthetic model only, never source/browser weights.
+    checkpoint = {name: value.detach().clone() for name, value in model.state_dict().items()}
+    model.load_state_dict(checkpoint)
     model.eval()
     with torch.no_grad(): prediction = model(B)
 if C['task'] == 'regression': score, metric = ((prediction - y[32:])**2).mean().item(), 'validation_mse'

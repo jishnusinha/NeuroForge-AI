@@ -86,7 +86,7 @@ Navigate to `http://localhost:5173` in your browser.
 
 ## Verification
 
-F22.0 adds a lazy ML/DL Code Companion in Playground, Neural Studio, and Model Workbench, with synthetic NumPy/PyTorch and JavaScript/TF.js examples, copy/download controls, shapes, recipes, and separate observed evidence. See [supported methods, privacy contract, and verification](docs/DS_F22_OPTIMIZATION_CODE_LAB.md). The dependent F22 optimizer/3D phases remain pending.
+F22 adds the lazy **Optimization Lab** at `/app/optimization`: an interactive 3D loss atlas, eight optimizer rules, synchronized races, exact traces, graphics fallback, and reproducible exports. ML/DL code companions extend Playground, Neural Studio, Model Workbench, search, Academy and research evidence. See [methods, privacy contract and controls](docs/DS_F22_OPTIMIZATION_CODE_LAB.md) and [verification evidence](docs/DS_F22_VERIFICATION.md).
 
 PRISM now includes a shared product design system, guided data/model/research journeys and chart reproduction ZIP bundles. See the [F21 implementation, visual review workflow and curated walkthroughs](docs/DS_F21_PRODUCT_EXPERIENCE.md). Run `npm run audit:f21` after building to capture all route/theme/viewport combinations; use `npm run review:f21` with a preserved baseline for before/after review.
 

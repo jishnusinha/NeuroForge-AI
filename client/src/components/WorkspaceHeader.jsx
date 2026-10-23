@@ -62,6 +62,7 @@ export default function WorkspaceHeader() {
         return { section: 'Console', title: 'Mission Control' };
       case '/app/playground':
         return { section: 'Laboratory', title: 'ML Algorithm Playground' };
+      case '/app/optimization': return {section:'Optimization',title:'3D Loss Atlas'};
       case '/app/studio':
         return { section: 'Deep Learning', title: 'Neural Network Studio' };
       case '/app/arena':

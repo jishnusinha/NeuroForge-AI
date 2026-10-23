@@ -1,51 +1,91 @@
-# F22.0 — Universal Code Companion
+# F22 — Optimization & Code Laboratory
 
-This implements the first reviewable phase of the F22 plan. The plan's optimizer-engine and 3D-atlas phases depend on review and manual merge of F22.0. F22.1–F22.5 are not implemented by this change.
+F22.0–F22.5 are implemented locally. The follow-up instruction to complete the remaining phases supersedes the earlier first-phase-only handoff. No backend endpoints, production databases, cloud resources, or existing research receipt formats were changed. External pull requests, merges and deployment are separate from these local changes.
 
-## Available experience
+## Open the laboratory
 
-Open **F22 — ML / DL Code Companion** below Playground, Neural Studio, or F12 Model Workbench. The panel loads on demand. Concept, From scratch, Framework, Experiment recipe, and Observed evidence tabs share the current reviewed settings. Beginner mode adds shape explanations; Advanced mode retains the same executable code. Python and JavaScript examples have line numbers, copy, source download, and context JSON download. JavaScript uses `.mjs` so Node interprets the downloaded file as an ES module without requiring a package configuration.
+Use **Optimization Lab** in the sidebar or command palette, `/app/optimization`, or **Open 3D Optimization Lab** beneath Studio's existing F8 simulator. Pages uses `#/app/optimization`. The route, Three.js 0.180.0 renderer, and code templates load lazily. The homepage does not load Three.js.
 
-| Entry | Reviewed examples |
+1. Select Multiwell, Adam, a learning rate and starting coordinates, then **Compute experiment**.
+2. Read the numeric loss legend and stationary-point table. The surface contains four global minima, a local maximum, and four saddles. Its boundary samples are not global maxima.
+3. Orbit, pan and zoom with pointer controls or the camera buttons. Reset camera restores the initial viewpoint.
+4. Use Play/Pause, Replay, Next/Previous update, speed and the cursor. Snap mode shows discrete updates; smooth mode interpolates parameters for display only. The inspector shows the last completed numerical update.
+5. Select up to three optimizers and compute a synchronized race. Compare the same objective, initial point, requested budget, seed and color scale. Terminated traces stay at their last valid state. Freeze/Resume controls independently pause each displayed participant; numerical histories remain immutable.
+6. Inspect the full-gradient, gradient-used-for-update, optimizer memory and sampled training indices. Download exact trace JSON/CSV, a map SVG, atlas PNG, or executable Python/JavaScript.
+
+Editing settings does not silently recompute the displayed experiment. Compute applies validated settings atomically. The parameter/race panel is collapsible, including on mobile. The initial state is paused. Hidden/offscreen playback pauses; reduced motion forces discrete updates. The 2D map, loss timeline, tables and exports work without WebGL. Context loss releases the scene; toggle 3D graphics to retry.
+
+## Numerical contracts
+
+| Objective | Definition and interpretation |
 | --- | --- |
-| Playground | Linear regression (OLS or gradient descent), logistic regression |
-| Neural Studio | Configured dense network, SGD, momentum, Adam |
-| F12 | Regression/classification baseline, ridge, binary logistic regression |
+| Convex bowl | `0.5(x²+6y²)`; unique global minimum at `(0,0)`; no finite maximum |
+| Multiwell | `(x²−1)²+(y²−1)²`; four global minima `(±1,±1)`, local maximum `(0,0)`, four axial saddles |
+| Rosenbrock | `(1−x)²+100(y−x²)²`; global minimum `(1,1)`; no finite maximum |
+| Saddle | `x²−y²`; indefinite Hessian at origin; unbounded above and below |
+| Seeded linear/logistic | Exact training-only objective on the first 32 of 48 deterministic examples, with recorded regularization and parameterization |
+| Neural slice | Two output weights of a frozen synthetic tanh network; fixed hidden weights, data and output bias. This is not global full-network loss or actual Studio optimizer telemetry |
 
-Unsupported models explicitly show that no reviewed F22.0 template exists. They do not silently substitute another algorithm. Broader model templates and learning integrations belong to F22.4.
+Analytic gradients and Hessians are tested with finite differences. Known critical points use Hessian classification; an inconclusive Hessian is unknown. Dataset objectives do not invent analytical stationary points. The LCG is `state = (1664525*state+1013904223) mod 2^32`.
 
-## Scientific and privacy contract
+GD uses full gradients. Mini-batch SGD samples actual training indices with replacement from a recorded seeded stream and is unavailable for objectives without examples. Momentum uses `v=μv+g`. Nesterov uses the explicit look-ahead `g=∇L(θ−αμv)`, then the same velocity update; it is not labeled equivalent to PyTorch SGD's Nesterov variant. AdaGrad starts from zero accumulation. RMSProp is uncentered with configurable β₂. Epsilon is outside the square root. Adam corrects both moment biases. AdamW applies decoupled decay to pre-step parameters, separately from objective regularization.
 
-These are **synthetic learning examples**, not exact reproductions of source-data browser runs. An immutable, versioned context allowlists dimensions, layers, activations, optimizer, learning rate, regularization, epoch budget, batch size, seed, and decision threshold. Imported observations, original feature names, row identifiers, source splits, fitted pipelines, weights, receipts, and arbitrary extra properties never enter generated code or context downloads. Generated text is displayed as plain text and is never executed in the browser.
+Each immutable trace retains validated configuration, objective/version, seed, sampling metadata, full-objective loss/gradient, used gradient, update, available optimizer memory, finite status, evaluation counts and stopping rule. Its `f22-v1-...` fingerprint is a deterministic FNV configuration/version checksum, not a security digest. No unavailable moment is fabricated.
 
-Each example creates 40 observations using a documented deterministic LCG (1664525, 1013904223, modulus 2^32), trains on the first 32, and validates on the final eight. Feature names are generic. Preprocessing statistics for ridge come from training observations only. There is no final-test access. Closed-form methods use zero optimizer updates. Iterative examples use the selected fixed epoch budget; browser early stopping and historical checkpoints are not reproduced.
+Converged means the full-gradient norm meets the documented tolerance for deterministic methods. Stationarity can also be a maximum or saddle; it is not proof of optimality. SGD has no convergence claim. Exhausting the requested budget means completed. Non-finite/overflow updates or leaving the permitted parameter domain stop at the last valid state, with diverged/out_of_domain status. Exports never replace failed updates with clipped coordinates.
 
-NumPy and native JavaScript implement the same synthetic initialization and numerical recipe, checked by the fixture verifier. PyTorch and TF.js implement actual framework training, with explicitly different initialization and precision; their neural results are not claimed to match the browser or scratch implementations. Baselines and closed-form solutions have separate parity checks. Observed browser aggregates appear in a separate table, preserve unavailable values, and are excluded from example exports.
+The F8 adapter preserves its existing API, numerical bounds, default trajectories and tests. Its historical `sgd` argument still means full-gradient descent, while the new lab's `sgd` means actual mini-batch SGD.
 
-## Modules and execution
+## Graphics and playback
 
-`client/src/codegen/learning/` contains the context contract, allowlisted template registry, NumPy/PyTorch templates, and native JavaScript/TF.js templates. `CodeCompanionEntry` lazy-loads the shared panel. Its CSS uses PRISM theme tokens and bounded source scrolling.
+The indexed mesh defaults to 97×97 vertices, with 49×49 and 161×161 options. Vertex loss, color, paths and marker coordinates derive from the same objective. Vertex colors use an unlit, ordered purple/blue/green/yellow scale so lighting does not alter their numeric meaning. Recoloring updates the existing color attribute; optimizer changes replace only trajectory resources. The mesh is regenerated for objective/domain/grid changes.
 
-Generated Python scratch examples require Python 3.12 and `numpy==2.2.6`; framework examples require `torch==2.5.1`. Native JavaScript runs with Node.js 24. TF.js examples require `@tensorflow/tfjs@4.22.0`. Each script prints finite validation metrics, predictions, dimensions, and update counts as JSON. Framework examples use real backpropagation and optimizer updates. TF.js examples dispose their model, optimizer, and tensors.
+World coordinates are explicitly `(x, (L−sampledMin)/(sampledMax−sampledMin)*3, −y)`. This linear display normalization is shown next to the surface and does not change exported numerical loss. Height and color ranges are separately recorded. A shared numeric color range applies to every race participant; the optional range includes 0–5 without clipping numerical values. The 2D contour isolines interpolate measured grid samples for display only.
 
-## Verification and review
+Marker centers lie at the exact objective value, including during display interpolation; completed steps match trace records. A contrasting halo remains visible through terrain. Diamonds, triangles, crosses and text distinguish stationary points. The accessible table provides their exact coordinates, losses and Hessians.
 
-Run:
+Rendering is on demand with at most one pending scene animation frame. Camera, resize and playback events request frames. Offscreen/hidden views cancel pending frames. Scene cleanup disposes geometries, materials, label textures, controls, renderer, observers, listeners and graphics context. Desktop playback requests approximately 60 updates/second in smooth mode; mobile requests 30. This scheduling target is not a measured hardware FPS guarantee.
+
+**Record scene benchmark** exports initialization time, vertex/geometries count, frame intervals, median CPU render submission time, optional heap size and viewport/pixel ratio/reduced-motion profile. Frame intervals include idle periods; do not interpret them as a hardware FPS benchmark. Browser tests exercise both mesh budgets and verify replaced contexts are lost. Mid-range physical-device FPS, manual assistive-technology testing and published Pages verification remain release-signoff activities.
+
+## Universal code companions
+
+| Destination | Available example |
+| --- | --- |
+| Playground | OLS/GD linear regression, logistic, kNN and K-means |
+| Neural Studio | Configured dense layers, activations, shapes, SGD/momentum/Adam, actual backward/step/evaluation, synthetic in-memory checkpoint |
+| F12 | Baseline, N-feature ridge/logistic/softmax/kNN/CART/forest, regression or supported classification tasks |
+| F15 | Exact configured candidate list, fold count and metric; runnable fold-safe synthetic Python/JavaScript recipes with sealed holdout |
+| F19 | Separate selected-model example entry; plotting code remains evidence reproduction |
+| F20 | Selected archived-model example, explicitly separate from saved-run replay |
+| Academy | Inspect-code entries in lesson cards, with a dedicated optimization link |
+| Optimization Lab | Exact mathematical objective and trace reproduction in scratch PyTorch, framework PyTorch, or standalone JavaScript |
+
+The shared panel provides conceptual explanations, source, shapes, recipe/provenance, observed evidence, line numbers and copy/download controls. ML/DL examples use 40 LCG-generated rows: 32 train and 8 validate. F15 examples use 120 generated rows: 96 inner-CV and 24 sealed holdout rows, deterministic stratified/round-robin example folds, fresh fold-specific preprocessing and no holdout evaluation. Their source fold membership and F11 transformation recipe are unavailable, so these remain synthetic protocol analogs.
+
+Allowlisted context normalization strips source observations, original feature names, row IDs, split membership, fitted preprocessing, saved weights, tokens and arbitrary extra properties. No generated code executes in the browser. Mathematical optimization exports are exact; source-data model replay is not claimed. Observed browser metrics remain separate and are excluded from example exports. Browser early stopping and historical model checkpoints are not reproduced.
+
+Dependencies: Python 3.12, NumPy 2.2.6, CPU PyTorch 2.5.1, scikit-learn 1.7.2 where appropriate; Node.js 24 and TF.js 4.22.0 for TF.js examples. Classical Python framework examples use scikit-learn; softmax and dense examples use PyTorch. JavaScript is downloaded as `.mjs` for standalone ES-module execution. Initializers, tree tie conventions and framework solvers differ; numerical identity is claimed only for explicitly verified recipes.
+
+Readable exported JavaScript uses checked source templates, preserving function names and formatting through production minification. After changing the numerical or classical example kernels, run `node scripts/sync-optimization-code-source-f22.mjs`; its `--check` mode runs in the numerical test suite and rejects stale copies.
+
+## Verification
 
 ```text
 npm test
 npm run lint
 npm run build:client
 npm run fixtures:f22
+node scripts/export-optimization-fixtures-f22.mjs
 python scripts/verify-learning-code-f22.py
-node scripts/run-browser-tests.mjs memory tests/e2e/learning-code-f22.spec.mjs
-node scripts/run-browser-tests.mjs database tests/e2e/learning-code-f22.spec.mjs
+python scripts/verify-optimization-f22.py
+node scripts/export-python-chart-fixtures.mjs
+python scripts/verify-python-charts.py
+npm run test:integration
+node scripts/run-browser-tests.mjs memory
+node scripts/run-browser-tests.mjs database
 ```
 
-The fixture command exports ten contexts in four implementations and executes all twenty JavaScript programs. The Python verifier compiles and executes twenty Python programs, checks finite values and shapes, and compares NumPy outputs with the JavaScript references. CI installs CPU PyTorch and runs this verifier after the existing chart Python checks.
+CI runs the Python fixtures and existing chart gates before the full domain/storage/browser suite. Local Python execution was verified using an isolated runtime under ignored `.artifacts/f22/python/`; no system Python installation is required by the app. Numerical evidence covers 34 learning scripts, 16 optimization configurations in both scratch and framework implementations, seven search recipes in each language, and all 42 existing Python chart families. Node tests cover finite-difference gradients, extrema, independently calculated early steps, adaptive state, SGD integrity, divergence, immutable races, mesh/ball projection, exact standalone exports and privacy.
 
-Local verification on 2026-10-22: all 266 Node tests, strict lint, production build, twenty generated JavaScript programs, eight new desktop/mobile browser cases in both memory and real MongoDB modes, and the MongoDB integration test passed. Fifty existing browser regression cases passed across training, F8 optimization, F12 models, F18 charts/exports, and F21 performance. TF.js examples leave zero tensors allocated after cleanup. The isolated Pages build passed asset-prefix verification and companion hash-route, lazy-load, and download smoke checks at 390px and 1440px; screenshots were inspected. Run `node scripts/verify-learning-pages-f22.mjs` after the isolated build (or pass a Pages build directory). CI runs this check against its existing static build.
-
-Python is not installed on this workstation, so Python execution remains a CI gate rather than a local pass claim. No deployment or external pull request was performed.
-
-For manual review, change Studio's model seed and check the framework source and downloaded context. Copy and download both languages. Switch all four themes and keyboard-navigate the tabs. Select an unsupported Playground algorithm and verify the explicit unavailable state. Confirm opening or exporting examples never starts training, saves a run, or evaluates the final test. Review the existing F8 optimizer and F18 chart flows before merging. Subsequent F22 phases remain pending; this change does not introduce a 3D renderer, new objective engine, or optimizer race.
+Local verification records, scene benchmarks and remaining release-signoff limits are in [F22 verification](DS_F22_VERIFICATION.md). No external deployment or PR/merge is claimed by this implementation.

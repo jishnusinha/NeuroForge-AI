@@ -44,6 +44,7 @@ function CommandDialog() {
   const navigate = useNavigate();
 
   const commands = [
+    {category:'Workspaces',id:'nav-optimization',title:'Optimization Lab',desc:'3D loss atlas, exact optimizer traces, races and reproducible code',icon:Sliders,action:()=>navigate('/app/optimization')},
     {category:'Research',id:'nav-research',title:'Research Intelligence',desc:'Compare saved validation evidence, archived cross-validation, provenance and research reports',icon:Scale,action:()=>navigate('/app/experiments?view=research')},
     {category:'Data',id:'nav-model-workbench',title:'Model Workbench',desc:'Prepare a dataset, fit preprocessing and evaluate models using protected data splits',icon:Database,action:()=>navigate('/app/datasets?stage=modeling')},
     {

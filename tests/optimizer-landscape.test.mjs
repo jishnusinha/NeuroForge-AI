@@ -35,3 +35,4 @@ test('F8 malformed optimizer specifications are rejected rather than simulated',
  assert.throws(()=>simulateOptimizer({steps:10000}),/INVALID_OPTIMIZER_SETTINGS/);
  assert.throws(()=>simulateOptimizer({startX:1e90}),/INVALID_OPTIMIZER_SETTINGS/);
 });
+test('F8 adapter retains its historical positive learning-rate and momentum boundary domain',()=>{const trace=simulateOptimizer({method:'momentum',learningRate:1e-14,momentum:1-Number.EPSILON/2,steps:2});assert.equal(trace.status,'completed');assert.equal(trace.history.length,3);});

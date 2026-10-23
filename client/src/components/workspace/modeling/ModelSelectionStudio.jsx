@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { MODEL_DEFINITIONS } from '../../../ml/modelWorkbench/models.js';
 import { F15_GRID } from '../../../ml/modelSelection/searchManifest.js';
+import CodeCompanionEntry from '../../../design/components/CodeCompanionEntry.jsx';
 const SearchVisualization=lazy(()=>import('../charts/SearchVisualization.jsx'));
 
 const control='mt-1 min-h-10 w-full rounded-lg border border-white/20 bg-surface-dark px-2 py-2 text-sm text-text-primary';
@@ -159,6 +160,7 @@ export default function ModelSelectionStudio({ plan, matrix, onPromote, disabled
       {error&&<p role="alert" className="text-sm text-signal-amber">{error}</p>}
       {message&&<p role="status" className="text-sm text-quantum-mint">{message}</p>}
       <p className="text-xs text-text-muted">Search configurations are predefined, bounded and executed locally in a cancellable worker. Final validation and test remain separate. Selecting a candidate does not reveal test scores.</p>
+      <CodeCompanionEntry summary="F22 — Fold-safe search code" search={{workspace:'workbench',algorithm:chosen,task:matrix.task.type,features:matrix.features.length,classCount:matrix.task.classes.length||2,folds,metric,seed:42}}/>
     </section>
   </details>;
 }

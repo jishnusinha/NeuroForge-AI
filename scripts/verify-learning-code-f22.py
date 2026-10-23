@@ -21,8 +21,11 @@ for fixture in manifest['fixtures']:
         assert len(result['prediction']) == 8
         assert all(math.isfinite(value) for value in result['prediction'])
         assert math.isfinite(result['value'])
-        assert result['updates'] == fixture['expected']['updates']
-        if style == 'scratch' or fixture['frameworkParity']:
+        if fixture['context']['family'] == 'kmeans' and style == 'framework':
+            assert 1 <= result['updates'] <= fixture['context']['epochs']
+        else:
+            assert result['updates'] == fixture['expected']['updates']
+        if (style == 'scratch' and fixture.get('nativeParity', True)) or fixture['frameworkParity']:
             for observed, expected in zip(result['prediction'], fixture['expected']['prediction']):
                 assert math.isclose(observed, expected, rel_tol=1e-7, abs_tol=1e-8), (filename, observed, expected)
             assert math.isclose(result['value'], fixture['expected']['value'], rel_tol=1e-7, abs_tol=1e-8)

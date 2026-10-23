@@ -78,7 +78,7 @@ Shared semantic tokens and controls, workflow stages and population context, res
 
 ## Important limits
 
-F22.0 adds reviewed synthetic learning-code examples in Playground, Neural Studio, and F12. See [F22 scope and verification](DS_F22_OPTIMIZATION_CODE_LAB.md). F22.1–F22.5 (including the new optimizer engine and 3D atlas) remain pending.
+F22 includes the dedicated interactive 3D Optimization Lab, eight verified optimizer rules, seeded dataset and frozen neural-slice objectives, synchronized races, numeric inspectors, graphics fallback, trace/image/code exports and broader ML/DL/search/Academy companions. See [F22 methods and scope](DS_F22_OPTIMIZATION_CODE_LAB.md) and [verification/signoff limits](DS_F22_VERIFICATION.md). Mathematical objective reproduction is exact; model examples remain explicitly synthetic.
 - Legacy Playground/TF.js launch adapters require two numerical feature columns and compatible targets. F12 uses the full prepared matrix for regression and binary/multiclass classification.
 - Standalone PCA and optimizer landscape tools are educational computations, not automatically applied fitted transforms or real neural model telemetry.
 - A successful counterfactual search does not prove real-world causal intervention.

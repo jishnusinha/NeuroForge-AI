@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
 import {openModel} from '../support/f19-browser.mjs';
 async function openCompanion(page){await page.getByText('F22 — ML / DL Code Companion',{exact:true}).click();return page.getByRole('region',{name:'F22 Code Companion',exact:true});}
 async function downloaded(page,button){const promise=page.waitForEvent('download');await button.click();return readFile(await(await promise).path(),'utf8');}
@@ -19,6 +20,10 @@ test('F22 Playground companion is lazy, follows settings, copies and downloads r
  const changed=JSON.parse(await downloaded(page,panel.getByRole('button',{name:'Download example context',exact:true})));
  expect(changed.context.method).toBe('gd');expect(changed.context.features).toBe(1);expect(changed.context.learningRate).toBe(.2);
 });
+test('F22 Academy inspect-code and F15 synthetic fold-safe exports remain separate from source training',async({page})=>{
+ await page.goto('/app/learn');const entry=page.locator('summary').filter({hasText:'Inspect code —'}).first();await entry.click();await expect(page.getByRole('region',{name:'F22 Code Companion',exact:true})).toContainText('Synthetic example only');
+ const model=await openModel(page);await model.locator('summary').filter({hasText:'F15'}).first().click();await model.getByText('F22 — Fold-safe search code',{exact:true}).click();const panel=model.getByRole('region',{name:'Search Code Companion',exact:true});await panel.getByLabel('Search code language').selectOption('javascript');const js=await downloaded(page,panel.getByRole('button',{name:'Download search example',exact:true}));const result=JSON.parse(execFileSync(process.execPath,['--input-type=module','-'],{input:js,encoding:'utf8',windowsHide:true,timeout:60000}));expect(result.holdoutAccess).toBe(false);expect(result.results.every(r=>r.scores.length===3)).toBe(true);await expect(model.getByRole('region',{name:'F12 final test results',exact:true})).toHaveCount(0);
+});
 test('F22 Studio examples reflect dimensions, optimizer and seed without implicit training',async({page})=>{
  await page.goto('/app/studio');await page.getByRole('spinbutton',{name:'Model seed',exact:true}).fill('73');const panel=await openCompanion(page);await panel.getByRole('tab',{name:'Framework',exact:true}).click();await expect(panel.locator('pre')).toContainText('torch.manual_seed(73)');await expect(panel).toContainText('Dense(2, 4)');
  await panel.getByLabel('F22 code language').selectOption('javascript');await expect(panel.locator('pre')).toContainText("import * as tf from '@tensorflow/tfjs'");await expect(panel.locator('pre')).toContainText('model.fit');
@@ -30,10 +35,9 @@ test('F22 model entry preserves final-test isolation and imported names stay out
  await expect(model.getByRole('region',{name:'F12 final test results',exact:true})).toHaveCount(0);await expect(model.getByRole('region',{name:'F12 validation results',exact:true})).toHaveCount(0);
  await panel.getByRole('tab',{name:'Concept',exact:true}).focus();await page.keyboard.press('ArrowRight');await expect(panel.getByRole('tab',{name:'From scratch',exact:true})).toBeFocused();
 });
-test('F22 code controls and source reflow in four themes and unsupported methods are explicit',async({page},info)=>{
+test('F22 code controls reflow in four themes and expanded methods use their own reviewed templates',async({page},info)=>{
  await page.goto('/app/playground');const panel=await openCompanion(page);await panel.getByRole('tab',{name:'Framework',exact:true}).click();
  for(const theme of ['midnight','slate','forest','paper']){await page.getByRole('combobox',{name:'Visual theme'}).selectOption(theme);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await expect(panel.locator('pre')).toBeVisible();await panel.screenshot({path:info.outputPath('code-'+theme+'.png')});}
  await panel.getByLabel('F22 teaching mode').selectOption('advanced');await expect(panel.locator('pre')).toContainText('loss.backward');
- // Selecting an unreviewed model never silently substitutes logistic code.
- await page.getByRole('combobox',{name:'Algorithm',exact:true}).selectOption('K-Nearest Neighbors (KNN)');await expect(panel).toContainText('no reviewed F22.0 template');await expect(panel.getByRole('button',{name:/Copy/})).toHaveCount(0);
+ await page.getByRole('combobox',{name:'Algorithm',exact:true}).selectOption('K-Nearest Neighbors (KNN)');await expect(panel.locator('pre')).toContainText('KNeighborsClassifier');await expect(panel.getByRole('button',{name:'Copy Python example',exact:true})).toBeVisible();
 });

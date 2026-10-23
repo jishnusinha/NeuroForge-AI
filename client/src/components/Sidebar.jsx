@@ -22,6 +22,7 @@ export default function Sidebar() {
     { name: 'Mission Control', path: '/app', icon: LayoutDashboard },
     { name: 'ML Playground', path: '/app/playground', icon: Sliders, badge: 'Flagship' },
     { name: 'Neural Studio', path: '/app/studio', icon: Network, badge: 'Flagship' },
+    { name: 'Optimization Lab', path: '/app/optimization', icon: Sliders },
     { name: 'Experiment Arena', path: '/app/arena', icon: Scale, badge: 'Flagship' },
     { name: 'Academy', path: '/app/learn', icon: BookOpen },
     { name: 'Dataset Explorer', path: '/app/datasets', icon: Database },

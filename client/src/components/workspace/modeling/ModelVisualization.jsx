@@ -1,6 +1,7 @@
 import {lazy,Suspense,useEffect,useMemo,useState} from 'react';
 import {createModelChartSpec} from '../../../visualization/modelChartSpec.js';
 import {MODEL_CHARTS} from '../../../visualization/chartRegistry.js';
+import CodeCompanionEntry from '../../../design/components/CodeCompanionEntry.jsx';
 const ScientificChart=lazy(()=>import('../charts/ScientificChart.jsx'));
 const regressionTypes=['actual_predicted','residuals','residual_distribution','error_range'];
 export function ModelChart({matrix,candidate,type,config={},report,finalTest,explanation}){
@@ -35,6 +36,7 @@ export default function ModelVisualization({matrix,candidate,finalTest=null}){
         {type==='confusion'&&<label><input type="checkbox" aria-label="F19 normalize true class rows" checked={normalized} onChange={e=>setNormalized(e.target.checked)}/> Normalize by true class support</label>}
       </div>
       <ModelChart matrix={matrix} candidate={candidate} report={report} finalTest={finalTest} type={type} config={{classIndex:matrix.task.type==='regression'?undefined:classIndex,rowNormalized:normalized}}/>
+      <CodeCompanionEntry summary="F22 — Model example code (separate from plotted evidence)" context={{...candidate.options,workspace:'workbench',algorithm:candidate.algorithm,task:matrix.task.type,features:matrix.features.length,classCount:matrix.task.classes.length||2,seed:candidate.options?.seed??42}}/>
     </section>}
   </details>;
 }
